@@ -1,0 +1,850 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block header_title %}Employee Profile{% endblock %}
+
+{% block content_body %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; gap: 2rem; align-items: center;">
+        <div style="position: relative;">
+            <div
+                style="width: 100px; height: 100px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #64748b; overflow: hidden; position: relative;">
+                <img id="profile-photo" src="" alt=""
+                    style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                <span id="profile-initials">--</span>
+            </div>
+
+            <!-- Upload Button -->
+            <button onclick="document.getElementById('photo-input').click()" title="Upload Photo"
+                style="position: absolute; bottom: 0; right: 0; background: #ffffff; color: #334155; border: 1px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); z-index: 10; transition: all 0.2s;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+            </button>
+            <input type="file" id="photo-input" hidden accept="image/*" onchange="uploadProfilePhoto(this)">
+
+            <!-- Remove Button -->
+            <button id="btn-remove-photo" onclick="removeProfilePhoto()" title="Remove Photo"
+                style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 11;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div>
+            <h2 id="emp-name" style="margin-bottom: 0.5rem;">Loading...</h2>
+            <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
+                <span id="emp-designation">--</span> • <span id="emp-dept">--</span>
+            </div>
+            <div style="margin-top: 0.75rem;">
+                <span id="emp-status" class="badge badge-neutral">--</span>
+                <span id="emp-code" class="badge badge-neutral" style="margin-left: 0.5rem;">--</span>
+            </div>
+        </div>
+        <div style="margin-left: auto;">
+            <button class="btn btn-primary" onclick="openEditModal()">Edit
+                Profile</button>
+        </div>
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('personal')">Personal Details</button>
+    <button class="tab-btn" onclick="switchTab('employment')">Employment & Salary</button>
+    <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
+    <button class="tab-btn" onclick="switchTab('salary')">Salary Structure</button>
+</div>
+
+<!-- Personal Tab -->
+<div id="personal-section" class="tab-content">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Basic Information</h3>
+            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    style="margin-right: 4px;">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit Details
+            </button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+                <label class="form-label">Email Address</label>
+                <div id="field-email" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Phone Number</label>
+                <div id="field-phone" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Date of Birth</label>
+                <div id="field-dob" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Gender</label>
+                <div id="field-gender" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Blood Group</label>
+                <div id="field-blood" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+        </div>
+
+        <h3>Address</h3>
+        <div class="form-control" style="background: #f8fafc; min-height: 80px;" id="field-address">--</div>
+
+        <h3 class="mt-4">Emergency Contact</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+                <label class="form-label">Contact Name</label>
+                <div id="field-emg-name" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Contact Phone</label>
+                <div id="field-emg-phone" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employment Tab -->
+<div id="employment-section" class="tab-content hidden">
+    <div class="card">
+        <h3>Employment Details</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div>
+                <label class="form-label">Date of Joining</label>
+                <div id="field-doj" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Work Location</label>
+                <div id="field-location" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Employment Type</label>
+                <div id="field-type" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Reporting Manager</label>
+                <div id="field-manager" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+        </div>
+
+        <h3>Bank & Statutory Details</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+                <label class="form-label">Bank Name</label>
+                <div id="field-bank" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">Account Number</label>
+                <div id="field-account" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">PAN Number</label>
+                <div id="field-pan" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+            <div>
+                <label class="form-label">PF Account</label>
+                <div id="field-pf" class="form-control" style="background: #f8fafc;">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Documents Tab -->
+<div id="documents-section" class="tab-content hidden">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>Employee Documents</h3>
+            <button class="btn btn-secondary"
+                onclick="document.getElementById('upload-document-modal').classList.remove('hidden')">Upload
+                Document</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Title</th>
+                        <th>Type</th>
+                        <th>Uploaded Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="docs-table-body">
+                    <tr>
+                        <td colspan="4" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Salary Tab -->
+<div id="salary-section" class="tab-content hidden">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3>Salary Structure</h3>
+            <button class="btn btn-primary" onclick="openSalaryModal()">Update Structure</button>
+        </div>
+
+        <div
+            style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color);">
+            <label style="color: var(--text-muted); font-size: 0.9rem;">Annual CTC</label>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">
+                ₹ <span id="display-ctc">0.00</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Base for all component
+                calculations</p>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th style="text-align: right;">Monthly Amount</th>
+                        <th style="text-align: right;">Annual Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="salary-breakdown-body">
+                    <tr>
+                        <td colspan="3" class="text-center">No structure defined. Click Update.</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight: 700; background: #f1f5f9;">
+                        <td>Total</td>
+                        <td style="text-align: right;" id="total-monthly">--</td>
+                        <td style="text-align: right;" id="total-annual">--</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Salary Modal -->
+<!-- Salary Modal -->
+<div id="salary-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Update Salary Structure</h3>
+            <button onclick="document.getElementById('salary-modal').classList.add('hidden')" class="btn-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <form onsubmit="updateSalaryStructure(event)" class="modal-body">
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Enter the new Annual CTC. Components will be auto-calculated.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Annual CTC (₹)</label>
+                <input type="number" id="input-ctc" class="form-control" step="0.01" required
+                    style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="document.getElementById('salary-modal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Calculate & Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div id="upload-document-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Upload Document</h3>
+            <button onclick="document.getElementById('upload-document-modal').classList.add('hidden')" class="btn-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <form id="upload-document-form" onsubmit="uploadDocument(event)" class="modal-body"
+            enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" class="form-control" required placeholder="e.g. Aadhar Card">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Document Type</label>
+                <select name="document_type" class="form-control" required>
+                    <option value="ID_PROOF">ID Proof</option>
+                    <option value="ADDRESS_PROOF">Address Proof</option>
+                    <option value="EDUCATION">Educational Certificate</option>
+                    <option value="RESUME">Resume/CV</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">File</label>
+                <input type="file" name="file" class="form-control" required
+                    style="padding: 0.5rem; border: 1px dashed var(--border-color); background: #f8fafc;">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="document.getElementById('upload-document-modal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="modal-overlay hidden">
+    <div class="modal-box modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Employee Profile</h3>
+            <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')" class="btn-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <form id="edit-employee-form" onsubmit="updateEmployee(event)" class="modal-body">
+            <!-- Personal Details -->
+            <h4 class="col-span-2"
+                style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-top: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Personal Details</h4>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="first_name" id="edit-first-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="last_name" id="edit-last-name" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="email" id="edit-email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" id="edit-phone" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" id="edit-dob" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" id="edit-gender" class="form-control">
+                        <option value="">Select Gender</option>
+                        <option value="MALE">Male</option>
+                        <option value="FEMALE">Female</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-span-2">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" id="edit-address" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Emergency Contract Name</label>
+                    <input type="text" name="emergency_contact_name" id="edit-emg-name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Emergency Contact Phone</label>
+                    <input type="text" name="emergency_contact_phone" id="edit-emg-phone" class="form-control">
+                </div>
+            </div>
+
+            <!-- Employment Details -->
+            <h4 class="col-span-2"
+                style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-top: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Employment Details</h4>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Date of Joining</label>
+                    <input type="date" name="date_of_joining" id="edit-doj" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Employment Type</label>
+                    <select name="employment_type" id="edit-emp-type" class="form-control">
+                        <option value="PERMANENT">Permanent</option>
+                        <option value="CONTRACT">Contract</option>
+                        <option value="INTERN">Intern</option>
+                        <option value="GUEST_LECTURER">Guest Lecturer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Work Location</label>
+                    <input type="text" name="work_location" id="edit-location" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="is_active" id="edit-status" class="form-control">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bank Details -->
+            <h4 class="col-span-2"
+                style="font-size: 0.9rem; font-weight: 700; color: var(--text-main); margin-top: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                Bank & Statutory Details</h4>
+
+            <div class="grid-2">
+                <input type="hidden" id="edit-bank-id"> <!-- Hidden Field for Bank ID -->
+                <div class="form-group">
+                    <label class="form-label">Bank Name</label>
+                    <input type="text" id="edit-bank-name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" id="edit-account-number" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">IFSC Code</label>
+                    <input type="text" id="edit-ifsc" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Account Holder Name</label>
+                    <input type="text" id="edit-holder-name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PAN Number</label>
+                    <input type="text" id="edit-pan" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PF Account Number</label>
+                    <input type="text" id="edit-pf" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">UAN</label>
+                    <input type="text" id="edit-uan" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ESI Number</label>
+                    <input type="text" id="edit-esi" class="form-control">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                    onclick="document.getElementById('edit-profile-modal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const empId = window.location.pathname.split('/').filter(Boolean).pop(); // Get ID from URL
+    let currentEmployeeData = {}; // Store for editing
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadEmployeeDetails();
+    });
+
+    async function loadEmployeeDetails() {
+        try {
+            const res = await fetch(`/api/employees/${empId}/`);
+            if (!res.ok) throw new Error("Failed");
+            const data = await res.json();
+            currentEmployeeData = data; // Store
+
+            // Header
+            document.getElementById('emp-name').innerText = `${data.first_name} ${data.last_name}`;
+            document.getElementById('emp-designation').innerText = data.designation_name || data.designation || 'No Designation';
+            document.getElementById('emp-dept').innerText = data.department_name || 'No Dept';
+            document.getElementById('emp-code').innerText = data.employee_code;
+            document.getElementById('emp-status').innerText = data.is_active ? 'Active' : 'Inactive';
+            document.getElementById('emp-status').className = `badge ${data.is_active ? 'badge-success' : 'badge-danger'}`;
+            const fInitial = data.first_name ? data.first_name.charAt(0) : '';
+            const lInitial = data.last_name ? data.last_name.charAt(0) : '';
+            document.getElementById('profile-initials').innerText = (fInitial + lInitial).toUpperCase() || '--';
+
+            // Profile Photo
+            const photoEl = document.getElementById('profile-photo');
+            const initialsEl = document.getElementById('profile-initials');
+            const removeBtn = document.getElementById('btn-remove-photo');
+
+            if (data.profile_photo) {
+                photoEl.src = data.profile_photo;
+                photoEl.style.display = 'block';
+                initialsEl.style.display = 'none';
+                if (removeBtn) removeBtn.style.display = 'flex';
+            } else {
+                photoEl.style.display = 'none';
+                initialsEl.style.display = 'block';
+                if (removeBtn) removeBtn.style.display = 'none';
+            }
+
+            // Personal
+            document.getElementById('field-email').innerText = data.email;
+            document.getElementById('field-phone').innerText = data.phone;
+            document.getElementById('field-dob').innerText = data.date_of_birth || '--';
+            document.getElementById('field-gender').innerText = data.gender || '--';
+            document.getElementById('field-blood').innerText = data.blood_group || '--';
+            document.getElementById('field-address').innerText = data.address || '--';
+            document.getElementById('field-emg-name').innerText = data.emergency_contact_name || '--';
+            document.getElementById('field-emg-phone').innerText = data.emergency_contact_phone || '--';
+
+            // Employment
+            document.getElementById('field-doj').innerText = data.date_of_joining;
+            document.getElementById('field-location').innerText = data.work_location;
+            document.getElementById('field-type').innerText = data.employment_type;
+            document.getElementById('field-manager').innerText = data.reporting_manager_name || 'None';
+
+            // Bank
+            if (data.bank_details) {
+                document.getElementById('field-bank').innerText = data.bank_details.bank_name || '--';
+                document.getElementById('field-account').innerText = data.bank_details.account_number || '--';
+                document.getElementById('field-pan').innerText = data.bank_details.pan_number || '--';
+                document.getElementById('field-pf').innerText = data.bank_details.pf_account_number || '--';
+            }
+
+            // Documents
+            renderDocs(data.documents);
+
+            // Salary
+            if (data.ctc) document.getElementById('display-ctc').innerText = parseFloat(data.ctc).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            loadSalaryStructure();
+
+        } catch (e) {
+            console.error(e);
+            alert("Error loading employee data");
+        }
+    }
+
+    // --- Added Edit Functionality ---
+    // --- Added Edit Functionality ---
+    function openEditModal() {
+        const d = currentEmployeeData;
+        if (!d.id) return;
+
+        // Personal
+        document.getElementById('edit-first-name').value = d.first_name;
+        document.getElementById('edit-last-name').value = d.last_name;
+        document.getElementById('edit-email').value = d.email;
+        document.getElementById('edit-phone').value = d.phone;
+        document.getElementById('edit-dob').value = d.date_of_birth;
+        document.getElementById('edit-gender').value = d.gender;
+        document.getElementById('edit-address').value = d.address || '';
+        document.getElementById('edit-emg-name').value = d.emergency_contact_name || '';
+        document.getElementById('edit-emg-phone').value = d.emergency_contact_phone || '';
+
+        // Employment
+        document.getElementById('edit-doj').value = d.date_of_joining;
+        document.getElementById('edit-emp-type').value = d.employment_type;
+        document.getElementById('edit-location').value = d.work_location || '';
+        document.getElementById('edit-status').value = d.is_active ? 'true' : 'false';
+
+        // Bank - Check if exists
+        const b = d.bank_details || {};
+        document.getElementById('edit-bank-id').value = b.id || '';
+        document.getElementById('edit-bank-name').value = b.bank_name || '';
+        document.getElementById('edit-account-number').value = b.account_number || '';
+        document.getElementById('edit-ifsc').value = b.ifsc_code || '';
+        document.getElementById('edit-holder-name').value = b.account_holder_name || '';
+
+        // Statutory (mapped from bank details model in this system)
+        document.getElementById('edit-pan').value = b.pan_number || '';
+        document.getElementById('edit-pf').value = b.pf_account_number || '';
+        document.getElementById('edit-uan').value = b.uan_number || '';
+        document.getElementById('edit-esi').value = b.esi_number || '';
+
+        document.getElementById('edit-profile-modal').classList.remove('hidden');
+    }
+
+    async function updateEmployee(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const empData = Object.fromEntries(formData.entries());
+
+        // Employee Data Sanitization
+        empData.is_active = empData.is_active === 'true';
+        if (empData.date_of_birth === '') empData.date_of_birth = null;
+        if (empData.gender === '') empData.gender = null;
+
+        // Bank Data Preparation
+        const bankData = {
+            bank_name: document.getElementById('edit-bank-name').value,
+            account_number: document.getElementById('edit-account-number').value,
+            ifsc_code: document.getElementById('edit-ifsc').value,
+            account_holder_name: document.getElementById('edit-holder-name').value,
+            pan_number: document.getElementById('edit-pan').value,
+            pf_account_number: document.getElementById('edit-pf').value,
+            uan_number: document.getElementById('edit-uan').value,
+            esi_number: document.getElementById('edit-esi').value,
+            employee: empId
+        };
+        const bankId = document.getElementById('edit-bank-id').value;
+
+        // Validation Removed as per request
+
+        try {
+            // 1. Update Employee
+            const resEmp = await fetch(`/api/employees/${empId}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(empData)
+            });
+
+            if (!resEmp.ok) {
+                const err = await resEmp.json();
+                throw new Error("Employee Update Failed: " + JSON.stringify(err));
+            }
+
+            // 2. Update/Create Bank Details (Always required now)
+            let url = '/api/bank-details/';
+            let method = 'POST';
+
+            if (bankId) {
+                url = `/api/bank-details/${bankId}/`;
+                method = 'PATCH';
+            }
+
+            const resBank = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(bankData)
+            });
+
+            if (!resBank.ok) {
+                const err = await resBank.json();
+                console.error("Bank Update Failed", err);
+                alert("Employee updated, but Bank Details failed: " + JSON.stringify(err));
+            }
+
+            document.getElementById('edit-profile-modal').classList.add('hidden');
+            loadEmployeeDetails(); // Refresh view
+            alert("Profile Updated Successfully!");
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    }
+    // ----------------------------
+
+    function openSalaryModal() {
+        document.getElementById('salary-modal').classList.remove('hidden');
+        // Pre-fill CTC?
+        const current = document.getElementById('display-ctc').innerText.replace(/,/g, '');
+        if (current && current != '0.00' && !isNaN(current)) {
+            document.getElementById('input-ctc').value = current;
+        }
+    }
+
+    async function loadSalaryStructure() {
+        try {
+            const res = await fetch(`/api/salary-structures/?employee=${empId}`);
+            const data = await res.json();
+            const tbody = document.getElementById('salary-breakdown-body');
+            tbody.innerHTML = '';
+
+            let totalMonth = 0;
+            let totalYear = 0;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center">No structure defined. Click Update.</td></tr>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const name = item.component_name || 'Component';
+                const amt = parseFloat(item.amount);
+                if (amt > 0) {
+                    const annual = amt * 12;
+                    totalMonth += amt;
+                    totalYear += annual;
+
+                    tbody.innerHTML += `
+                       <tr>
+                           <td>${name}</td>
+                           <td style="text-align: right;">${amt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                           <td style="text-align: right;">${annual.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                       </tr>
+                   `;
+                }
+            });
+
+            document.getElementById('total-monthly').innerText = totalMonth.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('total-annual').innerText = totalYear.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+        } catch (e) { console.error(e); }
+    }
+
+    async function updateSalaryStructure(e) {
+        e.preventDefault();
+        const ctc = document.getElementById('input-ctc').value;
+
+        try {
+            const res = await fetch(`/api/salary-structures/calculate-from-ctc/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ employee_id: empId, ctc: ctc })
+            });
+
+            if (res.ok) {
+                document.getElementById('salary-modal').classList.add('hidden');
+                // Update display
+                document.getElementById('display-ctc').innerText = parseFloat(ctc).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                loadSalaryStructure();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + (err.error || 'Unknown error'));
+            }
+        } catch (e) { console.error(e); alert('Failed to update'); }
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(tabId + '-section').classList.remove('hidden');
+
+        // Simple active class toggle based on index or text content matching is robust
+        const indexMap = { 'personal': 0, 'employment': 1, 'documents': 2, 'salary': 3 };
+        document.querySelectorAll('.tab-btn')[indexMap[tabId]].classList.add('active');
+    }
+
+    function renderDocs(docs) {
+        const tbody = document.getElementById('docs-table-body');
+        tbody.innerHTML = '';
+        if (!docs || docs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center">No documents uploaded</td></tr>`;
+            return;
+        }
+        docs.forEach(doc => {
+            const row = `
+                <tr>
+                    <td>${doc.title}</td>
+                    <td><span class="badge badge-neutral">${doc.document_type}</span></td>
+                    <td>${new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                    <td>
+                        <a href="${doc.file}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View</a>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    async function uploadDocument(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        formData.append('employee', empId);
+
+        try {
+            const res = await fetch('/api/employee-documents/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            });
+            if (res.ok) {
+                document.getElementById('upload-document-modal').classList.add('hidden');
+                e.target.reset();
+                loadEmployeeDetails(); // Reload to see new doc
+            } else {
+                alert('Upload failed');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+
+
+    async function removeProfilePhoto() {
+        if (!confirm("Are you sure you want to remove the profile photo?")) return;
+
+        try {
+            const res = await fetch(`/api/employees/${empId}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ profile_photo: null })
+            });
+
+            if (res.ok) {
+                loadEmployeeDetails(); // Refresh UI
+                alert("Profile Photo Removed!");
+            } else {
+                alert("Failed to remove photo");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error removing photo");
+        }
+    }
+
+    async function uploadProfilePhoto(input) {
+        if (!input.files || input.files.length === 0) return;
+
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('profile_photo', file);
+
+        try {
+            const res = await fetch(`/api/employees/${empId}/`, {
+                method: 'PATCH',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                loadEmployeeDetails(); // Refresh
+                alert("Profile Photo Updated!");
+            } else {
+                alert("Failed to upload photo");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error uploading photo");
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

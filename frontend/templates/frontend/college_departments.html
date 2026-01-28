@@ -1,0 +1,200 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Departments{% endblock %}
+
+{% block content_body %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h3 style="margin-bottom: 0.25rem;">Department Management</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Manage organization departments and designations.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/dashboard/college/designations/" class="btn btn-secondary"
+                style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🏷️</span> Manage Designations
+            </a>
+            <button class="btn btn-primary" onclick="openDepartmentModal()">
+                <span>+</span> Add Department
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div
+        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div style="flex: 1;">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search departments..."
+                onkeyup="filterDepartments()">
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table id="departmentsTable">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Department Name</th>
+                    <th style="width: 40%;">Description</th>
+                    <th style="width: 15%;">Head Count</th>
+                    <th style="width: 20%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="departmentList">
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading
+                        departments...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal (Matching Employee Modal Style) -->
+<div id="departmentModal" class="modal-overlay hidden">
+    <div class="modal-box" style="width: 500px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 id="modalTitle">Add Department</h3>
+            <button onclick="closeDepartmentModal()"
+                style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="departmentForm" onsubmit="saveDepartment(event)">
+                <input type="hidden" id="deptId">
+                <div class="form-group">
+                    <label class="form-label">Department Name</label>
+                    <input type="text" id="deptName" class="form-control" required placeholder="e.g. Computer Science">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="deptDesc" class="form-control" rows="3" placeholder="Brief description..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" onclick="closeDepartmentModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allDepartments = [];
+
+    document.addEventListener('DOMContentLoaded', loadDepartments);
+
+    async function loadDepartments() {
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('/api/employees/departments/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            allDepartments = await response.json();
+            renderTable(allDepartments);
+        } catch (e) {
+            console.error("Failed to load departments", e);
+            document.getElementById('departmentList').innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">Error loading data</td></tr>`;
+        }
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('departmentList');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No departments found.</td></tr>`;
+            return;
+        }
+
+        data.forEach(dept => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: 500;">
+                    ${dept.name}
+                </td>
+                <td style="color: var(--text-muted);">${dept.description || '-'}</td>
+                <td>
+                    <span class="badge badge-neutral">
+                        ${dept.employee_count || '0'} Staff
+                    </span>
+                </td>
+                <td style="text-align: right;">
+                    <button onclick='editDepartment(${JSON.stringify(dept)})' class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Edit</button>
+                    <button onclick="deleteDepartment(${dept.id})" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterDepartments() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allDepartments.filter(d =>
+            d.name.toLowerCase().includes(term) ||
+            (d.description && d.description.toLowerCase().includes(term))
+        );
+        renderTable(filtered);
+    }
+
+    function openDepartmentModal() {
+        document.getElementById('modalTitle').innerText = 'Add Department';
+        document.getElementById('departmentForm').reset();
+        document.getElementById('deptId').value = '';
+        document.getElementById('departmentModal').classList.remove('hidden');
+    }
+
+    function closeDepartmentModal() {
+        document.getElementById('departmentModal').classList.add('hidden');
+    }
+
+    window.editDepartment = (dept) => {
+        document.getElementById('modalTitle').innerText = 'Edit Department';
+        document.getElementById('deptId').value = dept.id;
+        document.getElementById('deptName').value = dept.name;
+        document.getElementById('deptDesc').value = dept.description;
+        document.getElementById('departmentModal').classList.remove('hidden');
+    };
+
+    async function saveDepartment(e) {
+        e.preventDefault();
+        const id = document.getElementById('deptId').value;
+        const name = document.getElementById('deptName').value;
+        const description = document.getElementById('deptDesc').value;
+        const token = localStorage.getItem('access_token');
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/employees/departments/${id}/` : '/api/employees/departments/';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, description })
+            });
+
+            if (response.ok) {
+                closeDepartmentModal();
+                loadDepartments();
+            } else {
+                alert('Error saving department');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    window.deleteDepartment = async (id) => {
+        if (!confirm('Are you sure you want to delete this department?')) return;
+        const token = localStorage.getItem('access_token');
+        await fetch(`/api/employees/departments/${id}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadDepartments();
+    };
+</script>
+{% endblock %}

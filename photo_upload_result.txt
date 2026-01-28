@@ -1,0 +1,2 @@
+Response Status: 200
+Success! Photo uploaded to: /media/employee_photos/profile_rniKJ1e.jpg

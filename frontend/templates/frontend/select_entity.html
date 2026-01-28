@@ -1,0 +1,91 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card glass-panel" style="max-width: 800px; width: 90%;">
+        <div class="logo-area">
+            <div class="auth-title">Welcome to UPMS</div>
+            <div class="auth-subtitle">Please select your organization type to continue</div>
+        </div>
+
+        <div class="entity-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+            <!-- School -->
+            <div class="entity-card glass-panel" onclick="selectEntity('SCHOOL')"
+                style="padding: 2rem; text-align: center; cursor: pointer; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="icon-wrapper" style="margin-bottom: 1.5rem; color: #60a5fa;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 22v-4a2 2 0 1 0-4 0v4" />
+                        <path d="m18 10 4 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8l4-2" />
+                        <path d="M18 5v17" />
+                        <path d="m4 6 8-4 8 4" />
+                        <path d="M6 5v17" />
+                        <circle cx="12" cy="9" r="2" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0; color: var(--text-light); font-weight: 600;">School</h3>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">For Schools & Educational
+                    Institutions</p>
+            </div>
+
+            <!-- College -->
+            <div class="entity-card glass-panel" onclick="selectEntity('COLLEGE')"
+                style="padding: 2rem; text-align: center; cursor: pointer; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="icon-wrapper" style="margin-bottom: 1.5rem; color: #a78bfa;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                        <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0; color: var(--text-light); font-weight: 600;">College</h3>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">For Universities & Higher
+                    Education</p>
+            </div>
+
+            <!-- Company -->
+            <div class="entity-card glass-panel" onclick="selectEntity('COMPANY')"
+                style="padding: 2rem; text-align: center; cursor: pointer; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="icon-wrapper" style="margin-bottom: 1.5rem; color: #34d399;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+                        <path d="M9 22v-4h6v4" />
+                        <path d="M8 6h.01" />
+                        <path d="M16 6h.01" />
+                        <path d="M12 6h.01" />
+                        <path d="M12 10h.01" />
+                        <path d="M12 14h.01" />
+                        <path d="M16 10h.01" />
+                        <path d="M16 14h.01" />
+                        <path d="M8 10h.01" />
+                        <path d="M8 14h.01" />
+                    </svg>
+                </div>
+                <h3 style="margin: 0; color: var(--text-light); font-weight: 600;">Company</h3>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.5rem;">For Corporate and Business
+                    entities</p>
+            </div>
+        </div>
+
+        <div id="selectError" class="error-msg hidden" style="margin-top: 2rem;"></div>
+    </div>
+</div>
+
+<style>
+    .entity-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--primary);
+    }
+</style>
+
+<script src="/static/frontend/js/app.js"></script>
+<script>
+    // Ensure auth
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/';
+    }
+</script>
+{% endblock %}

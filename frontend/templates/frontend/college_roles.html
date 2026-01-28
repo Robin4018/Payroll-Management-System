@@ -1,0 +1,122 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}User Roles{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Role Management</h3>
+            <button onclick="openRoleModal()" class="btn-primary">+ Create Role</button>
+        </header>
+
+        <section class="content-section">
+            <div class="glass-panel" style="padding: 0;">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Role Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolesList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="margin-top: 2rem;">
+                <h4>Role Assignment</h4>
+                <p style="color: #94a3b8; font-size: 0.9em;">To assign roles to users, visit the <a
+                        href="/dashboard/college/employees/" style="color: #6366f1;">Employee Directory</a> and edit an
+                    employee's profile.</p>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Role Modal -->
+<div id="roleModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass" style="width: 400px;">
+        <div class="modal-header">
+            <h3>Create Role</h3>
+            <button onclick="closeRoleModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Role Name</label>
+                <input type="text" id="rName" class="form-control" placeholder="e.g. HR Manager">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitRole()" class="btn-primary">Save Role</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadRoles);
+
+    async function loadRoles() {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('/api/roles/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const roles = await res.json();
+        const tbody = document.getElementById('rolesList');
+        tbody.innerHTML = '';
+
+        roles.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${r.id}</td>
+                <td style="font-weight: 500;">${r.name}</td>
+                <td>
+                    <button class="btn-sm btn-danger" onclick="deleteRole(${r.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitRole() {
+        const name = document.getElementById('rName').value;
+        if (!name) return;
+
+        const res = await fetch('/api/roles/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({ name: name })
+        });
+
+        if (res.ok) {
+            closeRoleModal();
+            loadRoles();
+        } else {
+            alert('Failed to save role');
+        }
+    }
+
+    async function deleteRole(id) {
+        if (!confirm("Delete this role?")) return;
+        await fetch(`/api/roles/${id}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        });
+        loadRoles();
+    }
+
+    function openRoleModal() {
+        document.getElementById('rName').value = '';
+        document.getElementById('roleModal').style.display = 'flex';
+    }
+    function closeRoleModal() {
+        document.getElementById('roleModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

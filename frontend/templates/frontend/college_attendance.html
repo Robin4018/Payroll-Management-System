@@ -1,0 +1,430 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block header_title %}Attendance & Leave Management{% endblock %}
+
+{% block content_body %}
+<div class="card">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('daily')">Daily Attendance</button>
+        <button class="tab-btn" onclick="showTab('leaves')">Leave Requests</button>
+    </div>
+
+    <!-- Daily Attendance Tab -->
+    <div id="daily-tab" class="tab-content">
+        <div
+            style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
+            <div>
+                <label class="form-label" style="margin-bottom: 0;">Select Date</label>
+                <input type="date" id="attendanceDate" class="form-control" onchange="loadAttendance()">
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 0.5rem;">
+                <button id="btnMarkPresent" class="btn btn-secondary" onclick="markAll('PRESENT')">Mark All
+                    Present</button>
+                <button id="btnMarkHoliday" class="btn btn-warning" onclick="markAll('HOLIDAY')">Mark Holiday</button>
+                <button id="btnSave" class="btn btn-primary" onclick="saveAttendance()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="margin-right: 6px;">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Attendance
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee Code</th>
+                        <th>Name</th>
+                        <th>Dept</th>
+                        <th>Status</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    {% for emp in employees %}
+                    <tr id="row_{{ emp.id }}">
+                        <td>{{ emp.employee_code|default:"N/A" }}</td>
+                        <td>{{ emp.first_name }} {{ emp.last_name }}</td>
+                        <td>{{ emp.department.name|default:"-" }}</td>
+                        <td>
+                            <select id="status_{{ emp.id }}" class="form-control" style="width: 120px;"
+                                onchange="updateRowColor(this)">
+                                <option value="PRESENT" selected>Present</option>
+                                <option value="ABSENT">Absent</option>
+                                <option value="HALF_DAY">Half Day</option>
+                                <option value="LEAVE">On Leave</option>
+                                <option value="HOLIDAY">Holiday</option>
+                            </select>
+                        </td>
+                        <td><input type="time" id="in_{{ emp.id }}" class="form-control" value="09:00"></td>
+                        <td><input type="time" id="out_{{ emp.id }}" class="form-control" value="17:00"></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;">No employees found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ... Leaves Tab ... -->
+
+    <script>
+        console.log("Attendance Script Loaded v1.5");
+        // Initialize employees from Server Context for JS logic
+        const employees = [
+            {% for emp in employees %}
+        {
+            id: { { emp.id } },
+            employee_code: "{{ emp.employee_code|default:'' }}",
+                first_name: "{{ emp.first_name }}",
+                    last_name: "{{ emp.last_name }}"
+        },
+        {% endfor %}
+        ];
+    </script>
+
+    <!-- Leave Requests Tab -->
+    <div id="leaves-tab" class="tab-content hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>Pending Requests</h3>
+            <button class="btn btn-secondary" onclick="loadLeaves()">Refresh</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Type</th>
+                        <th>Dates</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leaveTableBody">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Tabs ---
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabName + '-tab').classList.remove('hidden');
+        const tabs = document.querySelectorAll('.tab-btn');
+        if (tabName === 'daily') tabs[0].classList.add('active');
+        else tabs[1].classList.add('active');
+    }
+
+    // --- State ---
+    let currentAttendance = {}; // map empId -> status object
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Restore date from local storage or default to today
+        const savedDate = localStorage.getItem('attendance_date');
+        const dateInput = document.getElementById('attendanceDate');
+
+        if (savedDate) {
+            dateInput.value = savedDate;
+        } else {
+            dateInput.valueAsDate = new Date();
+        }
+
+        loadAttendance();
+    });
+
+    // Hook into loadAttendance to save date
+    const originalLoad = loadAttendance;
+    window.loadAttendance = async function () {
+        const date = document.getElementById('attendanceDate').value;
+        if (date) localStorage.setItem('attendance_date', date);
+        await originalLoad();
+    }
+
+    async function loadAttendance() {
+        const date = document.getElementById('attendanceDate').value;
+        if (!date) return;
+
+        // Reset Buttons
+        document.getElementById('btnMarkPresent').classList.remove('active');
+        document.getElementById('btnMarkHoliday').classList.remove('active');
+
+        // Reset UI to defaults (Present)
+        document.querySelectorAll('select[id^="status_"]').forEach(s => { s.value = 'PRESENT'; updateRowColor(s); });
+        document.querySelectorAll('input[id^="in_"]').forEach(i => i.value = '09:00');
+        document.querySelectorAll('input[id^="out_"]').forEach(i => i.value = '17:00');
+
+        currentAttendance = {};
+
+        try {
+            const res = await fetch(`/api/attendance/?date=${date}&_=${new Date().getTime()}`);
+            let existing = [];
+
+            if (res.ok) {
+                existing = await res.json();
+                if (!Array.isArray(existing)) existing = [];
+            }
+
+            // Auto-detect Sunday
+            const dateObj = new Date(date);
+            if (dateObj.getDay() === 0) { // 0 = Sunday
+                // Only auto-mark if no previous records exist for this date
+                if (existing.length === 0) {
+                    console.log("Sunday detected, marking all as Holiday");
+                    markAll('HOLIDAY');
+                    return; // markAll handles updates
+                }
+            }
+
+            // Check counts to set button active state
+            let holidayCount = 0;
+            let presentCount = 0;
+            let total = existing.length;
+
+            existing.forEach((a, index) => {
+                currentAttendance[a.employee] = a;
+                // Update UI
+                const statusSelect = document.getElementById(`status_${a.employee}`);
+                const inInput = document.getElementById(`in_${a.employee}`);
+                const outInput = document.getElementById(`out_${a.employee}`);
+
+                if (statusSelect) {
+                    statusSelect.value = a.status;
+                    updateRowColor(statusSelect);
+                    if (a.status === 'HOLIDAY') holidayCount++;
+                    if (a.status === 'PRESENT') presentCount++;
+                }
+
+                // Add staggered animation
+                const row = document.getElementById(`row_${a.employee}`);
+                if (row) {
+                    row.classList.remove('row-animate');
+                    void row.offsetWidth; // trigger reflow
+                    row.style.animationDelay = `${index * 0.03}s`; // 30ms stagger
+                    row.classList.add('row-animate');
+                }
+
+                if (inInput && a.check_in) inInput.value = a.check_in;
+                if (outInput && a.check_out) outInput.value = a.check_out;
+            });
+
+            // Heuristic for active button
+            if (total > 0 && holidayCount === total) {
+                document.getElementById('btnMarkHoliday').classList.add('active');
+            } else if (total > 0 && presentCount === total) {
+                document.getElementById('btnMarkPresent').classList.add('active');
+            }
+
+        } catch (e) { console.log("Error fetching attendance details", e); }
+
+        loadLeaves();
+    }
+
+
+    function updateRowColor(select) {
+        const row = select.closest('tr');
+        if (select.value === 'ABSENT') row.style.backgroundColor = '#fee2e2';
+        else if (select.value === 'LEAVE') row.style.backgroundColor = '#fff7ed';
+        else row.style.backgroundColor = '';
+    }
+
+    function markAll(status) {
+        document.querySelectorAll('select[id^="status_"]').forEach(sel => {
+            sel.value = status;
+            updateRowColor(sel);
+        });
+
+        // Update Button State
+        if (status === 'PRESENT') {
+            document.getElementById('btnMarkPresent').classList.add('active');
+            document.getElementById('btnMarkHoliday').classList.remove('active');
+        } else if (status === 'HOLIDAY') {
+            document.getElementById('btnMarkHoliday').classList.add('active');
+            document.getElementById('btnMarkPresent').classList.remove('active');
+        } else {
+            document.getElementById('btnMarkPresent').classList.remove('active');
+            document.getElementById('btnMarkHoliday').classList.remove('active');
+        }
+    }
+
+    async function saveAttendance() {
+        const date = document.getElementById('attendanceDate').value;
+        const updates = [];
+        const btnSave = document.getElementById('btnSave');
+        const originalContent = btnSave.innerHTML;
+
+        employees.forEach(emp => {
+            const status = document.getElementById(`status_${emp.id}`).value;
+            const checkIn = document.getElementById(`in_${emp.id}`).value;
+            const checkOut = document.getElementById(`out_${emp.id}`).value;
+
+            // Only send actual data
+            updates.push({
+                employee: emp.id,
+                date: date,
+                status: status,
+                check_in: checkIn,
+                check_out: checkOut
+            });
+        });
+
+        if (confirm(`Save attendance for ${updates.length} employees?`)) {
+            // Loading State
+            btnSave.disabled = true;
+            btnSave.innerHTML = `
+                <svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                </svg>
+                Saving...
+            `;
+
+            try {
+                const res = await fetch('/api/attendance/mark_attendance/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(updates)
+                });
+
+                if (res.ok) {
+                    // Success State
+                    btnSave.classList.replace('btn-primary', 'btn-success'); // Assuming btn-success exists or we add it
+                    btnSave.style.backgroundColor = 'var(--success)';
+                    btnSave.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        Saved!
+                    `;
+
+                    showToast('Success', 'Attendance saved successfully', 'success');
+
+                    setTimeout(() => {
+                        btnSave.disabled = false;
+                        btnSave.classList.replace('btn-success', 'btn-primary');
+                        btnSave.style.backgroundColor = '';
+                        btnSave.innerHTML = originalContent;
+                    }, 2000);
+
+                    loadAttendance(); // Reload to refresh data
+                } else {
+                    showToast('Error', 'Failed to save attendance', 'error');
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = originalContent;
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error', 'Network error occurred', 'error');
+                btnSave.disabled = false;
+                btnSave.innerHTML = originalContent;
+            }
+        }
+    }
+
+    // --- Toast Helper ---
+    function showToast(title, message, type = 'success') {
+        let container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 12px; width: 100%;">
+                <div style="color: ${type === 'success' ? 'var(--success)' : 'var(--danger)'}; margin-top: 2px;">
+                    ${type === 'success'
+                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+            }
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-msg">${message}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color: #94a3b8; cursor: pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Auto remove
+        setTimeout(() => {
+            toast.style.animation = 'toastSlideOut 0.3s forwards';
+            toast.addEventListener('animationend', () => toast.remove());
+        }, 3000);
+    }
+
+    // --- Leave Requests ---
+    async function loadLeaves() {
+        try {
+            const res = await fetch('/api/leave-requests/');
+            const leaves = await res.json();
+            const tbody = document.getElementById('leaveTableBody');
+            tbody.innerHTML = '';
+
+            leaves.forEach(l => {
+                const row = `
+                    <tr>
+                         <td>${l.employee_name}</td>
+                         <td>${l.leave_type_name}</td>
+                         <td>${l.start_date} to ${l.end_date}</td>
+                         <td>${l.reason}</td>
+                         <td><span class="badge badge-${l.status === 'APPROVED' ? 'success' : l.status === 'REJECTED' ? 'danger' : 'warning'}">${l.status}</span></td>
+                         <td>
+                             ${l.status === 'PENDING' ? `
+                                 <button class="btn btn-sm btn-success" onclick="updateLeave(${l.id}, 'approve')">Approve</button>
+                                 <button class="btn btn-sm btn-danger" onclick="updateLeave(${l.id}, 'reject')">Reject</button>
+                             ` : '-'}
+                         </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    async function updateLeave(id, action) {
+        if (!confirm(`Confirm ${action}?`)) return;
+        const res = await fetch(`/api/leave-requests/${id}/${action}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({})
+        });
+        if (res.ok) loadLeaves();
+        else alert("Action failed");
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Compliance Settings{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Compliance Configuration</h3>
+        </header>
+
+        <section class="content-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('rates-tab')">Statutory Rates (PF/ESI)</button>
+                <button class="tab-btn" onclick="switchTab('slabs-tab')">Income Tax Slabs</button>
+            </div>
+
+            <div id="rates-tab" class="tab-content active">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h4>PF & ESI Configuration</h4>
+                        <!-- <button onclick="addRate()" class="btn-primary">+ Add New Rate</button> -->
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Employee %</th>
+                                <th>Employer %</th>
+                                <th>Wage Limit</th>
+                                <th>Effective Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ratesList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="slabs-tab" class="tab-content">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <h4>Tax Slabs (2023-2024)</h4>
+                        <div class="actions">
+                            <select id="regimeFilter" class="form-control-sm" onchange="loadSlabs()">
+                                <option value="OLD">Old Regime</option>
+                                <option value="NEW">New Regime</option>
+                            </select>
+                            <button onclick="openSlabModal()" class="btn-primary">+ Add Slab</button>
+                        </div>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Range</th>
+                                <th>Tax Rate %</th>
+                                <th>Cess %</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slabsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Slab Modal -->
+<div id="slabModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Add/Edit Tax Slab</h3>
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Regime</label>
+                <select id="sRegime" class="form-control">
+                    <option value="OLD">Old Regime</option>
+                    <option value="NEW">New Regime</option>
+                </select>
+            </div>
+            <div class="form-group row">
+                <div class="col">
+                    <label>Min Income</label>
+                    <input type="number" id="sMin" class="form-control" placeholder="0">
+                </div>
+                <div class="col">
+                    <label>Max Income (Empty for infinity)</label>
+                    <input type="number" id="sMax" class="form-control" placeholder="e.g. 500000">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tax Rate (%)</label>
+                <input type="number" id="sRate" class="form-control" placeholder="5.00">
+            </div>
+            <div class="form-group">
+                <label>Financial Year</label>
+                <input type="text" id="sFY" class="form-control" value="2023-2024">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitSlab()" class="btn-primary">Save Slab</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRates();
+        loadSlabs();
+    });
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    async function loadRates() {
+        const res = await fetch('/api/compliance/rates/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const rates = await res.json();
+        const tbody = document.getElementById('ratesList');
+        tbody.innerHTML = '';
+        rates.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${r.type}</td>
+                <td>${r.employee_contribution_percent}%</td>
+                <td>${r.employer_contribution_percent}%</td>
+                <td>${r.wage_limit || '-'}</td>
+                <td>${r.effective_from}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function loadSlabs() {
+        const regime = document.getElementById('regimeFilter').value;
+        const res = await fetch('/api/compliance/tax-slabs/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const allSlabs = await res.json();
+        const filtered = allSlabs.filter(s => s.regime === regime);
+
+        filtered.sort((a, b) => parseFloat(a.min_income) - parseFloat(b.min_income));
+
+        const tbody = document.getElementById('slabsList');
+        tbody.innerHTML = '';
+        filtered.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${parseFloat(s.min_income).toLocaleString()} - ${s.max_income ? parseFloat(s.max_income).toLocaleString() : 'Above'}</td>
+                <td>${s.tax_rate}%</td>
+                <td>${s.cess_percent}%</td>
+                <td>
+                    <button class="btn-sm btn-danger" onclick="deleteSlab(${s.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitSlab() {
+        const data = {
+            regime: document.getElementById('sRegime').value,
+            min_income: document.getElementById('sMin').value,
+            max_income: document.getElementById('sMax').value || null,
+            tax_rate: document.getElementById('sRate').value,
+            financial_year: document.getElementById('sFY').value,
+            cess_percent: 4.00
+        };
+
+        const res = await fetch('/api/compliance/tax-slabs/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            closeModal();
+            loadSlabs();
+        } else {
+            alert('Failed to save slab');
+        }
+    }
+
+    async function deleteSlab(id) {
+        if (!confirm("Delete this slab?")) return;
+        await fetch(`/api/compliance/tax-slabs/${id}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        loadSlabs();
+    }
+
+    function openSlabModal() {
+        document.getElementById('slabModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('slabModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .form-group.row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .col {
+        flex: 1;
+    }
+</style>
+{% endblock %}

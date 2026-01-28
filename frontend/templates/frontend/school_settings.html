@@ -1,0 +1,24 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card glass-panel" style="max-width: 1200px; width: 95%; min-height: 80vh;">
+        <div class="header-area"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div>
+                <h2 style="margin: 0;">Settings</h2>
+                <p style="color: var(--text-dim);">System configuration</p>
+            </div>
+            <a href="/dashboard/school/" class="btn-secondary">Back to Modules</a>
+        </div>
+
+        <div class="content-area">
+            <!-- Placeholder for Settings Content -->
+            <div class="glass-panel" style="padding: 2rem; text-align: center;">
+                <h3>General Settings</h3>
+                <p>System settings and configuration options will appear here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

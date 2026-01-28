@@ -1,0 +1,96 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar glass-panel">
+        <div class="brand">
+            <h2>UPMS</h2>
+        </div>
+        <nav>
+            <a href="#" class="active" onclick="showSection('overview')">Overview</a>
+            <a href="#" onclick="showSection('employees')">Employees</a>
+            <a href="#" onclick="showSection('payroll')">Payroll</a>
+            <a href="#" onclick="logout()" class="logout-btn">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Welcome, <span id="userDisplay">Admin</span></h3>
+            <div class="date-display" id="dateDisplay"></div>
+        </header>
+
+        <section id="overview" class="content-section">
+            <div class="stats-grid">
+                <div class="stat-card glass-panel">
+                    <h4>Total Employees</h4>
+                    <h2 id="totalEmployees">-</h2>
+                </div>
+                <div class="stat-card glass-panel">
+                    <h4>Last Payroll</h4>
+                    <h2 id="lastPayrollDate">-</h2>
+                </div>
+            </div>
+        </section>
+
+        <section id="employees" class="content-section hidden">
+            <div class="section-header">
+                <h2>Employees</h2>
+                <button class="btn-secondary">Add Employee</button>
+            </div>
+            <div class="table-container glass-panel">
+                <table id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Designation</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="payroll" class="content-section hidden">
+            <div class="section-header">
+                <h2>Payroll Management</h2>
+            </div>
+
+            <!-- Generate Section -->
+            <div class="action-panel glass-panel" style="margin-bottom: 2rem;">
+                <h3>Run Payroll</h3>
+                <div class="run-form">
+                    <select id="tenantSelect">
+                        <option value="1">Tech Corp (Default)</option>
+                    </select>
+                    <input type="date" id="payrollMonth">
+                    <button onclick="runPayroll()" class="btn-primary">Generate Payslips</button>
+                    <button onclick="exportExcel()" class="btn-secondary"
+                        style="margin-left: 10px; background: #10b981;">Export Excel</button>
+                </div>
+                <div id="payrollResult"></div>
+            </div>
+
+            <!-- History Section -->
+            <div class="glass-panel" style="padding: 1rem;">
+                <h3>Payroll History</h3>
+                <table id="payrollTable">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Month</th>
+                            <th>Net Pay</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

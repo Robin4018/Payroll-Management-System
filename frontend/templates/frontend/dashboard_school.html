@@ -1,0 +1,242 @@
+{% extends 'frontend/base.html' %}
+
+{% block content %}
+<!-- Overlay to allow scrolling on this specific page -->
+<style>
+    body {
+        overflow-y: auto !important;
+        /* Force scroll */
+        height: auto !important;
+    }
+
+    .auth-container {
+        min-height: 100vh;
+        height: auto;
+        padding: 2rem 1rem;
+        align-items: flex-start;
+        /* Align to top to allow scroll */
+        background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+    }
+</style>
+
+<div class="auth-container">
+    <div class="dashboard-hub" style="max-width: 900px; width: 95%; margin: 0 auto;">
+
+        <!-- Header Section -->
+        <div class="header-section glass-panel"
+            style="padding: 2rem; text-align: center; margin-bottom: 2rem; border-radius: 16px; position: relative; overflow: hidden;">
+            <div class="glow-effect"
+                style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%); pointer-events: none;">
+            </div>
+
+            <div style="position: relative; z-index: 1;">
+                <h1
+                    style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    School Payroll Management</h1>
+                <p style="color: var(--text-dim); font-size: 1rem; max-width: 500px; margin: 0 auto;">Centralized
+                    control for all your educational institution's payroll and HR needs.</p>
+            </div>
+        </div>
+
+        <!-- Modules Grid -->
+        <div class="modules-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+
+            <!-- Employee Management -->
+            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/employees/'">
+                <div class="card-content">
+                    <div class="icon-box" style="background: rgba(96, 165, 250, 0.1); color: #60a5fa;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="text-content">
+                        <h3>Employees</h3>
+                        <p>Manage staff profiles & contracts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payroll Processing -->
+            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/payroll/'">
+                <div class="card-content">
+                    <div class="icon-box" style="background: rgba(52, 211, 153, 0.1); color: #34d399;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="text-content">
+                        <h3>Payroll</h3>
+                        <p>Process salaries & payslips.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Structures -->
+            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/structure/'">
+                <div class="card-content">
+                    <div class="icon-box" style="background: rgba(167, 139, 250, 0.1); color: #a78bfa;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                    </div>
+                    <div class="text-content">
+                        <h3>Structures</h3>
+                        <p>Allowances & deductions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports -->
+            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/reports/'">
+                <div class="card-content">
+                    <div class="icon-box" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="text-content">
+                        <h3>Reports</h3>
+                        <p>Financial analytics & data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/settings/'">
+                <div class="card-content">
+                    <div class="icon-box" style="background: rgba(248, 113, 113, 0.1); color: #f87171;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="text-content">
+                        <h3>Settings</h3>
+                        <p>System configuration.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Back Link -->
+        <div style="margin-top: 3rem; text-align: center;">
+            <a href="/select-entity/" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Switch Organization</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .glass-panel {
+        background: rgba(17, 24, 39, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .module-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .module-card:hover {
+        transform: translateY(-4px);
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .module-card:hover .icon-box {
+        transform: scale(1.05);
+        background: rgba(99, 102, 241, 0.2);
+    }
+
+    .card-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        height: 100%;
+    }
+
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .text-content h3 {
+        color: #f8fafc;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        margin-top: 0;
+    }
+
+    .text-content p {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #94a3b8;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .back-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f8fafc;
+        transform: translateY(-1px);
+    }
+</style>
+
+<script src="/static/frontend/js/app.js"></script>
+<script>
+    if (!localStorage.getItem('access_token')) {
+        window.location.href = '/';
+    }
+</script>
+{% endblock %}

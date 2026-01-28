@@ -1,0 +1,153 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block header_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Notifications</h3>
+            <div class="header-actions">
+                <button onclick="markAllRead()" class="btn-sm">Mark All Read</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="glass-panel" style="padding: 0;">
+                <div id="notifList" class="notification-list">
+                    <!-- Loaded via JS -->
+                    <div style="padding:2rem; text-align:center; color:#94a3b8;">Loading...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadNotifications);
+
+    async function loadNotifications() {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('/api/notifications/', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+
+        const list = document.getElementById('notifList');
+        list.innerHTML = '';
+
+        if (data.length === 0) {
+            list.innerHTML = '<div style="padding:2rem; text-align:center; color:#94a3b8;">No notifications found.</div>';
+            return;
+        }
+
+        data.forEach(n => {
+            const icon = getIcon(n.notification_type);
+            const statusClass = n.is_read ? 'read' : 'unread';
+
+            list.innerHTML += `
+                <div class="notif-item ${statusClass}">
+                    <div class="notif-icon">${icon}</div>
+                    <div class="notif-content">
+                        <div class="notif-header">
+                            <h5>${n.title}</h5>
+                            <span class="date">${new Date(n.created_at).toLocaleString()}</span>
+                        </div>
+                        <p>${n.message}</p>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function markAllRead() {
+        const token = localStorage.getItem('access_token');
+        await fetch('/api/notifications/mark_all_read/', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadNotifications();
+    }
+
+    function getIcon(type) {
+        switch (type) {
+            case 'PAYROLL': return '💵';
+            case 'LEAVE': return '📅';
+            case 'PAYSLIP': return '📄';
+            default: return '🔔';
+        }
+    }
+</script>
+
+<style>
+    .notification-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .notif-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        gap: 1rem;
+        transition: background 0.2s;
+    }
+
+    .notif-item:last-child {
+        border-bottom: none;
+    }
+
+    .notif-item.unread {
+        background: rgba(99, 102, 241, 0.1);
+        border-left: 4px solid #6366f1;
+    }
+
+    .notif-item.read {
+        opacity: 0.7;
+    }
+
+    .notif-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .notif-icon {
+        font-size: 1.5rem;
+        padding-top: 0.25rem;
+    }
+
+    .notif-content {
+        flex: 1;
+    }
+
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .notif-header h5 {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 1rem;
+    }
+
+    .notif-header .date {
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
+    .notif-content p {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .btn-sm {
+        padding: 0.5rem 1rem;
+        background: #334155;
+        border: none;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

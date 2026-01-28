@@ -1,0 +1,310 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Tax Declarations{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Tax Declarations (IT Proofs)</h3>
+            <div id="employeeActions" style="display:none;">
+                <button onclick="openDeclarationModal()" class="btn-primary">Edit My Declaration</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('my-dec')">My Declaration</button>
+                <button class="tab-btn admin-only" onclick="switchTab('all-dec')" style="display:none;">All Declarations
+                    (Admin)</button>
+            </div>
+
+            <div id="my-dec" class="tab-content active">
+                <div class="glass-panel">
+                    <div id="myDeclarationView">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="all-dec" class="tab-content">
+                <div class="glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Year</th>
+                                <th>Regime</th>
+                                <th>Declared Total</th>
+                                <th>Verified Total</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allDeclarationsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Declaration Modal -->
+<div id="decModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Submit Investment Declaration (FY 2023-24)</h3>
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Tax Regime</label>
+                <select id="dRegime" class="form-control">
+                    <option value="OLD">Old Regime</option>
+                    <option value="NEW">New Regime</option>
+                </select>
+                <small>Note: New Regime has lower rates but fewer exemptions.</small>
+            </div>
+
+            <div id="deductionFields">
+                <div class="form-group">
+                    <label>Section 80C (LIC, PPF, ELSS) - Max 1.5L</label>
+                    <input type="number" id="d80c" class="form-control" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Section 80D (Medical Insurance)</label>
+                    <input type="number" id="d80d" class="form-control" value="0">
+                </div>
+                <div class="form-group">
+                    <label>HRA (Rent Paid Annually)</label>
+                    <input type="number" id="dHra" class="form-control" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Other Deductions</label>
+                    <input type="number" id="dOther" class="form-control" value="0">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitDeclaration()" class="btn-primary">Submit Declaration</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentDeclarationId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadMyDeclaration();
+        // Check if admin (Mock check using localStorage role or similar, real app uses token claims)
+        // For demo, we just load 'all declarations' blindly and let backend filter return empty if not admin
+        // But to show UI tab:
+        // document.querySelector('.admin-only').style.display = 'block'; 
+        // We will enable it for testing.
+        document.querySelector('.admin-only').style.display = 'inline-block';
+        loadAllDeclarations();
+    });
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    async function loadMyDeclaration() {
+        const res = await fetch('/api/compliance/declarations/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const list = await res.json();
+        // Assuming list contains my declarations. Pick latest or current FY.
+        // Simplified: Pick first
+        const myDec = list[0];
+
+        const container = document.getElementById('myDeclarationView');
+        const actionBtn = document.getElementById('employeeActions');
+
+        if (myDec) {
+            currentDeclarationId = myDec.id;
+            container.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Financial Year</label>
+                        <span>${myDec.financial_year}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Regime</label>
+                        <span class="badge ${myDec.regime === 'NEW' ? 'active' : 'pending'}">${myDec.regime} Regime</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <span class="badge ${myDec.status.toLowerCase()}">${myDec.status}</span>
+                    </div>
+                </div>
+                <hr>
+                <h4>Declared Investments</h4>
+                <ul>
+                    <li><strong>80C:</strong> ₹ ${myDec.section_80c}</li>
+                    <li><strong>80D:</strong> ₹ ${myDec.section_80d}</li>
+                    <li><strong>HRA Rent:</strong> ₹ ${myDec.hra_rent_paid}</li>
+                    <li><strong>Other:</strong> ₹ ${myDec.other_deductions}</li>
+                </ul>
+                <p><strong>Total Declared:</strong> ₹ ${parseFloat(myDec.section_80c) + parseFloat(myDec.section_80d) + parseFloat(myDec.hra_rent_paid) + parseFloat(myDec.other_deductions)}</p>
+                
+                ${myDec.verified_amount > 0 ? `<p class="text-success"><strong>Verified Amount:</strong> ₹ ${myDec.verified_amount}</p>` : ''}
+            `;
+
+            if (myDec.status !== 'LOCKED') {
+                actionBtn.style.display = 'block';
+                // Pre-fill modal
+                document.getElementById('dRegime').value = myDec.regime;
+                document.getElementById('d80c').value = myDec.section_80c;
+                document.getElementById('d80d').value = myDec.section_80d;
+                document.getElementById('dHra').value = myDec.hra_rent_paid;
+                document.getElementById('dOther').value = myDec.other_deductions;
+            } else {
+                actionBtn.style.display = 'none';
+                container.innerHTML += `<p class="alert alert-warning">Declaration is LOCKED. Cannot edit.</p>`;
+            }
+
+        } else {
+            container.innerHTML = `<p>No declaration submitted for current financial year.</p>`;
+            actionBtn.style.display = 'block';
+            actionBtn.querySelector('button').innerText = 'Submit New Declaration';
+        }
+    }
+
+    async function loadAllDeclarations() {
+        // In real app, this endpoint would differ or return all for Admin
+        // Re-using same endpoint might just return mine if not superuser.
+        // Assuming backend handles "Admin sees all" for verified endpoint testing.
+        const res = await fetch('/api/compliance/declarations/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const list = await res.json();
+        const tbody = document.getElementById('allDeclarationsList');
+        tbody.innerHTML = '';
+
+        list.forEach(d => {
+            const total = parseFloat(d.section_80c) + parseFloat(d.section_80d) + parseFloat(d.hra_rent_paid);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${d.employee_name || d.employee}</td>
+                <td>${d.financial_year}</td>
+                <td>${d.regime}</td>
+                <td>${total}</td>
+                <td>${d.verified_amount}</td>
+                <td>${d.status}</td>
+                <td>
+                    ${d.status !== 'LOCKED' ? `
+                    <button class="btn-sm btn-primary" onclick="verifyDec(${d.id}, ${total})">Verify</button>
+                    <button class="btn-sm btn-warning" onclick="lockDec(${d.id})">Lock</button>
+                    ` : 'Locked'}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitDeclaration() {
+        const data = {
+            financial_year: "2023-2024", // Hardcoded for demo
+            regime: document.getElementById('dRegime').value,
+            section_80c: document.getElementById('d80c').value,
+            section_80d: document.getElementById('d80d').value,
+            hra_rent_paid: document.getElementById('dHra').value,
+            other_deductions: document.getElementById('dOther').value,
+            employee: 1 // TODO: Dynamic
+        };
+
+        let method = 'POST';
+        let url = '/api/compliance/declarations/';
+
+        // If updating (we need to know ID, but for now assuming POST creates/fails or we use ID if known)
+        if (currentDeclarationId) {
+            method = 'PATCH';
+            url = `/api/compliance/declarations/${currentDeclarationId}/`;
+        }
+
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            closeModal();
+            loadMyDeclaration();
+            loadAllDeclarations();
+            alert('Submitted Successfully');
+        } else {
+            alert('Failed to submit');
+        }
+    }
+
+    async function verifyDec(id, amount) {
+        const verified = prompt("Enter verified amount:", amount);
+        if (verified === null) return;
+
+        await fetch(`/api/compliance/declarations/${id}/verify/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ verified_amount: verified })
+        });
+        loadAllDeclarations();
+    }
+
+    async function lockDec(id) {
+        if (!confirm("Lock this declaration?")) return;
+        await fetch(`/api/compliance/declarations/${id}/lock/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        loadAllDeclarations();
+    }
+
+    function openDeclarationModal() {
+        document.getElementById('decModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('decModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .info-grid {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+
+    .info-item label {
+        display: block;
+        font-size: 0.9em;
+        color: #888;
+    }
+
+    .info-item span {
+        font-weight: 500;
+        font-size: 1.1em;
+    }
+
+    .text-success {
+        color: #10b981;
+    }
+
+    .alert {
+        padding: 10px;
+        border-radius: 4px;
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+</style>
+{% endblock %}

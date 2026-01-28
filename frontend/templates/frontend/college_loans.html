@@ -1,0 +1,209 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Loan & Advances{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Loan Management</h3>
+            <div class="header-actions">
+                <button onclick="openRequestModal()" class="btn-primary">+ Request Loan</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('my-loans')">My Loans</button>
+                <button class="tab-btn" onclick="switchTab('approvals')">Approvals (Admin)</button>
+            </div>
+
+            <div id="my-loans" class="tab-content active">
+                <div class="employee-grid" id="myLoansList">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <div id="approvals" class="tab-content">
+                <div class="table-container glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Amount</th>
+                                <th>Tenure</th>
+                                <th>EMI</th>
+                                <th>Reason</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalsList">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Request Modal -->
+<div id="loanModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Request Loan</h3>
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="lAmount" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Tenure (Months)</label>
+                <input type="number" id="lTenure" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Reason</label>
+                <textarea id="lReason" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Interest Rate (%)</label>
+                <input type="text" value="0.00" disabled class="form-control" style="opacity:0.7">
+                <small>Company Standard Rate</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitLoan()" class="btn-primary">Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadLoans);
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+        loadLoans(); // Refresh
+    }
+
+    async function loadLoans() {
+        const res = await fetch('/api/payroll/loans/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const loans = await res.json();
+
+        const myContainer = document.getElementById('myLoansList');
+        const adminContainer = document.getElementById('approvalsList');
+
+        myContainer.innerHTML = '';
+        adminContainer.innerHTML = '';
+
+        loans.forEach(loan => {
+            // My Loans Card
+            const card = document.createElement('div');
+            card.className = 'employee-card'; // Reuse style
+            card.innerHTML = `
+                <div class="card-header">
+                    <h4>₹ ${loan.amount}</h4>
+                    <span class="badge ${loan.status.toLowerCase()}">${loan.status}</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>EMI:</strong> ₹ ${loan.monthly_emi}</p>
+                    <p><strong>Balance:</strong> ₹ ${loan.outstanding_balance}</p>
+                    <p><strong>Tenure:</strong> ${loan.tenure_months} Months</p>
+                </div>
+            `;
+            myContainer.appendChild(card);
+
+            // Admin Row (Only Pending)
+            if (loan.status === 'PENDING') {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${loan.employee_name || 'Emp ' + loan.employee}</td>
+                    <td>${loan.amount}</td>
+                    <td>${loan.tenure_months}</td>
+                    <td>${loan.monthly_emi}</td>
+                    <td>${loan.reason || '-'}</td>
+                    <td>
+                        <button onclick="approveLoan(${loan.id})" class="btn-sm btn-primary">Approve</button>
+                    </td>
+                `;
+                adminContainer.appendChild(tr);
+            }
+        });
+    }
+
+    async function submitLoan() {
+        const data = {
+            amount: document.getElementById('lAmount').value,
+            tenure_months: document.getElementById('lTenure').value,
+            reason: document.getElementById('lReason').value,
+            employee: 1 // TODO: Get logged in employee ID dynamically or handle in backend
+        };
+
+        // Note: Backend should set 'employee' from request.user, but serializer might require it.
+        // If ModelViewSet uses `perform_create`, we can inject user.
+        // For now, let's assume backend handles it or we send ID 1.
+
+        const res = await fetch('/api/payroll/loans/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            closeModal();
+            loadLoans();
+            alert('Request Submitted');
+        } else {
+            alert('Failed to submit');
+        }
+    }
+
+    async function approveLoan(id) {
+        if (!confirm("Approve this loan?")) return;
+        const res = await fetch(`/api/payroll/loans/${id}/approve/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) loadLoans();
+    }
+
+    function openRequestModal() {
+        document.getElementById('loanModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('loanModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .badge.pending {
+        background: #f59e0b;
+        color: #fff;
+    }
+
+    .badge.active {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .badge.rejected {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    .badge.closed {
+        background: #6b7280;
+        color: #fff;
+    }
+</style>
+{% endblock %}

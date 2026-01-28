@@ -1,0 +1,245 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Designations{% endblock %}
+
+{% block content_body %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h3 style="margin-bottom: 0.25rem;">Designation Management</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Define roles and hierarchy ranks across departments.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/dashboard/college/departments/" class="btn btn-secondary"
+                style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🏢</span> Manage Departments
+            </a>
+            <button class="btn btn-primary" onclick="openDesignationModal()">
+                <span>+</span> Add Designation
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div
+        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <div style="flex: 1;">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search designations..."
+                onkeyup="filterDesignations()">
+        </div>
+        <select id="filterDept" class="form-control" style="width: 250px;" onchange="filterDesignations()">
+            <option value="">All Departments</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table id="designationsTable">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Title</th>
+                    <th style="width: 50%;">Department</th>
+                    <th style="width: 20%; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="designationList">
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading
+                        designations...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="designationModal" class="modal-overlay hidden">
+    <div class="modal-box" style="width: 500px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
+            <h3 id="modalTitle">Add Designation</h3>
+            <button onclick="closeDesignationModal()"
+                style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="designationForm" onsubmit="saveDesignation(event)">
+                <input type="hidden" id="desigId">
+                <div class="form-group">
+                    <label class="form-label">Designation Title</label>
+                    <input type="text" id="desigName" class="form-control" required
+                        placeholder="e.g. Associate Professor">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department</label>
+                    <select id="desigDept" class="form-control">
+                        <option value="">Global (All Departments)</option>
+                    </select>
+                    <small style="color: var(--text-muted); font-size: 0.8rem;">Leave empty for organization-wide
+                        roles.</small>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" onclick="closeDesignationModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allDesignations = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDesignations();
+        loadDepartmentsForSelect();
+    });
+
+    async function loadDesignations() {
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('/api/employees/designations/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            allDesignations = await response.json();
+            renderTable(allDesignations);
+        } catch (e) {
+            document.getElementById('designationList').innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">Error loading data</td></tr>`;
+        }
+    }
+
+    async function loadDepartmentsForSelect() {
+        const token = localStorage.getItem('access_token');
+        try {
+            const response = await fetch('/api/employees/departments/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            // Modal Select
+            const select = document.getElementById('desigDept');
+            select.innerHTML = '<option value="">Global (All Departments)</option>';
+
+            // Filter Select
+            const filter = document.getElementById('filterDept');
+            filter.innerHTML = '<option value="">All Departments</option>';
+
+            data.forEach(dept => {
+                const opt1 = document.createElement('option');
+                opt1.value = dept.id;
+                opt1.textContent = dept.name;
+                select.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = dept.name; // Filter by name typically for frontend filter
+                opt2.textContent = dept.name;
+                filter.appendChild(opt2);
+            });
+        } catch (e) { }
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('designationList');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No designations found.</td></tr>`;
+            return;
+        }
+
+        data.forEach(d => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: 500;">${d.name}</td>
+                <td>
+                    <span class="badge ${d.department_name ? 'badge-primary' : 'badge-neutral'}" style="white-space: nowrap;">
+                        ${d.department_name || 'Global'}
+                    </span>
+                </td>
+
+                <td style="text-align: right;">
+                    <button onclick='editDesignation(${JSON.stringify(d)})' class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Edit</button>
+                    <button onclick="deleteDesignation(${d.id})" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterDesignations() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const dept = document.getElementById('filterDept').value;
+
+        const filtered = allDesignations.filter(d => {
+            const matchesSearch = d.name.toLowerCase().includes(search);
+            // If dept is Global (null) in local data, we check if dept filter is empty or matches 'Global'? 
+            // Usually filtering by specific dept name. 
+            // d.department_name can be null.
+            const matchesDept = dept ? (d.department_name === dept) : true;
+            return matchesSearch && matchesDept;
+        });
+        renderTable(filtered);
+    }
+
+    function openDesignationModal() {
+        document.getElementById('modalTitle').innerText = 'Add Designation';
+        document.getElementById('designationForm').reset();
+        document.getElementById('desigId').value = '';
+        document.getElementById('designationModal').classList.remove('hidden');
+    }
+
+    function closeDesignationModal() {
+        document.getElementById('designationModal').classList.add('hidden');
+    }
+
+    window.editDesignation = (item) => {
+        document.getElementById('modalTitle').innerText = 'Edit Designation';
+        document.getElementById('desigId').value = item.id;
+        document.getElementById('desigName').value = item.name;
+        document.getElementById('desigDept').value = item.department || '';
+
+        document.getElementById('designationModal').classList.remove('hidden');
+    };
+
+    async function saveDesignation(e) {
+        e.preventDefault();
+        const id = document.getElementById('desigId').value;
+        const name = document.getElementById('desigName').value;
+        const department = document.getElementById('desigDept').value || null;
+        const rank = document.getElementById('desigRank').value;
+        const token = localStorage.getItem('access_token');
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `/api/employees/designations/${id}/` : '/api/employees/designations/';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ name, department })
+            });
+
+            if (response.ok) {
+                closeDesignationModal();
+                loadDesignations();
+            } else {
+                const errorData = await response.json();
+                alert('Error saving designation');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    window.deleteDesignation = async (id) => {
+        if (!confirm('Are you sure you want to delete this designation?')) return;
+        const token = localStorage.getItem('access_token');
+        await fetch(`/api/employees/designations/${id}/`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        loadDesignations();
+    };
+</script>
+{% endblock %}

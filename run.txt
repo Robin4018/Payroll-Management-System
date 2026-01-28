@@ -1,0 +1,47 @@
+Create Virtual Environment:
+python -m venv venv
+>> venv\Scripts\activate
+
+Install Django + Required Packages:
+pip install django djangorestframework mysqlclient python-dotenv
+
+runserver:
+venv\Scripts\activate
+python manage.py runserver
+
+celery:
+celery -A backend worker -l info -P eventlet
+
+Add employees here:
+
+http://127.0.0.1:8000/api/employees/
+Click POST and add
+Once created → employee is saved in DB
+
+Create Salary Structure here:
+http://127.0.0.1:8000/api/salary-structures/
+
+You will see:
+The new employee name appears in dropdown
+
+Then you can assign:
+Basic
+HRA
+Allowances
+PF
+Tax
+
+View payroll list here:
+http://127.0.0.1:8000/api/payroll/
+
+Salary Calculation Logic:
+Gross Salary = basic + hra + allowances
+
+Deductions = pf + tax
+
+Net Salary = gross - deductions
+
+admin:
+username - robin
+password - robin 2003
+

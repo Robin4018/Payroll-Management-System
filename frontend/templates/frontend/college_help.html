@@ -1,0 +1,324 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Help & Support{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Support Center</h3>
+            <div class="header-actions">
+                <button onclick="openTicketModal()" class="btn-primary">+ Create Ticket</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('my-open')">My Open Tickets</button>
+                <button class="tab-btn" onclick="switchTab('my-closed')">Resolved</button>
+                <!-- Admin Only Tab (Logic in JS or backend filtered) -->
+                <button class="tab-btn admin-only" onclick="switchTab('admin-queue')" style="display:none;">Admin
+                    Queue</button>
+            </div>
+
+            <div id="ticketsContainer" class="glass-panel" style="padding: 0;">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Subject</th>
+                                <th>Category</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticketList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Ticket Modal -->
+<div id="ticketModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Create Support Ticket</h3>
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" id="tSubject" class="form-control" placeholder="Brief issue summary">
+            </div>
+            <div class="form-group row">
+                <div class="col">
+                    <label>Category</label>
+                    <select id="tCategory" class="form-control">
+                        <option value="PAYROLL">Payroll Issue</option>
+                        <option value="IT">IT Support</option>
+                        <option value="HR">HR Query</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label>Priority</label>
+                    <select id="tPriority" class="form-control">
+                        <option value="LOW">Low</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="tDesc" class="form-control" rows="4" placeholder="Detailed description..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitTicket()" class="btn-primary">Submit Ticket</button>
+        </div>
+    </div>
+</div>
+
+<!-- View/Reply Modal -->
+<div id="viewModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass" style="width: 600px;">
+        <div class="modal-header">
+            <h3 id="vSubject">Ticket #123</h3>
+            <button onclick="closeViewModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="ticket-meta">
+                <span class="badge" id="vStatus">OPEN</span>
+                <span class="badge" id="vPriority">HIGH</span>
+                <span id="vDate" style="color: #94a3b8; font-size: 0.9em;"></span>
+            </div>
+            <p id="vDesc"
+                style="margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 6px;"></p>
+
+            <hr style="border-color: rgba(255,255,255,0.1);">
+            <h4>Conversation</h4>
+            <div id="commentsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 1rem;"></div>
+
+            <div class="reply-box">
+                <textarea id="replyText" class="form-control" rows="2" placeholder="Write a reply..."></textarea>
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button id="closeTicketBtn" class="btn-danger-outline" onclick="closeTicket()">Close Ticket</button>
+                    <button class="btn-primary" onclick="submitReply()">Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentTab = 'my-open';
+    let currentTicketId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTickets();
+        // Assuming Admin check logic
+        // if user.role == 'ADMIN' show admin-queue
+        document.querySelector('.admin-only').style.display = 'inline-block'; // Enabling for demo
+    });
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        currentTab = tab;
+        loadTickets();
+    }
+
+    async function loadTickets() {
+        const token = localStorage.getItem('access_token');
+        const res = await fetch('/api/support/tickets/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('access_token')}` }
+        });
+        const allTickets = await res.json();
+
+        // Frontend filtering (Backend returns all for User)
+        let filtered = [];
+        if (currentTab === 'my-open') {
+            filtered = allTickets.filter(t => t.status !== 'CLOSED' && t.status !== 'RESOLVED');
+        } else if (currentTab === 'my-closed') {
+            filtered = allTickets.filter(t => t.status === 'CLOSED' || t.status === 'RESOLVED');
+        } else if (currentTab === 'admin-queue') {
+            // In real app, we'd hit a different endpoint or filter differently.
+            // Assuming we are employee seeing own, this tab might be empty unless we are admin.
+            // For demo, just show all open
+            filtered = allTickets;
+        }
+
+        const tbody = document.getElementById('ticketList');
+        tbody.innerHTML = '';
+
+        filtered.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${t.id}</td>
+                <td><a href="#" onclick="viewTicket(${t.id})" style="color:white; text-decoration:none;">${t.subject}</a></td>
+                <td>${t.category}</td>
+                <td><span class="badge priority-${t.priority}">${t.priority}</span></td>
+                <td><span class="badge status-${t.status}">${t.status}</span></td>
+                <td>${new Date(t.created_at).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn-sm" onclick="viewTicket(${t.id})">View</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function submitTicket() {
+        const data = {
+            subject: document.getElementById('tSubject').value,
+            category: document.getElementById('tCategory').value,
+            priority: document.getElementById('tPriority').value,
+            description: document.getElementById('tDesc').value
+        };
+
+        const res = await fetch('/api/support/tickets/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            closeModal();
+            loadTickets();
+        } else {
+            alert('Failed to create ticket');
+        }
+    }
+
+    // View details
+    // We iterate the loaded list or fetch single. Fetching single is cleaner.
+    async function viewTicket(id) {
+        currentTicketId = id;
+        const res = await fetch(`/api/support/tickets/${id}/`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        });
+        const t = await res.json();
+
+        document.getElementById('vSubject').innerText = `#${t.id} - ${t.subject}`;
+        document.getElementById('vDesc').innerText = t.description;
+        document.getElementById('vStatus').innerText = t.status;
+        document.getElementById('vPriority').innerText = t.priority;
+        document.getElementById('vDate').innerText = new Date(t.created_at).toLocaleString();
+
+        const cList = document.getElementById('commentsList');
+        cList.innerHTML = '';
+        if (t.comments) {
+            t.comments.forEach(c => {
+                cList.innerHTML += `
+                    <div style="margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 4px;">
+                        <div style="font-size: 0.8em; color: #94a3b8; display:flex; justify-content:space-between;">
+                            <span>${c.employee_name || 'User'}</span>
+                            <span>${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div style="margin-top: 4px;">${c.text}</div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('viewModal').style.display = 'flex';
+    }
+
+    async function submitReply() {
+        const text = document.getElementById('replyText').value;
+        if (!text) return;
+
+        await fetch(`/api/support/tickets/${currentTicketId}/add_comment/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({ text: text })
+        });
+        document.getElementById('replyText').value = '';
+        viewTicket(currentTicketId); // Refresh
+    }
+
+    async function closeTicket() {
+        if (!confirm("Close this ticket?")) return;
+        await fetch(`/api/support/tickets/${currentTicketId}/close/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('access_token')}` }
+        });
+        viewTicket(currentTicketId);
+        loadTickets();
+    }
+
+    function openTicketModal() {
+        document.getElementById('ticketModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('ticketModal').style.display = 'none';
+    }
+    function closeViewModal() {
+        document.getElementById('viewModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .form-group.row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .col {
+        flex: 1;
+    }
+
+    .badge.priority-HIGH,
+    .badge.priority-CRITICAL {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .badge.priority-MEDIUM {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+    }
+
+    .badge.priority-LOW {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .badge.status-OPEN {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+    }
+
+    .badge.status-CLOSED {
+        background: rgba(148, 163, 184, 0.2);
+        color: #94a3b8;
+    }
+
+    .btn-danger-outline {
+        background: transparent;
+        border: 1px solid #ef4444;
+        color: #ef4444;
+        padding: 5px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-danger-outline:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+</style>
+{% endblock %}

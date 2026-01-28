@@ -1,0 +1,92 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block header_title %}Audit & System Logs{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>System Audit Logs</h3>
+            <div class="header-actions">
+                <select id="actionFilter" class="form-control" onchange="loadLogs()">
+                    <option value="">All Actions</option>
+                    <option value="LOGIN">Login</option>
+                    <option value="UPDATE">Updates</option>
+                    <option value="PAYROLL_RUN">Payroll Runs</option>
+                </select>
+                <button onclick="loadLogs()" class="btn-icon">↻</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="glass-panel" style="padding: 0;">
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Actor</th>
+                                <th>Action</th>
+                                <th>Detail</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <!-- JS Loaded -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadLogs);
+
+    async function loadLogs() {
+        const token = localStorage.getItem('access_token');
+        const filter = document.getElementById('actionFilter').value;
+        let url = '/api/audit-logs/';
+        if (filter) url += `?action=${filter}`;
+        
+        try {
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach(log => {
+                const row = `
+                    <tr>
+                        <td style="color:#94a3b8; font-size:0.9em;">${new Date(log.timestamp).toLocaleString()}</td>
+                        <td style="font-weight:600; color:#fff;">${log.actor_name || 'System'}</td>
+                        <td><span class="badge ${getBadgeClass(log.action)}">${log.action}</span></td>
+                        <td style="color:#cbd5e1;">${log.details}</td>
+                        <td style="font-family:monospace; color:#64748b;">${log.ip_address || '-'}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
+    function getBadgeClass(action) {
+        if (action === 'LOGIN') return 'badge-success';
+        if (action === 'DELETE' || action === 'LOGOUT') return 'badge-danger';
+        if (action === 'UPDATE') return 'badge-warning';
+        return 'badge-info';
+    }
+</script>
+
+<style>
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .badge-info { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+</style>
+{% endblock %}

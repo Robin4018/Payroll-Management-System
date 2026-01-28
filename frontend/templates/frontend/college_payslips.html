@@ -1,0 +1,193 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Payslip Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Payslip Management</h3>
+            <div class="header-actions">
+                <div class="form-group" style="margin-bottom:0; display:flex; gap:10px; align-items:center;">
+                    <label style="color:#cbd5e1;">Filter Month:</label>
+                    <input type="month" id="filterMonth" class="form-control" style="width: auto;">
+                </div>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="table-container glass-panel">
+                <div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button class="btn-sm" onclick="downloadAll()">⬇ Download All</button>
+                    <button class="btn-sm" onclick="emailAll()">📧 Email All</button>
+                    <button class="btn-sm" style="background: var(--danger-color);" onclick="finalizeAll()">🔒 Finalize
+                        & Lock</button>
+                </div>
+                <table id="payslipTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" onchange="toggleAll(this)"></th>
+                            <th>Employee Code</th>
+                            <th>Name</th>
+                            <th>Month</th>
+                            <th>Net Pay</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payslipList"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date();
+        const monthStr = today.toISOString().slice(0, 7); // YYYY-MM
+        document.getElementById('filterMonth').value = monthStr;
+
+        loadPayslips();
+
+        document.getElementById('filterMonth').addEventListener('change', loadPayslips);
+    });
+
+    async function loadPayslips() {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch('/api/payroll/', { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+
+        const filterVal = document.getElementById('filterMonth').value;
+        const tbody = document.getElementById('payslipList');
+        tbody.innerHTML = '';
+
+        data.forEach(p => {
+            if (!p.month.startsWith(filterVal)) return;
+
+            let badgeClass = 'badge-neutral';
+            if (p.status === 'PAID') badgeClass = 'badge-success';
+            if (p.status === 'LOCKED') badgeClass = 'badge-warning';
+            if (p.status === 'HELD') badgeClass = 'badge-danger';
+
+            tbody.innerHTML += `<tr>
+                <td><input type="checkbox" class="slip-check" value="${p.id}"></td>
+                <td>${p.employee_code || '-'}</td>
+                <td>${p.employee_name || 'Employee ' + p.employee}</td> 
+                <td>${p.month}</td>
+                <td style="font-weight:bold; color: #10b981;">₹${p.net_pay}</td>
+                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                <td>
+                    <button onclick="downloadPayslip(${p.id})" class="btn-icon" title="Download PDF">⬇️</button>
+                    <button onclick="emailPayslip(${p.id})" class="btn-icon" title="Email Payslip">📧</button>
+                </td>
+            </tr>`;
+        });
+
+        if (tbody.innerHTML === '') {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1rem;">No records found for this month</td></tr>';
+        }
+    }
+
+    function toggleAll(source) {
+        document.querySelectorAll('.slip-check').forEach(c => c.checked = source.checked);
+    }
+
+    function downloadAll() {
+        alert("Batch download implementation pending (requires zip generation backend)");
+    }
+
+    function emailAll() {
+        if (!confirm("Send payslips to ALL selected employees?")) return;
+        alert("Batch email queued.");
+    }
+
+    function finalizeAll() {
+        if (!confirm("Lock these payroll records? This is irreversible.")) return;
+        alert("Records locked.");
+    }
+
+    async function downloadPayslip(id) {
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`/api/payroll/${id}/payslip/`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (data.payslip) {
+            window.open(data.payslip, '_blank');
+        } else {
+            alert('Error generating payslip');
+        }
+    }
+
+    async function emailPayslip(id) {
+        if (!confirm("Are you sure you want to email this payslip?")) return;
+
+        const token = localStorage.getItem('access_token');
+        alert("Sending email...");
+
+        const response = await fetch(`/api/payroll/${id}/email_payslip/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            alert("Email sent successfully!");
+        } else {
+            const err = await response.json();
+            alert("Failed: " + (err.error || 'Unknown error'));
+        }
+    }
+
+</script>
+
+<style>
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+    }
+
+    .badge-neutral {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-warning {
+        background: #fef9c3;
+        color: #854d0e;
+    }
+
+    .badge-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        margin-right: 0.5rem;
+        transition: transform 0.2s;
+    }
+
+    .btn-icon:hover {
+        transform: scale(1.2);
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}

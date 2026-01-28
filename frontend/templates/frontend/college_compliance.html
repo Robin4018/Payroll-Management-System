@@ -1,0 +1,169 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Tax & Compliance{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Statutory Compliance</h3>
+            <div class="header-actions">
+                <button onclick="downloadReport('PF')" class="btn-secondary">Download PF Challan</button>
+                <button onclick="downloadReport('ESI')" class="btn-secondary">Download ESI Return</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('reports')">Statutory Reports</button>
+                <button class="tab-btn" onclick="switchTab('tds')">TDS & Form 16</button>
+                <button class="tab-btn" onclick="switchTab('declarations')">Tax Declarations</button>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reportsTab" class="glass-panel" style="padding: 2rem;">
+                <h4 style="color: #ec4899; margin-bottom: 1rem;">Monthly Compliance Reports</h4>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Select Month to generate statutory reports (PF, ESI,
+                    PT).</p>
+                <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                    <div class="form-group">
+                        <label>Month</label>
+                        <input type="month" id="reportMonth" class="form-control" style="width: auto;">
+                    </div>
+                </div>
+                <!-- Placeholders for download actions -->
+                <div style="margin-top:2rem; display:flex; gap:1rem;">
+                    <div class="stat-card"
+                        style="background: rgba(255,255,255,0.05); padding:1rem; border-radius:8px; flex:1;">
+                        <h5>PF Challan (ECR)</h5>
+                        <button onclick="alert('PF ECR Downloaded')" class="btn-primary"
+                            style="margin-top:10px; width:100%;">Generate</button>
+                    </div>
+                    <div class="stat-card"
+                        style="background: rgba(255,255,255,0.05); padding:1rem; border-radius:8px; flex:1;">
+                        <h5>ESI Monthly Return</h5>
+                        <button onclick="alert('ESI Return Downloaded')" class="btn-primary"
+                            style="margin-top:10px; width:100%;">Generate</button>
+                    </div>
+                    <div class="stat-card"
+                        style="background: rgba(255,255,255,0.05); padding:1rem; border-radius:8px; flex:1;">
+                        <h5>PT Statement</h5>
+                        <button onclick="alert('PT Statement Downloaded')" class="btn-primary"
+                            style="margin-top:10px; width:100%;">Generate</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TDS Tab -->
+            <div id="tdsTab" class="table-container glass-panel hidden">
+                <h4 style="padding: 1rem; color: #10b981;">TDS & Form 16</h4>
+                <table id="tdsTable">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Projected Tax</th>
+                            <th>TDS Deducted (YTD)</th>
+                            <th>Form 16</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tdsList">
+                        <!-- Mock Data -->
+                        <tr>
+                            <td>John Doe</td>
+                            <td>₹24,000</td>
+                            <td>₹12,000</td>
+                            <td><button class="btn-icon">📄</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Declarations Tab -->
+            <div id="declarationsTab" class="table-container glass-panel hidden">
+                <h4 style="padding: 1rem; color: #f59e0b;">Investment Declarations (80C, 80D)</h4>
+                <table id="declTable">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>80C (Limit 1.5L)</th>
+                            <th>80D (Medical)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="declList">
+                        <!-- Mock Data -->
+                        <tr>
+                            <td>John Doe</td>
+                            <td>1,50,000</td>
+                            <td>25,000</td>
+                            <td><span class="badge badge-APPROVED">Verified</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date();
+        document.getElementById('reportMonth').value = today.toISOString().slice(0, 7);
+    });
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('reportsTab').classList.add('hidden');
+        document.getElementById('reportsTab').style.display = 'none';
+        document.getElementById('tdsTab').classList.add('hidden');
+        document.getElementById('declarationsTab').classList.add('hidden');
+
+        if (tab === 'reports') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('reportsTab').classList.remove('hidden');
+            document.getElementById('reportsTab').style.display = 'block';
+        } else if (tab === 'tds') {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('tdsTab').classList.remove('hidden');
+        } else {
+            document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
+            document.getElementById('declarationsTab').classList.remove('hidden');
+        }
+    }
+
+    function downloadReport(type) {
+        alert(type + " report generation started...");
+    }
+</script>
+
+<style>
+    .tabs {
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .tab-btn {
+        padding: 0.5rem 1.5rem;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 600;
+    }
+
+    .tab-btn.active {
+        color: #ec4899;
+        border-color: #ec4899;
+    }
+
+    .badge-APPROVED {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

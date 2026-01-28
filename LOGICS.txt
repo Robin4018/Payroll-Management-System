@@ -1,0 +1,1012 @@
+# Payroll Management System - Calculations & Business Logic
+
+## TABLE OF CONTENTS
+1. Salary Structure & Components
+2. Gross Salary Calculation
+3. Statutory Deductions (EPF, ESI, PT, TDS)
+4. Net Salary Calculation
+5. Attendance-based Calculations
+6. Leave Calculations
+7. Overtime Calculations
+8. Bonus & Incentive Calculations
+9. Loan & Advance Calculations
+10. Reimbursement Processing
+11. Tax Calculations (Income Tax/TDS)
+12. Arrears Calculation
+13. Full & Final Settlement
+14. Proration Logic
+15. Example Calculations
+
+---
+
+## 1. SALARY STRUCTURE & COMPONENTS
+
+### A. Earnings Components
+
+#### Basic Salary
+- Foundation of all salary calculations
+- Typically 40-50% of CTC (Cost to Company)
+- Formula: `Basic = CTC × Basic_Percentage`
+- Example: If CTC = ₹10,00,000 and Basic = 40%, then Basic = ₹4,00,000 annually (₹33,333 monthly)
+
+#### House Rent Allowance (HRA)
+- Typically 40-50% of Basic
+- Formula: `HRA = Basic × HRA_Percentage`
+- Example: If Basic = ₹33,333, HRA = ₹33,333 × 50% = ₹16,667
+
+#### Dearness Allowance (DA)
+- Percentage of Basic (varies by organization)
+- Formula: `DA = Basic × DA_Percentage`
+- Example: If Basic = ₹33,333 and DA = 20%, DA = ₹6,667
+
+#### Transport Allowance (TA) / Conveyance
+- Fixed amount or percentage
+- Tax exempt up to ₹1,600 per month (as per current IT rules)
+- Example: ₹1,600 per month
+
+#### Medical Allowance
+- Fixed amount
+- Tax exempt up to ₹15,000 per annum with bills
+- Example: ₹1,250 per month
+
+#### Special Allowance
+- Balancing component to reach CTC
+- Formula: `Special_Allowance = CTC - (Basic + HRA + DA + TA + Medical + Other_Fixed_Allowances + Employer_Contributions)`
+
+#### Performance Bonus / Incentive
+- Variable pay based on performance
+- Can be monthly, quarterly, or annual
+- Formula: `Bonus = Basic × Bonus_Percentage × Performance_Rating`
+
+#### Overtime Allowance
+- Calculated separately (see Overtime section)
+
+---
+
+### B. Deduction Components
+
+#### Employee Provident Fund (EPF)
+- See detailed section below
+
+#### Employee State Insurance (ESI)
+- See detailed section below
+
+#### Professional Tax (PT)
+- See detailed section below
+
+#### Income Tax / TDS
+- See detailed section below
+
+#### Loan Deductions
+- Monthly installment as per loan agreement
+
+#### Advance Salary Recovery
+- Amount advanced / Number of installments
+
+#### Other Deductions
+- Canteen charges
+- Uniform charges
+- Society fees
+- Miscellaneous deductions
+
+---
+
+## 2. GROSS SALARY CALCULATION
+
+### Formula:
+```
+Gross Salary = Basic + HRA + DA + TA + Medical + Special Allowance + 
+               Performance Bonus + Overtime + Other Allowances
+```
+
+### Example Calculation:
+```
+Basic Salary        = ₹33,333
+HRA (50% of Basic)  = ₹16,667
+DA (20% of Basic)   = ₹6,667
+Transport Allowance = ₹1,600
+Medical Allowance   = ₹1,250
+Special Allowance   = ₹15,000
+---------------------------------
+Gross Salary        = ₹74,517
+```
+
+---
+
+## 3. STATUTORY DEDUCTIONS
+
+### A. EMPLOYEE PROVIDENT FUND (EPF)
+
+#### Applicability:
+- Mandatory for employees earning basic + DA ≤ ₹15,000
+- Voluntary for employees earning > ₹15,000
+
+#### Employee Contribution:
+- **Rate**: 12% of (Basic + DA)
+- **Formula**: `Employee_EPF = (Basic + DA) × 12%`
+
+#### Employer Contribution:
+- **Total**: 12% of (Basic + DA)
+- Split into:
+  - **EPF**: 3.67% of (Basic + DA)
+  - **EPS** (Pension): 8.33% of (Basic + DA), max on ₹15,000
+  - **EDLI** (Insurance): 0.5% of (Basic + DA)
+  - **Admin Charges**: 1.1% of (Basic + DA)
+
+#### Calculation Example:
+```
+Basic + DA = ₹33,333 + ₹6,667 = ₹40,000
+
+Employee EPF Contribution:
+= ₹40,000 × 12% = ₹4,800
+
+Employer Contributions:
+EPF           = ₹40,000 × 3.67% = ₹1,468
+EPS (Pension) = ₹15,000 × 8.33% = ₹1,250 (capped at ₹15,000)
+Admin + EDLI  = ₹40,000 × 1.61% = ₹644
+Total Employer = ₹3,362
+
+Note: If Basic+DA > ₹15,000, employer's pension contribution is capped
+```
+
+#### Special Cases:
+- **VPF (Voluntary PF)**: Employee can contribute more than 12%
+- **EPF on arrears**: EPF should be deducted on arrear payments
+- **International Workers**: Different rules may apply
+
+---
+
+### B. EMPLOYEE STATE INSURANCE (ESI)
+
+#### Applicability:
+- Mandatory for employees earning ≤ ₹21,000 per month
+- Covers self and family members
+
+#### Employee Contribution:
+- **Rate**: 0.75% of Gross Salary
+- **Formula**: `Employee_ESI = Gross_Salary × 0.75%`
+
+#### Employer Contribution:
+- **Rate**: 3.25% of Gross Salary
+- **Formula**: `Employer_ESI = Gross_Salary × 3.25%`
+
+#### Calculation Example:
+```
+Gross Salary = ₹20,000
+
+Employee ESI = ₹20,000 × 0.75% = ₹150
+Employer ESI = ₹20,000 × 3.25% = ₹650
+Total ESI = ₹800
+```
+
+#### Special Notes:
+- ESI calculated on gross, not just basic
+- Rounds to nearest rupee
+- Not applicable if salary > ₹21,000
+
+---
+
+### C. PROFESSIONAL TAX (PT)
+
+#### Varies by State (Example: Karnataka)
+
+**Karnataka PT Slabs (Monthly):**
+```
+Salary Range              PT Amount
+-----------------------------------
+Up to ₹15,000            Nil
+₹15,001 - ₹20,000        ₹150
+Above ₹20,000            ₹200
+```
+
+**Special Rule:**
+- Maximum ₹200 per month for 11 months
+- February: ₹300 (to make annual total ₹2,500)
+
+#### Calculation Logic:
+```javascript
+function calculatePT(grossSalary, month) {
+    if (grossSalary <= 15000) {
+        return 0;
+    } else if (grossSalary <= 20000) {
+        return month === 'February' ? 300 : 150;
+    } else {
+        return month === 'February' ? 300 : 200;
+    }
+}
+```
+
+#### State-wise Variations:
+- **Maharashtra**: Different slabs
+- **Tamil Nadu**: Different structure
+- **Delhi, Haryana, UP**: No PT
+- Each state has unique rules
+
+---
+
+### D. TAX DEDUCTED AT SOURCE (TDS)
+
+#### Income Tax Calculation Process:
+
+**Step 1: Calculate Gross Annual Salary**
+```
+Annual Gross = (Monthly Gross × 12) + Bonuses + Other Annual Benefits
+```
+
+**Step 2: Calculate Total Deductions**
+```
+Standard Deduction = ₹50,000 (applicable for all)
+80C Deductions = Up to ₹1,50,000 (EPF, PPF, LIC, ELSS, etc.)
+80D Deductions = Up to ₹25,000/₹50,000 (Medical Insurance)
+HRA Exemption = Least of:
+    - Actual HRA received
+    - 50% of Basic (metro) or 40% of Basic (non-metro)
+    - Rent paid - 10% of Basic
+Other Deductions = 80E, 80G, etc.
+```
+
+**Step 3: Calculate Taxable Income**
+```
+Taxable Income = Gross Annual Salary - Total Deductions
+```
+
+**Step 4: Apply Tax Slabs**
+
+**NEW TAX REGIME (FY 2023-24):**
+```
+Income Range              Tax Rate
+-----------------------------------
+0 - ₹3,00,000            Nil
+₹3,00,001 - ₹6,00,000    5%
+₹6,00,001 - ₹9,00,000    10%
+₹9,00,001 - ₹12,00,000   15%
+₹12,00,001 - ₹15,00,000  20%
+Above ₹15,00,000         30%
+```
+
+**OLD TAX REGIME:**
+```
+Income Range              Tax Rate
+-----------------------------------
+0 - ₹2,50,000            Nil
+₹2,50,001 - ₹5,00,000    5%
+₹5,00,001 - ₹10,00,000   20%
+Above ₹10,00,000         30%
+```
+
+**Step 5: Add Cess**
+```
+Health & Education Cess = 4% of Income Tax
+```
+
+**Step 6: Calculate Monthly TDS**
+```
+Monthly TDS = (Annual Tax + Cess) / 12
+```
+
+#### Detailed Example:
+```
+Annual Gross Salary = ₹10,00,000
+
+Deductions:
+Standard Deduction     = ₹50,000
+EPF (Employee)         = ₹57,600 (₹4,800 × 12)
+80C (Additional)       = ₹92,400 (to make it ₹1,50,000)
+HRA Exemption          = ₹1,20,000
+Total Deductions       = ₹3,20,000
+
+Taxable Income = ₹10,00,000 - ₹3,20,000 = ₹6,80,000
+
+Tax Calculation (Old Regime):
+On first ₹2,50,000    = Nil
+On next ₹2,50,000     = ₹2,50,000 × 5% = ₹12,500
+On next ₹1,80,000     = ₹1,80,000 × 20% = ₹36,000
+Total Tax             = ₹48,500
+Cess (4%)             = ₹1,940
+Total Tax + Cess      = ₹50,440
+
+Monthly TDS = ₹50,440 / 12 = ₹4,203
+```
+
+---
+
+## 4. NET SALARY CALCULATION
+
+### Formula:
+```
+Net Salary = Gross Salary - (EPF + ESI + PT + TDS + Loan + Other Deductions)
+```
+
+### Complete Example:
+```
+EARNINGS:
+Basic Salary             = ₹33,333
+HRA                      = ₹16,667
+DA                       = ₹6,667
+Transport Allowance      = ₹1,600
+Medical Allowance        = ₹1,250
+Special Allowance        = ₹15,000
+-----------------------------------------
+Gross Salary             = ₹74,517
+
+DEDUCTIONS:
+EPF (12%)                = ₹4,800
+ESI (Not applicable)     = ₹0
+Professional Tax         = ₹200
+TDS                      = ₹4,203
+Loan EMI                 = ₹5,000
+-----------------------------------------
+Total Deductions         = ₹14,203
+
+NET SALARY = ₹74,517 - ₹14,203 = ₹60,314
+```
+
+---
+
+## 5. ATTENDANCE-BASED CALCULATIONS
+
+### A. Loss of Pay (LOP) Calculation
+
+#### Formula:
+```
+LOP_Per_Day = Monthly_Gross / Total_Working_Days_In_Month
+
+Total_LOP = LOP_Per_Day × Number_of_Absent_Days
+
+Payable_Salary = Monthly_Gross - Total_LOP
+```
+
+#### Example:
+```
+Monthly Gross Salary = ₹74,517
+Working Days in Month = 26
+Absent Days = 3
+
+LOP Per Day = ₹74,517 / 26 = ₹2,866
+Total LOP = ₹2,866 × 3 = ₹8,598
+
+Salary to be Paid = ₹74,517 - ₹8,598 = ₹65,919
+```
+
+### B. Proportionate Salary for Partial Month
+
+#### For New Joiners:
+```
+Date of Joining = 15th of the month
+Working Days in Month = 26
+Days Worked = 12 (from 15th to 26th)
+
+Proportionate_Salary = (Monthly_Gross / Working_Days) × Days_Worked
+                     = (₹74,517 / 26) × 12
+                     = ₹34,391
+```
+
+#### For Resignations:
+```
+Last Working Day = 20th of the month
+Working Days in Month = 26
+Days Worked = 20
+
+Proportionate_Salary = (₹74,517 / 26) × 20
+                     = ₹57,321
+```
+
+---
+
+## 6. LEAVE CALCULATIONS
+
+### A. Leave Balance Management
+
+#### Annual Leave Accrual:
+```
+Earned Leave Per Month = Total_Annual_Leave / 12
+
+Example:
+Annual Leave = 24 days
+Monthly Accrual = 24 / 12 = 2 days per month
+```
+
+#### Leave Balance Formula:
+```
+Leave_Balance = Opening_Balance + Leaves_Credited - Leaves_Taken - Leaves_Lapsed
+```
+
+### B. Leave Encashment
+
+#### On Resignation/Retirement:
+```
+Encashment_Amount = (Basic_Salary / Working_Days_In_Month) × Unused_Leave_Days
+
+Example:
+Basic Salary = ₹33,333
+Working Days = 26
+Unused Leaves = 15
+
+Encashment = (₹33,333 / 26) × 15 = ₹19,230
+```
+
+#### Maximum Encashment Limits:
+- Often capped (e.g., max 30 days per year)
+- Some organizations pay on basic only
+- Others pay on basic + DA
+
+---
+
+## 7. OVERTIME CALCULATIONS
+
+### A. Overtime Eligibility
+- Typically for employees below certain grade
+- After working beyond standard hours (8 hours/day or 48 hours/week)
+
+### B. Overtime Rate Calculation
+
+#### Formula:
+```
+Hourly_Rate = (Basic_Salary × 12) / (365 × 8)
+            or
+Hourly_Rate = Monthly_Basic / (Working_Days × 8)
+
+Overtime_Rate = Hourly_Rate × Overtime_Multiplier
+```
+
+#### Overtime Multipliers:
+- Normal OT: 1.5× or 2× hourly rate
+- Weekend/Holiday OT: 2× or 2.5× hourly rate
+- Night Shift: Additional 1.5×
+
+#### Example:
+```
+Monthly Basic = ₹33,333
+Working Days = 26
+Working Hours per Day = 8
+
+Hourly Rate = ₹33,333 / (26 × 8) = ₹160.35
+
+Regular Overtime (10 hours @ 2×):
+= 10 × ₹160.35 × 2 = ₹3,207
+
+Weekend Overtime (5 hours @ 2.5×):
+= 5 × ₹160.35 × 2.5 = ₹2,004
+
+Total OT Allowance = ₹5,211
+```
+
+---
+
+## 8. BONUS & INCENTIVE CALCULATIONS
+
+### A. Annual Performance Bonus
+
+#### Formula:
+```
+Bonus_Amount = (Annual_Basic × Bonus_Percentage × Performance_Rating) / 100
+
+Performance Rating Scale:
+Outstanding (5)  = 150%
+Exceeds (4)      = 125%
+Meets (3)        = 100%
+Needs Improvement (2) = 50%
+Unsatisfactory (1) = 0%
+```
+
+#### Example:
+```
+Annual Basic = ₹4,00,000
+Bonus Percentage = 10%
+Performance Rating = 4 (Exceeds Expectations)
+
+Bonus = (₹4,00,000 × 10% × 125%) / 100
+      = ₹50,000
+```
+
+### B. Festival Bonus
+
+#### Common in India (Diwali, etc.)
+```
+Festival_Bonus = Basic_Salary × Bonus_Multiplier
+
+Example:
+Basic = ₹33,333
+Bonus = 1 month basic = ₹33,333
+```
+
+### C. Attendance Bonus
+
+#### Criteria: 100% attendance
+```
+Attendance_Bonus = Fixed_Amount or Percentage_of_Basic
+
+Example:
+If attendance = 100%, Bonus = ₹2,000
+If attendance < 100%, Bonus = ₹0
+```
+
+---
+
+## 9. LOAN & ADVANCE CALCULATIONS
+
+### A. Loan Interest Calculation
+
+#### Reducing Balance Method:
+```
+EMI = [P × r × (1+r)^n] / [(1+r)^n - 1]
+
+Where:
+P = Principal Amount
+r = Monthly Interest Rate (Annual Rate / 12 / 100)
+n = Number of months
+
+Example:
+Loan Amount = ₹1,00,000
+Annual Interest = 12%
+Tenure = 24 months
+
+r = 12 / 12 / 100 = 0.01
+n = 24
+
+EMI = [1,00,000 × 0.01 × (1.01)^24] / [(1.01)^24 - 1]
+    = [1,00,000 × 0.01 × 1.2697] / [0.2697]
+    = 1,269.7 / 0.2697
+    = ₹4,707
+```
+
+### B. Monthly Deduction Schedule
+
+#### Amortization Schedule:
+```
+Month 1:
+Opening Balance = ₹1,00,000
+Interest = ₹1,00,000 × 0.01 = ₹1,000
+Principal = ₹4,707 - ₹1,000 = ₹3,707
+Closing Balance = ₹1,00,000 - ₹3,707 = ₹96,293
+
+Month 2:
+Opening Balance = ₹96,293
+Interest = ₹96,293 × 0.01 = ₹963
+Principal = ₹4,707 - ₹963 = ₹3,744
+Closing Balance = ₹96,293 - ₹3,744 = ₹92,549
+```
+
+### C. Advance Salary Recovery
+
+#### Simple Division:
+```
+Advance_Amount = ₹20,000
+Recovery_Period = 4 months
+
+Monthly_Deduction = ₹20,000 / 4 = ₹5,000
+```
+
+---
+
+## 10. REIMBURSEMENT PROCESSING
+
+### A. Medical Reimbursement
+```
+Eligible_Amount = Lesser of (Actual_Bills, Maximum_Limit)
+
+Example:
+Bill Amount = ₹25,000
+Policy Limit = ₹20,000
+Reimbursement = ₹20,000
+```
+
+### B. Travel Reimbursement
+
+#### Per KM Rate:
+```
+Total_Reimbursement = Distance_Travelled × Rate_Per_KM
+
+Example:
+Distance = 500 km
+Rate = ₹8 per km
+Reimbursement = 500 × 8 = ₹4,000
+```
+
+### C. Mobile/Internet Reimbursement
+```
+Reimbursement = Lesser of (Actual_Bill × Allowed_Percentage, Maximum_Cap)
+
+Example:
+Actual Bill = ₹2,000
+Allowed = 50%
+Cap = ₹800
+
+Calculation = ₹2,000 × 50% = ₹1,000
+But capped at ₹800, so Reimbursement = ₹800
+```
+
+---
+
+## 11. TAX CALCULATIONS - DETAILED
+
+### A. HRA Exemption Calculation
+
+#### Formula - Least of:
+1. Actual HRA received
+2. Rent paid - 10% of Basic Salary
+3. 50% of Basic (for metro cities) or 40% (for non-metro)
+
+#### Example (Metro City):
+```
+Basic Salary (Annual) = ₹4,00,000
+HRA Received (Annual) = ₹2,00,000
+Rent Paid (Annual) = ₹2,40,000
+City = Mumbai (Metro)
+
+Option 1: Actual HRA = ₹2,00,000
+
+Option 2: Rent - 10% of Basic
+        = ₹2,40,000 - (₹4,00,000 × 10%)
+        = ₹2,40,000 - ₹40,000
+        = ₹2,00,000
+
+Option 3: 50% of Basic (Metro)
+        = ₹4,00,000 × 50%
+        = ₹2,00,000
+
+HRA Exemption = Least(₹2,00,000, ₹2,00,000, ₹2,00,000) = ₹2,00,000
+```
+
+### B. Leave Travel Allowance (LTA)
+
+#### Exemption Rules:
+- Exempt for 2 journeys in a block of 4 years
+- Only domestic travel
+- Only actual travel cost (tickets)
+- Shortest route by air/rail
+
+#### Example:
+```
+LTA Provided = ₹50,000
+Actual Travel Tickets = ₹45,000
+Other Expenses (hotel, food) = ₹30,000
+
+Exempt Amount = ₹45,000 (only tickets)
+Taxable Amount = ₹50,000 - ₹45,000 = ₹5,000
+```
+
+---
+
+## 12. ARREARS CALCULATION
+
+### A. Salary Revision Arrears
+
+#### Scenario: Salary revised from Jan but paid in June
+```
+Old Basic = ₹30,000
+New Basic = ₹35,000
+Effective from = January
+Paid in = June
+Arrear Period = Jan to May (5 months)
+
+Arrears = (New Basic - Old Basic) × Number_of_Months
+        = (₹35,000 - ₹30,000) × 5
+        = ₹25,000
+
+Components affected:
+- Basic arrear = ₹25,000
+- HRA arrear = ₹25,000 × 50% = ₹12,500
+- DA arrear = ₹25,000 × 20% = ₹5,000
+- Total Arrear = ₹42,500
+
+Deductions on Arrears:
+- EPF on arrear basic = ₹25,000 × 12% = ₹3,000
+```
+
+### B. Increment Arrears
+```
+Similar to above, but for annual increments applied retrospectively
+```
+
+---
+
+## 13. FULL & FINAL SETTLEMENT
+
+### Components to Calculate:
+
+#### A. Salary for Working Days
+```
+Last_Month_Salary = (Monthly_Gross / Working_Days) × Days_Worked
+```
+
+#### B. Leave Encashment
+```
+Encashment = (Basic / Working_Days) × Unused_Leaves
+```
+
+#### C. Notice Period Recovery (if applicable)
+```
+Notice_Recovery = (Monthly_Gross / Working_Days) × Notice_Shortfall_Days
+```
+
+#### D. Gratuity (if applicable)
+```
+Eligibility = Minimum 5 years of service
+
+Gratuity = (Last_Drawn_Basic × Years_of_Service × 15) / 26
+
+Example:
+Last Basic = ₹35,000
+Service = 8 years
+Gratuity = (₹35,000 × 8 × 15) / 26
+         = ₹42,00,000 / 26
+         = ₹1,61,538
+```
+
+#### Complete F&F Example:
+```
+Working Days in Last Month = 26
+Days Worked = 15
+Monthly Gross = ₹74,517
+Basic = ₹33,333
+Unused Leaves = 20
+Service Years = 5
+
+Calculations:
+1. Proportionate Salary = (₹74,517 / 26) × 15 = ₹42,991
+2. Leave Encashment = (₹33,333 / 26) × 20 = ₹25,641
+3. Gratuity = (₹33,333 × 5 × 15) / 26 = ₹96,152
+4. Less: Notice Period (10 days) = (₹74,517 / 26) × 10 = ₹28,660
+5. Less: Advance/Loan Outstanding = ₹15,000
+
+Total Settlement:
+Salary         = ₹42,991
+Leave Encash   = ₹25,641
+Gratuity       = ₹96,152
+Gross          = ₹1,64,784
+
+Deductions:
+Notice Recovery = ₹28,660
+Loan Outstanding = ₹15,000
+EPF (on salary) = ₹5,159
+TDS (on gratuity) = ₹0 (exempt up to ₹20L)
+Total Deductions = ₹48,819
+
+Net F&F Amount = ₹1,64,784 - ₹48,819 = ₹1,15,965
+```
+
+---
+
+## 14. PRORATION LOGIC
+
+### A. Mid-Month Joining
+```
+function calculateProrateSalary(monthlySalary, joiningDate, monthEndDate) {
+    totalDays = getDaysInMonth(month, year)
+    workedDays = monthEndDate - joiningDate + 1
+    
+    prorateSalary = (monthlySalary / totalDays) × workedDays
+    
+    return prorateSalary
+}
+```
+
+### B. Calendar Days vs Working Days
+
+#### Calendar Days Method:
+```
+Prorate = (Monthly_Salary / Days_in_Month) × Days_Present
+```
+
+#### Working Days Method:
+```
+Prorate = (Monthly_Salary / Working_Days) × Days_Present
+```
+
+**Example:**
+```
+Monthly Salary = ₹74,517
+Total Days in Month = 31
+Working Days = 26
+Days Present = 20
+
+Calendar Method = (₹74,517 / 31) × 20 = ₹48,075
+Working Days Method = (₹74,517 / 26) × 20 = ₹57,321
+
+Most organizations use Working Days method
+```
+
+---
+
+## 15. EXAMPLE: COMPLETE MONTHLY PAYROLL
+
+### Employee Details:
+```
+Name: Rajesh Kumar
+Designation: Assistant Professor
+Department: Computer Science
+Basic: ₹40,000
+HRA: 50% of Basic = ₹20,000
+DA: 20% of Basic = ₹8,000
+TA: ₹1,600
+Medical: ₹1,250
+Special Allowance: ₹15,000
+```
+
+### Attendance:
+```
+Working Days: 26
+Present: 25
+Absent (LOP): 1
+Overtime Hours: 8
+```
+
+### Declarations:
+```
+80C Investments: ₹1,50,000
+HRA: Rent paid ₹15,000/month
+```
+
+### Step-by-Step Calculation:
+
+#### 1. Calculate Gross Before LOP
+```
+Basic           = ₹40,000
+HRA             = ₹20,000
+DA              = ₹8,000
+TA              = ₹1,600
+Medical         = ₹1,250
+Special         = ₹15,000
+----------------------------
+Gross           = ₹85,850
+```
+
+#### 2. Calculate LOP
+```
+LOP = (₹85,850 / 26) × 1 = ₹3,302
+```
+
+#### 3. Calculate Overtime
+```
+Hourly Rate = ₹40,000 / (26 × 8) = ₹192.31
+OT Amount = 8 × ₹192.31 × 2 = ₹3,077
+```
+
+#### 4. Adjusted Gross
+```
+Adjusted Gross = ₹85,850 - ₹3,302 + ₹3,077 = ₹85,625
+```
+
+#### 5. Calculate EPF
+```
+EPF Base = ₹40,000 + ₹8,000 = ₹48,000
+Employee EPF = ₹48,000 × 12% = ₹5,760
+```
+
+#### 6. Calculate Professional Tax
+```
+Gross > ₹20,000, so PT = ₹200
+```
+
+#### 7. Calculate TDS
+```
+Annual Gross = ₹85,850 × 12 = ₹10,30,200
+Less: Standard Deduction = ₹50,000
+Less: EPF (80C) = ₹69,120
+Less: 80C (other) = ₹80,880
+Less: HRA Exemption = ₹1,44,000
+Taxable Income = ₹6,86,200
+
+Tax:
+0 - 2.5L = Nil
+2.5L - 5L = ₹12,500
+5L - 6.86L = ₹37,240
+Total = ₹49,740
+Cess (4%) = ₹1,990
+Annual Tax = ₹51,730
+Monthly TDS = ₹4,311
+```
+
+#### 8. Final Salary
+```
+EARNINGS:
+Basic (After LOP)     = ₹38,698
+HRA (After LOP)       = ₹19,349
+DA (After LOP)        = ₹7,740
+TA                    = ₹1,600
+Medical               = ₹1,250
+Special               = ₹15,000
+Overtime              = ₹3,077
+---------------------------------
+Gross Earnings        = ₹86,714
+
+DEDUCTIONS:
+EPF                   = ₹5,760
+Professional Tax      = ₹200
+TDS                   = ₹4,311
+---------------------------------
+Total Deductions      = ₹10,271
+
+NET SALARY = ₹86,714 - ₹10,271 = ₹76,443
+```
+
+---
+
+## 16. EDGE CASES & SPECIAL SCENARIOS
+
+### A. Negative Salary
+```
+If deductions > earnings:
+- Stop at zero, carry forward negative to next month
+- Or recover from subsequent months
+- Or settle during F&F
+```
+
+### B. Mid-Year Tax Regime Change
+```
+- Recalculate from April
+- Adjust TDS in remaining months
+- May need refund/recovery in next month
+```
+
+### C. Backdated Salary Revision
+```
+- Calculate arrears for past months
+- Add to current month
+- Deduct EPF/TDS on arrears
+```
+
+### D. Unpaid Leave Spanning Months
+```
+Month 1: 28-31 (4 days LOP)
+Month 2: 1-5 (5 days LOP)
+
+Calculate LOP separately for each month
+```
+
+---
+
+## 17. VALIDATION RULES
+
+### Business Validations:
+```
+1. Gross Salary should be > 0
+2. Net Salary should ideally be > 0
+3. EPF should not exceed ceiling (₹1,800 if basic capped at ₹15,000)
+4. ESI only if gross ≤ ₹21,000
+5. TDS should not be negative
+6. Leave balance should not be negative
+7. Loan EMI should not exceed 40-50% of net salary
+8. Overtime hours should be reasonable (max per day/week)
+9. Attendance percentage should be ≤ 100%
+10. Deductions should not exceed gross salary
+```
+
+---
+
+## 18. FORMULAS SUMMARY SHEET
+
+```
+Basic Salary = CTC × Basic_Percentage
+
+HRA = Basic × HRA_Percentage
+
+Gross Salary = Σ(All Earnings)
+
+EPF = (Basic + DA) × 12%
+
+ESI = Gross × 0.75% (if eligible)
+
+LOP = (Gross / Working_Days) × Absent_Days
+
+Overtime = (Basic / (Working_Days × 8)) × OT_Hours × Multiplier
+
+Net Salary = Gross - Total_Deductions
+
+Prorate = (Monthly_Salary / Working_Days) × Days_Worked
+
+Leave Encashment = (Basic / Working_Days) × Unused_Leaves
+
+Gratuity = (Last_Basic × Service_Years × 15) / 26
+
+Loan EMI = [P × r × (1+r)^n] / [(1+r)^n - 1]
+
+TDS = f(Taxable_Income, Tax_Slabs)
+
+Taxable_Income = Gross - Standard_Deduction - 80C - HRA_Exempt - Other_Exemptions
+```
+
+---
+
+This comprehensive guide covers all major calculations and business logic required for a payroll system. Each formula can be implemented in code with appropriate validations and error handling.

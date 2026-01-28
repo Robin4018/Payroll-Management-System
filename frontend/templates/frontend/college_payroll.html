@@ -1,0 +1,323 @@
+{% extends 'frontend/dashboard_base.html' %}
+
+{% block header_title %}Payroll Processing{% endblock %}
+
+{% block content_body %}
+<!-- Wizard Progress -->
+<div class="steps-container"
+    style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
+    <div class="step-line"
+        style="position: absolute; top: 15px; left: 0; right: 0; height: 3px; background: #e2e8f0; z-index: 0;"></div>
+    <div class="step-item active" id="step-1-indicator" style="z-index: 1; text-align: center;">
+        <div class="step-circle"
+            style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+            1</div>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; font-weight: 500;">Selection</p>
+    </div>
+    <div class="step-item" id="step-2-indicator" style="z-index: 1; text-align: center;">
+        <div class="step-circle"
+            style="width: 32px; height: 32px; background: #e2e8f0; color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #fff;">
+            2</div>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">Review</p>
+    </div>
+    <div class="step-item" id="step-3-indicator" style="z-index: 1; text-align: center;">
+        <div class="step-circle"
+            style="width: 32px; height: 32px; background: #e2e8f0; color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #fff;">
+            3</div>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">Process</p>
+    </div>
+</div>
+
+<!-- Step 1: Selection -->
+<div id="step-1" class="step-content">
+    <div class="card" style="max-width: 800px; margin: 0 auto;">
+        <h3 style="margin-bottom: 1.5rem;">Select Payroll Period</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="form-group">
+                <label class="form-label">Month & Year</label>
+                <input type="month" id="payroll-month" class="form-control" onchange="enableNext()">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Employee Group</label>
+                <select id="employee-filter" class="form-control" onchange="handleFilterChange()">
+                    <option value="ALL">All Active Employees</option>
+                    <option value="DEPT">By Department</option>
+                    <option value="SELECT">Select Manually</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="dept-selector" class="form-group hidden">
+            <label class="form-label">Select Department</label>
+            <select id="department-select" class="form-control">
+                <!-- Departments loaded via JS -->
+            </select>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+            <button class="btn btn-primary" id="btn-next-1" onclick="goToStep2()" disabled>Next: Review Staff</button>
+        </div>
+    </div>
+</div>
+
+<!-- Step 2: Review Content -->
+<div id="step-2" class="step-content hidden">
+    <div class="card">
+        <h3 style="margin-bottom: 1.5rem;">Review Employees</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">The following employees will be included in this
+            payroll run.</p>
+
+        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+            <table id="preview-table">
+                <thead>
+                    <tr>
+                        <th width="50"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th>Employee Code</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="preview-table-body">
+                    <tr>
+                        <td colspan="5" class="text-center">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+            <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+            <button class="btn btn-primary" onclick="goToStep3()">Next: Finalize</button>
+        </div>
+    </div>
+</div>
+
+<!-- Step 3: Process -->
+<div id="step-3" class="step-content hidden">
+    <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
+        <h2 style="margin-bottom: 0.5rem;">Ready to Process</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">
+            You are about to calculate payroll for <span id="final-count"
+                style="font-weight: bold; color: var(--primary-color);">0</span> employees
+            for <span id="final-period" style="font-weight: bold;">--</span>.
+        </p>
+
+        <div class="alert alert-warning" style="text-align: left; margin-bottom: 2rem;">
+            <strong>Note:</strong> This action will create Draft entries. You can review and edit adjustments before
+            finalizing payout.
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 1rem;">
+            <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+            <button class="btn btn-primary" onclick="runPayroll()">Run Payroll Calculation</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success State -->
+<div id="step-success" class="step-content hidden">
+    <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem; color: #10b981;">✅</div>
+        <h2>Calculation Complete!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Payroll entries have been generated successfully.</p>
+        <button class="btn btn-primary" onclick="window.location.href='/dashboard/college/reports/'">View
+            Reports</button>
+    </div>
+</div>
+
+<script>
+    let currentEmployees = [];
+    let selectedEmployeeIds = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set default month to current
+        const now = new Date();
+        const monthStr = now.toISOString().slice(0, 7);
+        document.getElementById('payroll-month').value = monthStr;
+        enableNext();
+
+        fetchDepartments();
+    });
+
+    function enableNext() {
+        const month = document.getElementById('payroll-month').value;
+        const btn = document.getElementById('btn-next-1');
+        btn.disabled = !month;
+    }
+
+    function handleFilterChange() {
+        const filter = document.getElementById('employee-filter').value;
+        const deptSelector = document.getElementById('dept-selector');
+
+        if (filter === 'DEPT') {
+            deptSelector.classList.remove('hidden');
+        } else {
+            deptSelector.classList.add('hidden');
+        }
+    }
+
+    async function fetchDepartments() {
+        try {
+            const res = await fetch('/api/employees/departments/');
+            const data = await res.json();
+            const select = document.getElementById('department-select');
+            data.forEach(d => {
+                select.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+            });
+        } catch (e) { }
+    }
+
+    function goToStep(step) {
+        document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(`step-${step}`).classList.remove('hidden');
+        updateIndicators(step);
+    }
+
+    function updateIndicators(step) {
+        // Reset all
+        document.querySelectorAll('.step-item .step-circle').forEach(el => {
+            el.style.backgroundColor = '#e2e8f0';
+            el.style.color = '#64748b';
+        });
+
+        // Set active up to current
+        for (let i = 1; i <= step; i++) {
+            const circle = document.querySelector(`#step-${i}-indicator .step-circle`);
+            if (circle) {
+                circle.style.backgroundColor = 'var(--primary-color)';
+                circle.style.color = 'white';
+            }
+        }
+    }
+
+    async function goToStep2() {
+        goToStep(2);
+        updateIndicators(2);
+
+        const filter = document.getElementById('employee-filter').value;
+        const deptId = document.getElementById('department-select').value;
+
+        // Build query
+        let url = '/api/employees/';
+        if (filter === 'DEPT' && deptId) {
+            // Assuming API supports filtering by dept query param? 
+            // Or we filter client side for demo if API is simple
+            // Let's assume we fetch all and filter client side for safety as API wasn't explicitly updated for filter params
+        }
+
+        try {
+            const res = await fetch(url); // Fetch all for now
+            const allData = await res.json();
+
+            if (filter === 'DEPT') {
+                currentEmployees = allData.filter(e => e.department == deptId || e.department_name == deptId); // Handle ID vs Name usage
+            } else {
+                currentEmployees = allData;
+            }
+
+            // Only Active employees usually
+            currentEmployees = currentEmployees.filter(e => e.is_active);
+
+            renderPreviewTable();
+        } catch (e) {
+            console.error(e);
+            document.getElementById('preview-table-body').innerHTML = `<tr><td colspan="5">Error loading employees</td></tr>`;
+        }
+    }
+
+    function renderPreviewTable() {
+        const tbody = document.getElementById('preview-table-body');
+        tbody.innerHTML = '';
+
+        if (currentEmployees.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center">No employees found matching criteria.</td></tr>`;
+            return;
+        }
+
+        currentEmployees.forEach(emp => {
+            const row = `
+                <tr>
+                    <td><input type="checkbox" class="emp-check" value="${emp.id}" checked></td>
+                    <td>${emp.employee_code}</td>
+                    <td>${emp.first_name} ${emp.last_name}</td>
+                    <td>${emp.department_name || '--'}</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function toggleAll(source) {
+        document.querySelectorAll('.emp-check').forEach(c => c.checked = source.checked);
+    }
+
+    function goToStep3() {
+        // Collect selected IDs
+        selectedEmployeeIds = [];
+        document.querySelectorAll('.emp-check:checked').forEach(c => selectedEmployeeIds.push(parseInt(c.value)));
+
+        if (selectedEmployeeIds.length === 0) {
+            alert("Please select at least one employee.");
+            return;
+        }
+
+        const monthStr = document.getElementById('payroll-month').value;
+        const niceDate = new Date(monthStr + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' });
+
+        document.getElementById('final-count').innerText = selectedEmployeeIds.length;
+        document.getElementById('final-period').innerText = niceDate;
+
+        goToStep(3);
+        updateIndicators(3);
+    }
+
+    async function runPayroll() {
+        const month = document.getElementById('payroll-month').value + "-01"; // YYYY-MM -> YYYY-MM-DD
+
+        const payload = {
+            month: month,
+            employee_ids: selectedEmployeeIds
+        };
+
+        try {
+            const res = await fetch('/api/payroll/run/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                goToStep('success');
+            } else {
+                const err = await res.json();
+                alert("Error: " + (err.error || "Unknown error"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Network Error");
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

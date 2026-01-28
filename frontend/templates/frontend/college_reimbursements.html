@@ -1,0 +1,225 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Reimbursements{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <main class="main-content">
+        <header class="glass-header">
+            <h3>Expense Claims</h3>
+            <div class="header-actions">
+                <button onclick="openRequestModal()" class="btn-primary">+ New Claim</button>
+            </div>
+        </header>
+
+        <section class="content-section">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('my-claims')">My Claims</button>
+                <button class="tab-btn" onclick="switchTab('approvals')">Approvals (Admin)</button>
+            </div>
+
+            <div id="my-claims" class="tab-content active">
+                <div class="table-container glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Amount (₹)</th>
+                                <th>Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="myClaimsList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="approvals" class="tab-content">
+                <div class="table-container glass-panel">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Date</th>
+                                <th>Title</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalsList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Request Modal -->
+<div id="claimModal" class="modal-overlay" style="display: none;">
+    <div class="modal-glass">
+        <div class="modal-header">
+            <h3>Submit Expense Claim</h3>
+            <button onclick="closeModal()" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="rTitle" class="form-control" placeholder="e.g. Travel to HQ">
+            </div>
+            <div class="form-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="rAmount" class="form-control" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Date of Expense</label>
+                <input type="date" id="rDate" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="rDesc" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Attachment (Optional)</label>
+                <input type="file" id="rFile" class="form-control">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="submitClaim()" class="btn-primary">Submit Claim</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', loadClaims);
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+        loadClaims();
+    }
+
+    async function loadClaims() {
+        const res = await fetch('/api/payroll/reimbursements/', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const claims = await res.json();
+
+        const myContainer = document.getElementById('myClaimsList');
+        const adminContainer = document.getElementById('approvalsList');
+
+        myContainer.innerHTML = '';
+        adminContainer.innerHTML = '';
+
+        claims.forEach(item => {
+            // My Claims
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.date_of_expense}</td>
+                <td>${item.title}</td>
+                <td>₹ ${item.amount}</td>
+                <td><span class="badge ${item.status.toLowerCase()}">${item.status}</span></td>
+                <td>${item.description || '-'}</td>
+            `;
+            myContainer.appendChild(tr);
+
+            // Admin Row (Only Pending and if admin... simplified to just show all pending for now)
+            if (item.status === 'PENDING') {
+                const trAdmin = document.createElement('tr');
+                trAdmin.innerHTML = `
+                    <td>${item.employee_name || item.employee}</td>
+                    <td>${item.date_of_expense}</td>
+                    <td>${item.title}</td>
+                    <td>₹ ${item.amount}</td>
+                    <td>
+                        <button onclick="updateStatus(${item.id}, 'approve')" class="btn-sm btn-primary">Approve</button>
+                        <button onclick="updateStatus(${item.id}, 'reject')" class="btn-sm btn-danger">Reject</button>
+                    </td>
+                `;
+                adminContainer.appendChild(trAdmin);
+            }
+        });
+    }
+
+    async function submitClaim() {
+        const data = new FormData();
+        data.append('title', document.getElementById('rTitle').value);
+        data.append('amount', document.getElementById('rAmount').value);
+        data.append('date_of_expense', document.getElementById('rDate').value);
+        data.append('description', document.getElementById('rDesc').value);
+        data.append('employee', 1); // Mock ID, backend should infer from user
+
+        const fileInput = document.getElementById('rFile');
+        if (fileInput.files.length > 0) {
+            data.append('attachment', fileInput.files[0]);
+        }
+
+        const res = await fetch('/api/payroll/reimbursements/', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                // Content-Type not set for FormData
+            },
+            body: data
+        });
+
+        if (res.ok) {
+            closeModal();
+            loadClaims();
+            alert('Claim Submitted');
+        } else {
+            alert('Failed to submit');
+        }
+    }
+
+    async function updateStatus(id, action) {
+        if (!confirm(action + " this claim?")) return;
+        const res = await fetch(`/api/payroll/reimbursements/${id}/${action}/`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (res.ok) loadClaims();
+    }
+
+    function openRequestModal() {
+        document.getElementById('claimModal').style.display = 'flex';
+    }
+    function closeModal() {
+        document.getElementById('claimModal').style.display = 'none';
+    }
+</script>
+
+<style>
+    .badge.pending {
+        background: #f59e0b;
+        color: #fff;
+    }
+
+    .badge.approved {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .badge.rejected {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    .badge.paid {
+        background: #3b82f6;
+        color: #fff;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
