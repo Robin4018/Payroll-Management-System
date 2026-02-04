@@ -82,7 +82,17 @@ def college_designations_view(request):
     return render(request, 'frontend/college_designations.html')
 
 def college_salary_structure_view(request):
-    return render(request, 'frontend/college_salary_structure.html')
+    tenant_id = None
+    if hasattr(request.user, 'employee') and request.user.employee.tenant:
+        tenant_id = request.user.employee.tenant.id
+    else:
+        # Fallback for superuser/admin without employee record
+        from tenants.models import Tenant
+        tenant = Tenant.objects.filter(type='EDUCATION').first() or Tenant.objects.first()
+        if tenant:
+            tenant_id = tenant.id
+            
+    return render(request, 'frontend/college_salary_structure.html', {'tenant_id': tenant_id})
 
 from employees.models import Employee
 from django.contrib.auth.decorators import login_required

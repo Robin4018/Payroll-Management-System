@@ -48,7 +48,7 @@ class SalaryTemplateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SalaryTemplate
-        fields = ['id', 'name', 'description', 'configs']
+        fields = ['id', 'name', 'description', 'configs', 'tenant']
 
 class LoanSerializer(serializers.ModelSerializer):
     employee_name = serializers.ReadOnlyField(source='employee.first_name')

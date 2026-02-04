@@ -3,6 +3,76 @@
 {% block header_title %}Salary Structure Management{% endblock %}
 
 {% block content_body %}
+<style>
+    /* Professional Form Controls */
+    .form-control {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background-color: #f8fafc;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        background-color: #fff;
+        outline: none;
+    }
+
+    /* Custom Select Arrow */
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-right: 4px;
+    }
+
+    .btn-action.edit {
+        background: #eff6ff;
+        color: var(--primary);
+    }
+
+    .btn-action.edit:hover {
+        background: #dbeafe;
+    }
+
+    .btn-action.delete {
+        background: #fef2f2;
+        color: var(--danger);
+    }
+
+    .btn-action.delete:hover {
+        background: #fee2e2;
+    }
+
+    /* Table Styling */
+    .table-hover tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    td {
+        vertical-align: middle;
+    }
+</style>
+
 <div class="card">
     <div class="tabs">
         <button class="tab-btn active" onclick="showTab('components')">Salary Components</button>
@@ -21,32 +91,66 @@
                     <span>Earnings</span>
                     <span class="badge badge-success">Credit</span>
                 </h3>
-                <div class="table-container">
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
                     <table>
                         <thead>
                             <tr>
                                 <th>Component Name</th>
                                 <th>Type</th>
                                 <th>Calculation</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="earningsTableBody"></tbody>
                     </table>
                 </div>
                 <!-- ... Add Form ... -->
-                <div
-                    style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px dashed var(--border-color);">
-                    <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Add Earning</h4>
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" id="newEarningName" placeholder="Name (e.g. HRA)" class="form-control"
-                            style="flex: 1;">
-                        <select id="newEarningType" class="form-control" style="width: 120px;">
-                            <option value="FLAT_AMOUNT">Flat</option>
-                            <option value="FORMULA">Formula</option>
-                        </select>
+                <div class="glass-panel"
+                    style="margin-top: 1.5rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-dark); margin:0;">
+                            <i class="fas fa-plus-circle" style="color: var(--success); margin-right: 8px;"></i>New
+                            Earning
+                        </h4>
+                        <span
+                            style="font-size: 0.75rem; color: var(--text-muted); background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">Auto-suggest
+                            enabled</span>
                     </div>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="addComponent('EARNING')">+ Add
-                        Component</button>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div>
+                            <label
+                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Component
+                                Name</label>
+                            <input type="text" id="newEarningName" list="earningSuggestions"
+                                placeholder="e.g. HRA, Bonus" class="form-control" style="width: 100%;">
+                            <datalist id="earningSuggestions">
+                                <option value="Basic Salary">
+                                <option value="House Rent Allowance">
+                                <option value="Dearness Allowance">
+                                <option value="Transport Allowance">
+                                <option value="Medical Allowance">
+                                <option value="Special Allowance">
+                                <option value="Performance Bonus">
+                                <option value="Overtime">
+                                <option value="Leave Travel Allowance">
+                                <option value="Conveyance Allowance">
+                            </datalist>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Calculation</label>
+                            <select id="newEarningType" class="form-control" style="width: 100%;">
+                                <option value="FLAT_AMOUNT">Flat Amount</option>
+                                <option value="FORMULA">Formula Based</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: 600;"
+                        onclick="addComponent('EARNING')">
+                        <i class="fas fa-check" style="margin-right: 8px;"></i> Add Earning Component
+                    </button>
                 </div>
             </div>
 
@@ -56,32 +160,64 @@
                     <span>Deductions</span>
                     <span class="badge badge-danger">Debit</span>
                 </h3>
-                <div class="table-container">
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
                     <table>
                         <thead>
                             <tr>
                                 <th>Component Name</th>
                                 <th>Type</th>
                                 <th>Calculation</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="deductionsTableBody"></tbody>
                     </table>
                 </div>
                 <!-- ... Add Form ... -->
-                <div
-                    style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px dashed var(--border-color);">
-                    <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Add Deduction</h4>
-                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <input type="text" id="newDeductionName" placeholder="Name (e.g. PF)" class="form-control"
-                            style="flex: 1;">
-                        <select id="newDeductionType" class="form-control" style="width: 120px;">
-                            <option value="FLAT_AMOUNT">Flat</option>
-                            <option value="FORMULA">Formula</option>
-                        </select>
+                <div class="glass-panel"
+                    style="margin-top: 1.5rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-dark); margin:0;">
+                            <i class="fas fa-minus-circle" style="color: var(--danger); margin-right: 8px;"></i>New
+                            Deduction
+                        </h4>
+                        <span
+                            style="font-size: 0.75rem; color: var(--text-muted); background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">Auto-suggest
+                            enabled</span>
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; background: var(--danger);"
-                        onclick="addComponent('DEDUCTION')">+ Add Component</button>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div>
+                            <label
+                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Component
+                                Name</label>
+                            <input type="text" id="newDeductionName" list="deductionSuggestions"
+                                placeholder="e.g. PF, Tax" class="form-control" style="width: 100%;">
+                            <datalist id="deductionSuggestions">
+                                <option value="Provident Fund (PF)">
+                                <option value="Employees State Insurance (ESI)">
+                                <option value="Professional Tax (PT)">
+                                <option value="TDS (Income Tax)">
+                                <option value="Loan Recovery">
+                                <option value="Salary Advance">
+                                <option value="Unpaid Leave Deduction">
+                            </datalist>
+                        </div>
+                        <div>
+                            <label
+                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Calculation</label>
+                            <select id="newDeductionType" class="form-control" style="width: 100%;">
+                                <option value="FLAT_AMOUNT">Flat Amount</option>
+                                <option value="FORMULA">Formula Based</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary"
+                        style="width: 100%; background: var(--danger); border-color: var(--danger); justify-content: center; font-weight: 600;"
+                        onclick="addComponent('DEDUCTION')">
+                        <i class="fas fa-check" style="margin-right: 8px;"></i> Add Deduction Component
+                    </button>
                 </div>
             </div>
         </div>
@@ -89,29 +225,104 @@
 
     <!-- Templates Tab (New) -->
     <div id="templates-tab" class="tab-content hidden">
-        <div style="display: flex; gap: 2rem;">
-            <!-- List -->
-            <div style="flex: 1;">
-                <h3 style="margin-bottom:1rem;">Available Templates</h3>
-                <div id="templateList" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Loaded via JS -->
+        <div style="display: flex; gap: 1.5rem; height: 600px;">
+            <!-- List Column -->
+            <div style="flex: 1; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0; color: var(--text-dark); border-bottom: none;">Salary Templates</h3>
+                    <button class="btn btn-primary" onclick="openCreateTemplateModal()"
+                        style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                        <i class="fas fa-plus" style="margin-right: 6px;"></i> Create Template
+                    </button>
                 </div>
-                <button class="btn btn-secondary" style="width:100%; margin-top:1rem;"
-                    onclick="openCreateTemplateModal()">+ Create New Template</button>
+
+                <div id="templateList"
+                    style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 0.5rem;">
+                    <!-- Loaded via JS -->
+                    <!-- Empty State Placeholder (Initially visible, hidden by JS if items exist) -->
+                    <div id="noTemplatesMsg"
+                        style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b;">
+                        <i class="fas fa-file-invoice-dollar"
+                            style="font-size: 2rem; margin-bottom: 1rem; color: #94a3b8;"></i>
+                        <p style="margin: 0;">No templates found.</p>
+                        <p style="font-size: 0.85rem;">Create a template to quickly assign structures.</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- Detail/Preview -->
-            <div style="flex: 1; background: #f8fafc; padding: 1rem; border-radius: 8px;">
-                <h4>Template Components</h4>
-                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1rem;">Select a template to view details</p>
-                <ul id="templateDetailList" style="padding-left: 20px;">
-                </ul>
+            <!-- Detail/Preview Column -->
+            <div
+                style="flex: 1; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <h4
+                    style="margin-top: 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1rem; color: var(--text-dark);">
+                    Template Details
+                </h4>
+                <div id="templateDetailPlaceholder" style="text-align: center; color: #94a3b8; padding-top: 3rem;">
+                    <i class="fas fa-mouse-pointer" style="font-size: 1.5rem; margin-bottom: 1rem;"></i>
+                    <p>Select a template to view its components</p>
+                </div>
+
+                <div id="templateDetailContent" class="hidden">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h5 id="detailTplName" style="color: var(--primary); margin: 0 0 0.5rem 0;"></h5>
+                            <p id="detailTplDesc" style="color: var(--text-muted); font-size: 0.9rem; margin: 0;"></p>
+                        </div>
+                        <button onclick="deleteCurrentTemplate()" class="btn-action delete" title="Delete Template"
+                            style="height:32px; width:32px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+
+                    <div style="background: #f8fafc; border-radius: 8px; padding: 1rem;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+                            <h6
+                                style="margin:0; font-size: 0.8rem; text-transform: uppercase; color: #64748b; font-weight: 700;">
+                                Components</h6>
+                            <button class="btn-action edit" onclick="openAddTemplateComponentModal()"
+                                title="Add Component" style="width:24px; height:24px;">
+                                <i class="fas fa-plus" style="font-size:0.7rem;"></i>
+                            </button>
+                        </div>
+                        <ul id="templateDetailList"
+                            style="padding-left: 0; list-style: none; margin: 0; font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <!-- Items go here -->
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Assignment Tab -->
     <div id="assignment-tab" class="tab-content hidden">
+        <!-- Bulk Assignment Section -->
+        <div class="glass-panel"
+            style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin-top:0; color: var(--primary); margin-bottom: 0.5rem;">
+                        <i class="fas fa-layer-group" style="margin-right: 8px;"></i>Bulk Structure Update
+                    </h4>
+                    <p style="font-size: 0.9rem; color: #475569; margin: 0;">
+                        Apply a salary template to <strong>all employees</strong>. existing structures will be
+                        overwritten.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <select id="bulkTemplateSelect" class="form-control" style="min-width: 250px; background: white;">
+                        <option value="">-- Select Template to Apply --</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="bulkUpdateStructure()"
+                        style="background: #2563eb; border: none; padding: 0.75rem 1.5rem; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+                        UPDATE STRUCTURE FOR ALL
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div
             style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
             <div style="flex: 1;">
@@ -121,7 +332,7 @@
                 </select>
             </div>
             <div style="flex: 1;">
-                <label class="form-label">Apply Template (Optional)</label>
+                <label class="form-label">Apply Template (Individual)</label>
                 <div style="display: flex; gap: 0.5rem;">
                     <select id="templateApplySelect" class="form-control">
                         <option value="">-- Select Template --</option>
@@ -178,6 +389,66 @@
             onclick="document.getElementById('createTemplateModal').classList.add('hidden')">Cancel</button>
     </div>
 </div>
+</div>
+
+<!-- Edit Component Modal -->
+<div id="editComponentModal" class="modal hidden"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
+    <div class="modal-content"
+        style="background:white; width:500px; margin: 100px auto; padding:2rem; border-radius:8px;">
+        <h3>Edit Component</h3>
+        <input type="hidden" id="editCompId">
+        <div class="form-group">
+            <label>Component Name</label>
+            <input type="text" id="editCompName" class="form-control">
+        </div>
+        <div class="form-group">
+            <label>Calculation Type</label>
+            <select id="editCompType" class="form-control" onchange="toggleEditFormula()">
+                <option value="FLAT_AMOUNT">Flat Amount</option>
+                <option value="FORMULA">Formula Based</option>
+            </select>
+        </div>
+        <div class="form-group" id="editFormulaGroup" class="hidden">
+            <label>Formula (e.g. 0.5 * basic)</label>
+            <input type="text" id="editCompFormula" class="form-control">
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="updateComponent()">Update</button>
+            <button class="btn btn-secondary"
+                onclick="document.getElementById('editComponentModal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Template Component Modal -->
+<div id="addTemplateComponentModal" class="modal hidden"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
+    <div class="modal-content"
+        style="background:white; width:400px; margin: 100px auto; padding:2rem; border-radius:8px;">
+        <h3>Add Component to Template</h3>
+        <input type="hidden" id="targetTplId">
+        <div class="form-group">
+            <label>Select Component</label>
+            <select id="tplCompSelect" class="form-control" onchange="checkComponentType()">
+                <!-- Loaded via JS -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Default Amount (Optional)</label>
+            <input type="number" id="tplCompAmount" class="form-control" placeholder="0.00">
+            <small id="tplCompHint"
+                style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">
+                Enter amount only if fixed (e.g. Travel Allowance). Leave 0 for formula-based components.
+            </small>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="addTemplateComponent()">Add</button>
+            <button class="btn btn-secondary"
+                onclick="document.getElementById('addTemplateComponentModal').classList.add('hidden')">Cancel</button>
+        </div>
+    </div>
+</div>
 
 <script>
     // --- Tabs Logic ---
@@ -230,7 +501,7 @@
 
     async function loadTemplates() {
         try {
-            const res = await fetch('/api/payroll/templates/');
+            const res = await fetch('/api/salary-templates/');
             if (res.ok) {
                 globalTemplates = await res.json();
                 renderTemplateList();
@@ -246,17 +517,51 @@
         dBody.innerHTML = '';
 
         globalComponents.forEach(comp => {
-            const typeLabel = comp.calculation_type === 'percentage' ? 'Formula Based' : 'Flat Amount';
+            const typeLabel = comp.calculation_type === 'FORMULA' ? 'Formula Based' : 'Flat Amount';
+
+            // Logic Display Mapping from LOGICS.txt
+            let calcDisplay = '-';
+            const nameLower = comp.name.toLowerCase();
+
+            if (comp.calculation_type === 'FORMULA') {
+                calcDisplay = comp.formula || 'N/A';
+            } else {
+                // Static mapping for display purposes
+                if (nameLower.includes('basic salary')) calcDisplay = '40% of CTC';
+                else if (nameLower.includes('house rent')) calcDisplay = '50% of Basic';
+                else if (nameLower.includes('dearness')) calcDisplay = 'Varies (0-100% of Basic)';
+                else if (nameLower.includes('transport')) calcDisplay = 'Fixed (₹1,600)';
+                else if (nameLower.includes('medical')) calcDisplay = 'Fixed (₹1,250)';
+                else if (nameLower.includes('special')) calcDisplay = 'Balancing Component';
+                else if (nameLower.includes('provident fund')) calcDisplay = '12% of (Basic + DA)';
+                else if (nameLower.includes('esi')) calcDisplay = '0.75% of Gross';
+                else if (nameLower.includes('professional tax')) calcDisplay = 'State Slabs';
+                else if (nameLower.includes('tds')) calcDisplay = 'As per Tax Regime';
+                else if (nameLower.includes('salary advance')) calcDisplay = 'Manual Deduction / EMI';
+                else if (nameLower.includes('unpaid leave') || nameLower.includes('loss of pay')) calcDisplay = 'Based on Attendance (LOP)';
+                else if (nameLower.includes('loan')) calcDisplay = 'As per Loan Schedule';
+            }
+
             const row = `
                 <tr>
                     <td style="font-weight: 500;">${comp.name}</td>
                     <td><span class="badge" style="background: #f1f5f9; color: var(--text-muted);">${typeLabel}</span></td>
                     <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">
-                        ${comp.calculation_type === 'percentage' ? comp.formula || 'N/A' : '-'}
+                        ${calcDisplay}
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button class="btn-action edit" onclick="editComponent(${comp.id})" title="Edit Component">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action delete" onclick="deleteComponent(${comp.id})" title="Delete Component">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
-            if (comp.type === 'earning') eBody.innerHTML += row;
+            if (comp.type === 'EARNING') eBody.innerHTML += row;
             else dBody.innerHTML += row;
         });
     }
@@ -268,25 +573,126 @@
 
         if (!name) return alert('Name Required');
 
+        // Safe Tenant ID handling
+        let validTenantId = "{{ tenant_id|default:'' }}";
+        if (!validTenantId || validTenantId === 'None') {
+            validTenantId = 9; // Fallback
+        } else {
+            validTenantId = parseInt(validTenantId);
+        }
+
+        console.log("Using Tenant ID:", validTenantId);
+
         const payload = {
             name: name,
-            type: type.toLowerCase(),
+            type: type,
             calculation_type: calcType,
             description: 'Created via Dashboard',
             is_taxable: true,
-            is_active: true
+            is_active: true,
+            tenant: validTenantId
         };
 
-        const res = await fetch('/api/components/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify(payload)
-        });
+        console.log("Sending Payload:", payload);
 
-        if (res.ok) {
-            document.getElementById(prefix + 'Name').value = '';
-            loadComponents();
+        try {
+            const res = await fetch('/api/components/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById(prefix + 'Name').value = '';
+                loadComponents();
+                // Optional: Show success toast
+            } else {
+                const err = await res.json();
+                console.error("API Error:", err);
+                alert("Failed to add component: " + JSON.stringify(err));
+            }
+        } catch (e) {
+            console.error("Fetch Error:", e);
+            alert("Error adding component: " + e.message);
         }
+    }
+
+    // --- Edit & Delete Logic ---
+    function editComponent(id) {
+        const comp = globalComponents.find(c => c.id === id);
+        if (!comp) return;
+
+        document.getElementById('editCompId').value = comp.id;
+        document.getElementById('editCompName').value = comp.name;
+        document.getElementById('editCompType').value = comp.calculation_type === 'FORMULA' ? 'FORMULA' : 'FLAT_AMOUNT';
+        document.getElementById('editCompFormula').value = comp.formula || '';
+
+        toggleEditFormula();
+        document.getElementById('editComponentModal').classList.remove('hidden');
+    }
+
+    function toggleEditFormula() {
+        const type = document.getElementById('editCompType').value;
+        const group = document.getElementById('editFormulaGroup');
+        if (type === 'FORMULA') {
+            group.style.display = 'block';
+        } else {
+            group.style.display = 'none';
+        }
+    }
+
+    async function updateComponent() {
+        const id = document.getElementById('editCompId').value;
+        const name = document.getElementById('editCompName').value;
+        const calcType = document.getElementById('editCompType').value;
+        const formula = document.getElementById('editCompFormula').value;
+
+        if (!name) return alert("Name is required");
+
+        const payload = {
+            name: name,
+            calculation_type: calcType,
+            formula: calcType === 'FORMULA' ? formula : ''
+        };
+
+        try {
+            const res = await fetch(`/api/components/${id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById('editComponentModal').classList.add('hidden');
+                loadComponents();
+            } else {
+                alert('Update failed');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+
+
+
+    async function deleteComponent(id) {
+        if (!await customConfirm("Are you sure you want to delete this component? This may affect existing salary structures.", "Delete Component", true)) return;
+
+        try {
+            const res = await fetch(`/api/components/${id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            if (res.ok) {
+                loadComponents();
+                showToast("Component deleted successfully", "success");
+            } else {
+                alert("Failed to delete component");
+            }
+        } catch (e) { console.error(e); alert("Error deleting"); }
     }
 
     // --- Template Logic ---
@@ -300,81 +706,182 @@
 
         if (!name) return alert("Name required");
 
-        // 1. Create Template
+        // Safe Tenant ID handling
+        let validTenantId = "{{ tenant_id|default:'' }}";
+        if (!validTenantId || validTenantId === 'None') {
+            validTenantId = 9; // Fallback
+        } else {
+            validTenantId = parseInt(validTenantId);
+        }
+
         try {
-            const res = await fetch('/api/payroll/templates/', {
+            const res = await fetch('/api/salary-templates/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify({ name: name, description: desc, tenant: 1 }) // Tenant hardcoded for demo
+                body: JSON.stringify({
+                    name: name,
+                    description: desc,
+                    tenant: validTenantId
+                })
             });
-            const tpl = await res.json();
 
-            // 2. Demo: Auto-add all active components to this template with 0 default
-            // In a real UI, we'd select components. For MVP, we add all.
-            // But 'configs' is read only on create usually. We need separate endpoint or logic.
-            // Since we don't have a 'add config' UI, let's skip configs for now or assumption.
-            // Actually, without configs, a template is useless.
-            // Let's assume we implement 'Edit Template' later.
-            // FOR DEMO: Reload to show it exists.
-
-            document.getElementById('createTemplateModal').classList.add('hidden');
-            loadTemplates();
-        } catch (e) { alert("Error creating template"); }
+            if (res.ok) {
+                const tpl = await res.json();
+                document.getElementById('createTemplateModal').classList.add('hidden');
+                document.getElementById('tplName').value = ''; // Reset form
+                document.getElementById('tplDesc').value = '';
+                loadTemplates();
+            } else {
+                const err = await res.json();
+                console.error("Template Create Error:", err);
+                alert("Failed to create template: " + (err.detail || JSON.stringify(err)));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error creating template: " + e.message);
+        }
     }
 
     function renderTemplateList() {
         const list = document.getElementById('templateList');
-        list.innerHTML = '';
-        globalTemplates.forEach(t => {
-            const item = document.createElement('div');
-            item.className = 'glass-panel';
-            item.style.padding = '1rem';
-            item.style.cursor = 'pointer';
-            item.innerHTML = `<strong>${t.name}</strong><br><small>${t.description}</small>`;
-            item.onclick = () => showTemplateDetails(t.id);
-            list.appendChild(item);
-        });
-    }
+        const msg = document.getElementById('noTemplatesMsg');
 
-    function showTemplateDetails(id) {
-        const t = globalTemplates.find(x => x.id === id);
-        const ul = document.getElementById('templateDetailList');
-        ul.innerHTML = '';
-        if (t && t.configs) {
-            if (t.configs.length === 0) ul.innerHTML = '<li>No components configured (Edit logic pending)</li>';
-            t.configs.forEach(c => {
-                ul.innerHTML += `<li>${c.component_name} (${c.component_type}) - Default: ${c.default_amount}</li>`;
+        // Remove existing items (keep the placeholder)
+        Array.from(list.children).forEach(child => {
+            if (child.id !== 'noTemplatesMsg') list.removeChild(child);
+        });
+
+        if (globalTemplates.length === 0) {
+            msg.classList.remove('hidden');
+        } else {
+            msg.classList.add('hidden');
+            globalTemplates.forEach(t => {
+                const item = document.createElement('div');
+                item.className = 'glass-panel';
+                item.style.padding = '1rem';
+                item.style.cursor = 'pointer';
+                item.style.border = '1px solid var(--border-color)';
+                item.style.borderRadius = '8px';
+                item.style.backgroundColor = 'white';
+                item.style.transition = 'all 0.2s';
+                item.style.marginBottom = '0.5rem';
+
+                item.onmouseover = () => { item.style.transform = 'translateY(-2px)'; item.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)'; };
+                item.onmouseout = () => { item.style.transform = 'none'; item.style.boxShadow = 'none'; };
+
+                item.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:var(--text-dark);">${t.name}</strong>
+                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:0.8rem;"></i>
+                    </div>
+                    <small style="color:var(--text-muted); display:block; margin-top:0.25rem;">${t.description || 'No description'}</small>
+                `;
+                item.onclick = () => showTemplateDetails(t.id);
+                list.insertBefore(item, msg); // Insert before placeholder
             });
         }
     }
 
+    function showTemplateDetails(id) {
+        const t = globalTemplates.find(x => x.id === id);
+        const placeholder = document.getElementById('templateDetailPlaceholder');
+        const content = document.getElementById('templateDetailContent');
+        const ul = document.getElementById('templateDetailList');
+
+        if (!t) return;
+
+        placeholder.classList.add('hidden');
+        content.classList.remove('hidden');
+
+        document.getElementById('detailTplName').textContent = t.name;
+        document.getElementById('detailTplDesc').textContent = t.description || 'No description provided.';
+
+        ul.innerHTML = '';
+        if (t.configs && t.configs.length > 0) {
+            t.configs.forEach(c => {
+                ul.innerHTML += `
+                    <li style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px dashed #f1f5f9;">
+                        <span>${c.component_name} <span class="badge" style="font-size:0.7rem; margin-left:4px;">${c.component_type}</span></span>
+                        <div style="display:flex; align-items:center; gap: 8px;">
+                            <span style="font-family:monospace; font-weight:600;">₹${c.default_amount}</span>
+                            <button class="btn-action delete" style="width:24px; height:24px; border-radius:50%; padding:0;" onclick="deleteTemplateComponent(${c.id})" title="Remove">
+                                <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+                            </button>
+                        </div>
+                    </li>`;
+            });
+        } else {
+            ul.innerHTML = '<li style="color:#94a3b8; font-style:italic;">No components configured.</li>';
+        }
+    }
+
     function populateTemplateDropdown() {
+        // Populate individual select
         const sel = document.getElementById('templateApplySelect');
         sel.innerHTML = '<option value="">-- Select Template --</option>';
+
+        // Populate bulk select
+        const bulkSel = document.getElementById('bulkTemplateSelect');
+        if (bulkSel) bulkSel.innerHTML = '<option value="">-- Select Template to Apply --</option>';
+
         globalTemplates.forEach(t => {
             sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            if (bulkSel) bulkSel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
         });
+    }
+
+    async function bulkUpdateStructure() {
+        const tplId = document.getElementById('bulkTemplateSelect').value;
+        if (!tplId) return alert("Please select a template first.");
+
+        if (!confirm("Are you sure you want to apply this template to ALL employees? This will overwrite existing salary structures.")) return;
+
+        try {
+            const res = await fetch(`/api/salary-templates/${tplId}/assign-bulk/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    apply_to_all: true
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                // Refresh if needed
+            } else {
+                alert("Failed: " + (data.error || "Unknown error"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error running bulk update");
+        }
     }
 
     async function applyTemplateToEmployee() {
         const empId = document.getElementById('employeeSelect').value;
         const tplId = document.getElementById('templateApplySelect').value;
 
-        if (!empId || !tplId) return alert("Select both Employee and Template");
+        if (!empId || !tplId) return showToast("Select both Employee and Template", 'error');
 
-        if (!confirm("This will overwrite existing salary structure. Continue?")) return;
+        if (!await customConfirm("This will overwrite existing salary structure. Continue?", "Assign Template")) return;
 
-        const res = await fetch(`/api/payroll/templates/${tplId}/assign-to-employee/`, {
+        // FIXED: Correct API endpoint
+        const res = await fetch(`/api/salary-templates/${tplId}/assign-to-employee/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
             body: JSON.stringify({ employee_id: empId })
         });
 
         if (res.ok) {
-            alert("Applied successfully!");
+            showToast("Template applied successfully!", "success");
             loadEmployeeStructure(); // Refresh view
         } else {
-            alert("Failed to apply");
+            const data = await res.json();
+            alert("Failed to apply: " + (data.error || "Unknown"));
         }
     }
 
@@ -392,8 +899,10 @@
         document.getElementById('assignmentPlaceholder').classList.add('hidden');
 
         // Fetch existing
+        // Fetch existing
         try {
-            const res = await fetch(`/api/salary-structures/?employee_id=${empId}`);
+            // FIXED: Correct query param 'employee' not 'employee_id'
+            const res = await fetch(`/api/salary-structures/?employee=${empId}`);
             const data = await res.json();
             // Convert list to map for easier lookup: component_id -> amount
             currentEmployeeStructure = {};
@@ -412,7 +921,7 @@
 
         globalComponents.forEach(comp => {
             const currentAmount = currentEmployeeStructure[comp.id] || 0;
-            const isFormula = comp.calculation_type === 'percentage';
+            const isFormula = comp.calculation_type === 'FORMULA';
 
             const html = `
                 <div style="background: #fff; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
@@ -446,7 +955,7 @@
             // Only process flat amounts or newly entered values. 
             // Formula fields are read-only but if we wanted to override, we'd enable them.
             // For now, only picking up values from inputs.
-            if (comp.calculation_type !== 'percentage') {
+            if (comp.calculation_type !== 'FORMULA') {
                 const input = document.getElementById(`comp_input_${comp.id}`);
                 if (input) {
                     updates.push({
@@ -484,22 +993,135 @@
             // Or... honestly, for this demo, let's just say "Saved"
             console.log("Saving", up);
         }
+    }
 
-        // REAL IMPL: 
-        // We will call a custom action I should add to ViewSet: 'bulk_update'
-        const res = await fetch('/api/salary-structures/bulk_update/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify({ employee_id: empId, items: updates })
+    function openAddTemplateComponentModal() {
+        // Current detail view logic uses globalTemplates to render, so we find it by name or we need to store ID when showing Details.
+        // Let's rely on stored ID if possible or just infer from DOM is risky.
+        // Better: store current viewing template ID in a variable
+        const currentTplName = document.getElementById('detailTplName').textContent;
+        const currentTpl = globalTemplates.find(t => t.name === currentTplName);
+        if (!currentTpl) return alert("Select a template first");
+
+        document.getElementById('targetTplId').value = currentTpl.id;
+
+        const sel = document.getElementById('tplCompSelect');
+        sel.innerHTML = '<option value="">-- Select Component --</option>';
+        globalComponents.forEach(c => {
+            sel.innerHTML += `<option value="${c.id}">${c.name} (${c.calculation_type === 'FORMULA' ? 'Formula' : 'Flat'})</option>`;
         });
 
-        if (res.ok) {
-            alert("Structure Saved Successfully!");
-            loadEmployeeStructure();
-        } else {
-            const err = await res.json();
-            alert("Failed to save: " + (err.error || "Unknown error"));
+        // Reset and check
+        document.getElementById('tplCompAmount').value = '';
+        checkComponentType();
+
+        document.getElementById('addTemplateComponentModal').classList.remove('hidden');
+    }
+
+    function checkComponentType() {
+        const compId = document.getElementById('tplCompSelect').value;
+        const amountInput = document.getElementById('tplCompAmount');
+        const hint = document.getElementById('tplCompHint');
+
+        if (!compId) {
+            amountInput.disabled = false;
+            amountInput.placeholder = "0.00";
+            hint.textContent = "Enter amount if fixed (e.g. Travel Allowance). Leave 0 for variable/manual entry.";
+            hint.style.color = "var(--text-muted)";
+            return;
         }
+
+        const comp = globalComponents.find(c => c.id == compId);
+        if (comp && comp.calculation_type === 'FORMULA') {
+            amountInput.value = '';
+            amountInput.disabled = true;
+            amountInput.placeholder = "Auto-calculated via Formula";
+            hint.textContent = "This component uses a formula (e.g. % of Basic). Amount will be calculated per employee.";
+            hint.style.color = "var(--primary)";
+        } else {
+            amountInput.disabled = false;
+            amountInput.placeholder = "0.00";
+            hint.textContent = "Enter amount if fixed (e.g. Travel Allowance). Leave 0 for variable/manual entry.";
+            hint.style.color = "var(--text-muted)";
+        }
+    }
+
+    async function addTemplateComponent() {
+        const tplId = document.getElementById('targetTplId').value;
+        const compId = document.getElementById('tplCompSelect').value;
+        const amt = document.getElementById('tplCompAmount').value || 0;
+
+        if (!tplId || !compId) return alert("Select component");
+
+        try {
+            const res = await fetch('/api/salary-template-configs/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({
+                    template: tplId,
+                    component: compId,
+                    default_amount: amt
+                })
+            });
+
+            if (res.ok) {
+                document.getElementById('addTemplateComponentModal').classList.add('hidden');
+                document.getElementById('tplCompAmount').value = '';
+                await loadTemplates(); // Reload to get updated configs
+                showTemplateDetails(parseInt(tplId)); // Refresh view
+            } else {
+                const err = await res.json();
+                alert("Failed: " + JSON.stringify(err));
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteTemplateComponent(configId) {
+        if (!await customConfirm("Remove this component from template?", "Remove Component")) return;
+        try {
+            const res = await fetch(`/api/salary-template-configs/${configId}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (res.ok) {
+                // We need to refresh. Currently showTemplateDetails relies on globalTemplates.
+                // So we must reloadTemplates first.
+                // To keep the view open, we need the current Tpl ID.
+                // We can get it from the DOM or current logic.
+                const tplName = document.getElementById('detailTplName').textContent;
+                await loadTemplates();
+                const tpl = globalTemplates.find(t => t.name === tplName);
+                if (tpl) showTemplateDetails(tpl.id);
+                showToast("Component removed from template", "success");
+            } else {
+                alert("Failed to remove");
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function deleteCurrentTemplate() {
+        const tplName = document.getElementById('detailTplName').textContent;
+        const tpl = globalTemplates.find(t => t.name === tplName);
+
+        if (!tpl) return;
+        if (!await customConfirm(`Permanently delete template "${tpl.name}"? This action cannot be undone.`, "Delete Template", true)) return;
+
+        try {
+            const res = await fetch(`/api/salary-templates/${tpl.id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+
+            if (res.ok) {
+                // Clear Detail View
+                document.getElementById('templateDetailPlaceholder').classList.remove('hidden');
+                document.getElementById('templateDetailContent').classList.add('hidden');
+                await loadTemplates();
+                showToast("Template deleted successfully", "success");
+            } else {
+                alert("Failed to delete template");
+            }
+        } catch (e) { console.error(e); }
     }
 
     function getCookie(name) {
@@ -508,6 +1130,7 @@
             const cookies = document.cookie.split(';');
             for (let i = 0; i < cookies.length; i++) {
                 const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;

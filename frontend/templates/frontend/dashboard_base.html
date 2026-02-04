@@ -82,6 +82,173 @@
     </main>
 </div>
 
+<style>
+    /* --- Toast Notifications --- */
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .toast-notification {
+        min-width: 300px;
+        padding: 1rem 1.25rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out forwards;
+        border-left: 4px solid var(--primary);
+        font-size: 0.95rem;
+        color: #1e293b;
+    }
+
+    .toast-notification.success {
+        border-left-color: #22c55e;
+    }
+
+    .toast-notification.error {
+        border-left-color: #ef4444;
+    }
+
+    .toast-notification.info {
+        border-left-color: #3b82f6;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+
+    /* --- Custom Modal --- */
+    .custom-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+    }
+
+    .custom-modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .custom-confirm-box {
+        background: white;
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        transform: scale(0.95);
+        transition: transform 0.2s;
+        text-align: center;
+    }
+
+    .custom-modal-overlay.active .custom-confirm-box {
+        transform: scale(1);
+    }
+
+    .confirm-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .confirm-desc {
+        color: #64748b;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .confirm-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .confirm-btn {
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .btn-cancel:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-confirm {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-confirm:hover {
+        background: #1d4ed8;
+    }
+
+    .btn-confirm.danger {
+        background: #ef4444;
+    }
+
+    .btn-confirm.danger:hover {
+        background: #dc2626;
+    }
+</style>
+
+<!-- Global Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Custom Confirmation Modal -->
+<div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-confirm-box">
+        <div class="confirm-title" id="confirmTitle">Confirm Action</div>
+        <p class="confirm-desc" id="confirmMessage">Are you sure you want to proceed?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel" id="btnConfirmCancel">Cancel</button>
+            <button class="confirm-btn btn-confirm" id="btnConfirmYes">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Simple helper to mark active link
     const path = window.location.pathname;
@@ -95,5 +262,76 @@
         localStorage.removeItem('access_token');
         window.location.href = '/';
     }
+
+    // --- Toast Logic ---
+    window.showToast = function (message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+
+        // Icons based on type
+        let icon = '<i class="fas fa-info-circle" style="color:#3b82f6"></i>';
+        if (type === 'success') icon = '<i class="fas fa-check-circle" style="color:#22c55e"></i>';
+        if (type === 'error') icon = '<i class="fas fa-exclamation-circle" style="color:#ef4444"></i>';
+
+        toast.innerHTML = `
+            ${icon}
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Auto remove
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    };
+
+    // Override Alert
+    window.originalAlert = window.alert;
+    window.alert = function (message) {
+        // Use toast for alerts, default to info/error if it looks like one
+        const type = (message.toLowerCase().includes('fail') || message.toLowerCase().includes('error')) ? 'error' : 'info';
+        // If message is "Applied successfully!", make it success
+        const finalType = (message.toLowerCase().includes('success')) ? 'success' : type;
+
+        showToast(message, finalType);
+    };
+
+    // --- Custom Confirm Logic ---
+    let confirmResolve = null;
+
+    window.customConfirm = function (message, title = "Confirm Action", isDanger = false) {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('confirmTitle');
+        const msgEl = document.getElementById('confirmMessage');
+        const yesBtn = document.getElementById('btnConfirmYes');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+
+        // Danger styling
+        if (isDanger) yesBtn.classList.add('danger');
+        else yesBtn.classList.remove('danger');
+
+        modal.classList.add('active');
+
+        return new Promise((resolve) => {
+            confirmResolve = resolve;
+        });
+    };
+
+    // Setup Confirm Listeners
+    document.getElementById('btnConfirmCancel').addEventListener('click', () => {
+        document.getElementById('customConfirmModal').classList.remove('active');
+        if (confirmResolve) confirmResolve(false);
+    });
+
+    document.getElementById('btnConfirmYes').addEventListener('click', () => {
+        document.getElementById('customConfirmModal').classList.remove('active');
+        if (confirmResolve) confirmResolve(true);
+    });
+
 </script>
 {% endblock %}

@@ -14,12 +14,13 @@ router.register(r'bank-details', EmployeeBankDetailsViewSet, basename='employee-
 router.register(r'employee-documents', EmployeeDocumentViewSet, basename='employee-documents')
 router.register(r'employees', EmployeeViewSet)
 router.register(r'roles', RoleViewSet, basename='roles')
+from payroll.views import SalaryTemplateViewSet, LoanViewSet, ReimbursementViewSet, SalaryTemplateConfigViewSet
+router.register(r'salary-templates', SalaryTemplateViewSet, basename='salary-templates')
+router.register(r'salary-template-configs', SalaryTemplateConfigViewSet, basename='salary-template-configs')
 router.register(r'payroll', PayrollLedgerViewSet)
 router.register(r'components', SalaryComponentViewSet)
-router.register(r'salary-structures', EmployeeSalaryStructureViewSet) # Renamed to match frontend
+router.register(r'salary-structures', EmployeeSalaryStructureViewSet)
 router.register(r'adjustments', PayrollAdjustmentViewSet)
-from payroll.views import SalaryTemplateViewSet, LoanViewSet, ReimbursementViewSet
-router.register(r'payroll/templates', SalaryTemplateViewSet, basename='salary-templates')
 router.register(r'loans', LoanViewSet, basename='loans')
 router.register(r'reimbursements', ReimbursementViewSet, basename='reimbursements')
 router.register(r'report-analytics', ReportViewSet, basename='report-analytics')

@@ -191,19 +191,30 @@
 <!-- Salary Tab -->
 <div id="salary-section" class="tab-content hidden">
     <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h3>Salary Structure</h3>
-            <button class="btn btn-primary" onclick="openSalaryModal()">Update Structure</button>
+        <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem;">
+            <h3 style="margin: 0; min-width: 150px;">Salary Structure</h3>
+            <button onclick="openSalaryModal()"
+                style="flex: 1; background: var(--primary); color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-align: center; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s;">
+                UPDATE STRUCTURE
+            </button>
         </div>
 
         <div
-            style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color);">
-            <label style="color: var(--text-muted); font-size: 0.9rem;">Annual CTC</label>
-            <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">
-                ₹ <span id="display-ctc">0.00</span>
+            style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Annual CTC</label>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">
+                    ₹ <span id="display-ctc">0.00</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Base for component
+                    calculations</p>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Base for all component
-                calculations</p>
+            <div>
+                <label style="color: var(--text-muted); font-size: 0.9rem;">Current Template</label>
+                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-main);" id="display-template-name">
+                    --
+                </div>
+            </div>
         </div>
 
         <div class="table-container">
@@ -247,20 +258,43 @@
             </button>
         </div>
 
-        <form onsubmit="updateSalaryStructure(event)" class="modal-body">
-            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Enter the new Annual CTC. Components will be auto-calculated.
-            </p>
-            <div class="form-group">
-                <label class="form-label">Annual CTC (₹)</label>
-                <input type="number" id="input-ctc" class="form-control" step="0.01" required
-                    style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">
+        <form onsubmit="handleSalaryUpdate(event)" class="modal-body">
+            <div class="tabs" style="margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+                <button type="button" class="tab-btn active" onclick="switchSalaryMode('template')"
+                    id="btn-mode-template">Use Template</button>
+                <button type="button" class="tab-btn" onclick="switchSalaryMode('manual')" id="btn-mode-manual">Manual /
+                    CTC</button>
+            </div>
+
+            <!-- Template Mode -->
+            <div id="mode-template">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Select a pre-defined salary template to apply to this employee.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Salary Template</label>
+                    <select id="input-template" class="form-control">
+                        <option value="">-- Select Template --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Manual Mode -->
+            <div id="mode-manual" class="hidden">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Enter the new Annual CTC. Components will be auto-calculated based on default formulas.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Annual CTC (₹)</label>
+                    <input type="number" id="input-ctc" class="form-control" step="0.01"
+                        style="font-size: 1.25rem; font-weight: 700; color: var(--primary);">
+                </div>
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary"
                     onclick="document.getElementById('salary-modal').classList.add('hidden')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Calculate & Save</button>
+                <button type="submit" class="btn btn-primary">Save Structure</button>
             </div>
         </form>
     </div>
@@ -469,6 +503,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         loadEmployeeDetails();
+        loadTemplates(); // Fetch templates
     });
 
     async function loadEmployeeDetails() {
@@ -701,10 +736,75 @@
         } catch (e) { console.error(e); }
     }
 
-    async function updateSalaryStructure(e) {
-        e.preventDefault();
-        const ctc = document.getElementById('input-ctc').value;
+    // --- Salary Updates ---
+    let globalTemplates = [];
 
+    async function loadTemplates() {
+        try {
+            const res = await fetch('/api/salary-templates/');
+            if (res.ok) {
+                globalTemplates = await res.json();
+                const sel = document.getElementById('input-template');
+                sel.innerHTML = '<option value="">-- Select Template --</option>';
+                globalTemplates.forEach(t => {
+                    sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                });
+            }
+        } catch (e) { console.error("Template load error", e); }
+    }
+
+    function switchSalaryMode(mode) {
+        if (mode === 'template') {
+            document.getElementById('mode-template').classList.remove('hidden');
+            document.getElementById('mode-manual').classList.add('hidden');
+            document.getElementById('btn-mode-template').classList.add('active');
+            document.getElementById('btn-mode-manual').classList.remove('active');
+        } else {
+            document.getElementById('mode-template').classList.add('hidden');
+            document.getElementById('mode-manual').classList.remove('hidden');
+            document.getElementById('btn-mode-template').classList.remove('active');
+            document.getElementById('btn-mode-manual').classList.add('active');
+        }
+    }
+
+    async function handleSalaryUpdate(e) {
+        e.preventDefault();
+        const mode = document.getElementById('mode-template').classList.contains('hidden') ? 'manual' : 'template';
+
+        if (mode === 'template') {
+            const tplId = document.getElementById('input-template').value;
+            if (!tplId) return alert("Please select a template");
+            console.log("Using API endpoint for assignment...");
+            await assignTemplate(tplId);
+        } else {
+            const ctc = document.getElementById('input-ctc').value;
+            if (!ctc) return alert("Please enter CTC");
+            await updateSalaryStructureCTC(ctc);
+        }
+    }
+
+    async function assignTemplate(tplId) {
+        try {
+            // Using the specific action on valid ViewSet
+            const res = await fetch(`/api/salary-templates/${tplId}/assign-to-employee/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ employee_id: empId })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('salary-modal').classList.add('hidden');
+                showToast("Template Assigned Successfully", "success");
+                loadSalaryStructure();
+                // Optionally update template name display if we tracked it
+            } else {
+                alert("Failed: " + (data.error || JSON.stringify(data)));
+            }
+        } catch (e) { console.error(e); alert("Assignment Error"); }
+    }
+
+    async function updateSalaryStructureCTC(ctc) {
         try {
             const res = await fetch(`/api/salary-structures/calculate-from-ctc/`, {
                 method: 'POST',
@@ -714,9 +814,9 @@
 
             if (res.ok) {
                 document.getElementById('salary-modal').classList.add('hidden');
-                // Update display
                 document.getElementById('display-ctc').innerText = parseFloat(ctc).toLocaleString('en-IN', { minimumFractionDigits: 2 });
                 loadSalaryStructure();
+                showToast("Calculated from CTC Successfully", "success");
             } else {
                 const err = await res.json();
                 alert('Error: ' + (err.error || 'Unknown error'));

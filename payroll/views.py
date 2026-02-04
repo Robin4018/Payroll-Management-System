@@ -96,6 +96,8 @@ class SalaryTemplateViewSet(ModelViewSet):
     queryset = SalaryTemplate.objects.all()
     serializer_class = SalaryTemplateSerializer
 
+
+
     @action(detail=True, methods=['post'], url_path='assign-to-employee')
     def assign_to_employee(self, request, pk=None):
         template = self.get_object()
@@ -126,6 +128,59 @@ class SalaryTemplateViewSet(ModelViewSet):
         EmployeeSalaryStructure.objects.bulk_create(new_structures)
         
         return Response({"message": f"Template {template.name} applied to {employee.first_name}"})
+
+    @action(detail=True, methods=['post'], url_path='assign-bulk')
+    def assign_bulk(self, request, pk=None):
+        """
+        Assign a template to multiple employees or all employees in a tenant.
+        """
+        template = self.get_object()
+        employee_ids = request.data.get('employee_ids', [])
+        apply_to_all = request.data.get('apply_to_all', False)
+        # We rely on the template's tenant to filter employees if apply_to_all is True
+        
+        from employees.models import Employee
+        
+        employees = []
+        if apply_to_all:
+            # target all employees in the template's tenant
+            employees = Employee.objects.filter(tenant=template.tenant)
+        elif employee_ids:
+            employees = Employee.objects.filter(id__in=employee_ids, tenant=template.tenant)
+            
+        if not employees:
+            return Response({"error": "No valid employees selected"}, status=400)
+            
+        # Get Template Configs
+        configs = template.configs.all()
+        if not configs.exists():
+            return Response({"error": "Template has no components configured"}, status=400)
+
+        # 1. Delete existing structures for these employees
+        # Use bulk delete
+        EmployeeSalaryStructure.objects.filter(employee__in=employees).delete()
+        
+        # 2. Prepare new structures
+        new_structures = []
+        for emp in employees:
+            for config in configs:
+                new_structures.append(EmployeeSalaryStructure(
+                    employee=emp,
+                    component=config.component,
+                    amount=config.default_amount
+                ))
+        
+        # 3. Bulk Create
+        EmployeeSalaryStructure.objects.bulk_create(new_structures)
+        
+        return Response({"message": f"Template '{template.name}' applied to {len(employees)} employees."})
+
+from .serializers import SalaryTemplateConfigSerializer
+
+class SalaryTemplateConfigViewSet(ModelViewSet):
+    queryset = SalaryTemplateConfig.objects.all()
+    serializer_class = SalaryTemplateConfigSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class PayrollLedgerViewSet(ModelViewSet):
     queryset = PayrollLedger.objects.all()

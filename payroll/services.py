@@ -54,19 +54,17 @@ class PayrollCalculator:
                 # WARNING: eval is dangerous. In production, use a safe mathemetical parser.
                 # For this demo, we assume the formula is trusted admin input.
                 
-                # Context for eval
-                context = base_components.copy()
+                # Context for eval - Convert to float for ease of calculation with literals (0.5 etc)
+                context = {k: float(v) for k, v in base_components.items()}
                 
                 try:
-                    # Replace variable names in formula? 
-                    # Actually, let's just use eval with the context dictionary.
                     # e.g. "basic * 0.40" -> basic must be in context.
                     res = eval(formula, {}, context)
                     amount = Decimal(str(res))
                     print(f"DEBUG: Success {item.component.name}: {formula} -> {amount}")
                 except Exception as e:
                     print(f"DEBUG: Error calculating formula {formula} for {employee}: {e}")
-                    print(f"DEBUG: Context was: {context}")
+                    # print(f"DEBUG: Context was: {context}")
                     amount = Decimal('0.00')
 
                 if item.component.type == SalaryComponent.ComponentType.EARNING:
@@ -208,14 +206,12 @@ class PayrollCalculator:
         lop_units = STANDARD_WORKING_DAYS - final_payable_days
         
         lop_deduction = Decimal('0.00')
-        if earnings_total > 0:
+        if earnings_total > 0 and lop_units > 0:
             daily_salary = earnings_total / STANDARD_WORKING_DAYS
             lop_deduction = daily_salary * lop_units
             lop_deduction = round(lop_deduction, 2)
-            
-            if lop_units > 0:
-                print(f"DEBUG: LOP/Proration for {employee}: {lop_units:.2f} units -> {lop_deduction}")
-                deductions_total += lop_deduction
+            print(f"DEBUG: LOP/Proration for {employee}: {lop_units:.2f} units -> {lop_deduction}")
+            deductions_total += lop_deduction
         
         # Store for reporting
         lop_days_count = lop_days # Actual absent
@@ -227,8 +223,10 @@ class PayrollCalculator:
         earned_gross = earnings_total - lop_deduction
         
         # PF Basis = Basic + DA
-        basic_salary = base_components.get('basic salary', Decimal('0.00')) 
-        da_amount = base_components.get('dearness allowance', Decimal('0.00'))
+        # Fallback Lookups for component names
+        basic_salary = base_components.get('basic salary', base_components.get('basic', Decimal('0.00')))
+        da_amount = base_components.get('dearness allowance', base_components.get('da', Decimal('0.00')))
+        
         pf_basis = basic_salary + da_amount
         
         from compliance.services import ComplianceCalculator
