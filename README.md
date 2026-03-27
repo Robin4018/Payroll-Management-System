@@ -90,9 +90,4 @@ A high-performance, **Multi-tenant SaaS** payroll and HR management solution bui
 ```
 
 ---
-
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-*Developed with ❤️ by [Robin](https://github.com/Robin4018)*
+*Developed with by [Robin](https://github.com/Robin4018)*
