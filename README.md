@@ -1,6 +1,6 @@
 # 🚀 Universal Payroll Management System
 
-A high-performance, **Multi-tenant SaaS** payroll and HR management solution built with **Django**. Designed to handle complex organizational workflows for Schools, Colleges, and Corporate entities with absolute data isolation.
+A high-performance, **Multi-tenant SaaS** payroll and HR management solution built with **Django**. Designed to handle complex organizational workflows for Schools, Colleges, and Corporate entities with absolute data isolation. I've Submitted this as my Final Year main Project. If you're interested in contributing to this project, kindly create a seperate new branch and feel free to work on this.  
 
 ---
 
