@@ -44,6 +44,8 @@ class RoleSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     department_name = serializers.ReadOnlyField(source='department.name')
     designation_name = serializers.ReadOnlyField(source='designation_fk.name')
+    designation_display = serializers.SerializerMethodField()
+    profile_photo = serializers.ImageField(required=False, allow_null=True)
     reporting_manager_name = serializers.SerializerMethodField()
     bank_details = EmployeeBankDetailsSerializer(read_only=True)
     documents = EmployeeDocumentSerializer(many=True, read_only=True)
@@ -68,6 +70,16 @@ class EmployeeSerializer(serializers.ModelSerializer):
     def get_role(self, obj):
         if obj.user:
             return obj.user.groups.values_list('name', flat=True).first()
+        return None
+
+    designation_display = serializers.SerializerMethodField()
+    
+    def get_designation_display(self, obj):
+        return obj.designation_fk.name if obj.designation_fk else (obj.designation or "Staff")
+
+    def get_profile_photo(self, obj):
+        if obj.profile_photo:
+            return obj.profile_photo.url
         return None
 
     secondary_department_names = serializers.SerializerMethodField()

@@ -10,37 +10,45 @@ class DashboardStatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get tenant from logged-in user
+        month_param = request.query_params.get('month')
+        
         # Get tenant from logged-in user
         tenant = None
         if hasattr(request.user, 'employee') and request.user.employee.tenant:
             tenant = request.user.employee.tenant
         elif request.user.is_superuser:
-            # Fallback for superuser: Use the first available tenant (or specifically Education if available)
-            # This prevents dashboard breakage if the superuser deletes their own Employee record.
             from tenants.models import Tenant
-            tenant = Tenant.objects.filter(type='EDUCATION').first() or Tenant.objects.first()
+            org_type = getattr(request.user.profile, 'organization_type', 'COMPANY') if hasattr(request.user, 'profile') else 'COMPANY'
+            tenant_type = 'CORPORATE' if org_type == 'COMPANY' else 'EDUCATION'
+            tenant = Tenant.objects.filter(type=tenant_type).first() or Tenant.objects.first()
         
         if not tenant:
             return Response({"error": "No tenant found for user"}, status=400)
         
         # 1. Overview Stats - Filter by tenant
-        total_employees = Employee.objects.filter(tenant=tenant).count()
-        active_employees = Employee.objects.filter(tenant=tenant, is_active=True).count()
-        
-        # Financials
-        # Get the latest month where payroll was run for this tenant
-        last_ledger_entry = PayrollLedger.objects.filter(employee__tenant=tenant).order_by('-month').first()
-        current_month_cost = 0
-        last_payroll_date = None
-        
-        if last_ledger_entry:
-            last_payroll_date = last_ledger_entry.month
-            # Aggregate all ledgers for this specific month and tenant
-            current_month_cost = PayrollLedger.objects.filter(
-                employee__tenant=tenant,
-                month=last_payroll_date
-            ).aggregate(Sum('net_pay'))['net_pay__sum'] or 0
+        employee_qs = Employee.objects.filter(tenant=tenant)
+        ledger_qs = PayrollLedger.objects.filter(employee__tenant=tenant)
+
+        if month_param:
+            # If a specific month is selected, we filter by it
+            total_employees = employee_qs.count()
+            active_employees = employee_qs.filter(is_active=True).count()
+            
+            month_ledger = ledger_qs.filter(month=month_param)
+            current_month_cost = month_ledger.aggregate(Sum('net_pay'))['net_pay__sum'] or 0
+            last_payroll_date = month_param
+        else:
+            # Default behavior: Latest month stats
+            total_employees = employee_qs.count()
+            active_employees = employee_qs.filter(is_active=True).count()
+            
+            last_ledger_entry = ledger_qs.order_by('-month').first()
+            current_month_cost = 0
+            last_payroll_date = None
+            
+            if last_ledger_entry:
+                last_payroll_date = last_ledger_entry.month
+                current_month_cost = ledger_qs.filter(month=last_payroll_date).aggregate(Sum('net_pay'))['net_pay__sum'] or 0
 
         # YTD (Current Calendar Year) for this tenant
         current_year = timezone.now().year
@@ -76,24 +84,35 @@ class DashboardStatsView(APIView):
             trend_labels.append(lbl)
             trend_values.append(item['total'])
 
+        # 3. Pending Approvals - Filter by tenant
+        from attendance.models import LeaveRequest
+        from .models import Loan, Reimbursement
+        pending_leaves = LeaveRequest.objects.filter(employee__tenant=tenant, status='PENDING').count()
+        pending_loans = Loan.objects.filter(employee__tenant=tenant, status='PENDING').count()
+        pending_reimbursements = Reimbursement.objects.filter(employee__tenant=tenant, status='PENDING').count()
+        pending_total = pending_leaves + pending_loans + pending_reimbursements
+
         return Response({
             "stats": {
-                "total_employees": total_employees,
-                "active_employees": active_employees,
-                "inactive_employees": total_employees - active_employees,
-                "last_month_payroll": current_month_cost,
-                "ytd_payroll": ytd_payroll,
-                "avg_salary": avg_salary,
-                "last_run_date": last_payroll_date
+                "total_employees": int(total_employees),
+                "active_employees": int(active_employees),
+                "inactive_employees": int(total_employees - active_employees),
+                "last_month_payroll": float(current_month_cost),
+                "total_monthly_salary": float(current_month_cost), # Compatibility
+                "ytd_payroll": float(ytd_payroll),
+                "total_year_spend": float(ytd_payroll), # Compatibility
+                "avg_salary": float(avg_salary),
+                "last_run_date": last_payroll_date,
+                "pending_approvals": int(pending_total)
             },
             "charts": {
                 "dept_distribution": {
                     "labels": dept_labels,
-                    "data": dept_counts
+                    "data": [int(x) for x in dept_counts]
                 },
                 "salary_trend": {
                     "labels": trend_labels,
-                    "data": trend_values
+                    "data": [float(x) for x in trend_values]
                 }
             }
         })

@@ -1,151 +1,546 @@
 {% extends 'frontend/dashboard_base.html' %}
 
-{% block header_title %}Payroll Processing{% endblock %}
+{% block header_title %}Run Payroll{% endblock %}
 
 {% block content_body %}
-<!-- Wizard Progress -->
-<div class="steps-container"
-    style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
-    <div class="step-line"
-        style="position: absolute; top: 15px; left: 0; right: 0; height: 3px; background: #e2e8f0; z-index: 0;"></div>
-    <div class="step-item active" id="step-1-indicator" style="z-index: 1; text-align: center;">
-        <div class="step-circle"
-            style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
-            1</div>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; font-weight: 500;">Selection</p>
-    </div>
-    <div class="step-item" id="step-2-indicator" style="z-index: 1; text-align: center;">
-        <div class="step-circle"
-            style="width: 32px; height: 32px; background: #e2e8f0; color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #fff;">
-            2</div>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">Review</p>
-    </div>
-    <div class="step-item" id="step-3-indicator" style="z-index: 1; text-align: center;">
-        <div class="step-circle"
-            style="width: 32px; height: 32px; background: #e2e8f0; color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 2px solid #fff;">
-            3</div>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">Process</p>
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-glass: var(--primary-light);
+        --success-glass: rgba(16, 185, 129, 0.1);
+        --text-dark: var(--text-main);
+        --text-muted: var(--text-muted);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-entry {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    /* Cards */
+    .header-card-premium {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .wizard-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        padding: 3rem;
+        max-width: 900px;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+
+    /* Stepper */
+    .stepper-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .stepper-track {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 0;
+    }
+
+    .step-item {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        width: 120px;
+    }
+
+    .step-circle {
+        width: 44px;
+        height: 44px;
+        background: var(--bg-input);
+        border: 2px solid var(--border-color);
+        color: var(--text-muted);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem auto;
+        font-weight: 800;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .step-item.active .step-circle {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+        box-shadow: 0 10px 20px var(--primary-light);
+    }
+
+    .step-item.completed .step-circle {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: #10b981;
+        color: #10b981;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: color 0.3s;
+    }
+
+    .step-item.active .step-label {
+        color: var(--primary);
+        font-weight: 700;
+    }
+
+    /* Forms & Tables */
+    .form-control {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.85rem 1.25rem;
+        font-size: 0.95rem;
+        width: 100%;
+        transition: all 0.2s;
+        background-color: var(--bg-input);
+        color: var(--text-main);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-light);
+        background-color: var(--bg-card);
+        outline: none;
+    }
+
+    .preview-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .preview-table th {
+        background: var(--primary-light);
+        padding: 1.25rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .preview-table td {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.95rem;
+    }
+
+    .preview-table tr:hover td {
+        background: var(--primary-light);
+    }
+
+    .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-primary {
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+
+    /* Summary Components */
+    .summary-box {
+        background: var(--bg-input);
+        padding: 1.5rem;
+        border-radius: 16px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .summary-box:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+
+    .summary-icon {
+        width: 54px;
+        height: 54px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .summary-details {
+        flex: 1;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: 850;
+        color: var(--text-main);
+        margin-bottom: 0.1rem;
+    }
+
+    .summary-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        font-weight: 600;
+    }
+
+    .premium-alert {
+        background: rgba(234, 179, 8, 0.1);
+        border: 1px solid rgba(234, 179, 8, 0.2);
+        padding: 1.25rem 1.5rem;
+        border-radius: 14px;
+        color: #eab308;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        text-align: left;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
+    }
+</style>
+
+<div class="header-card-premium animate-entry">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+            <h3
+                style="margin: 0; font-size: 1.75rem; font-weight: 850; color: var(--text-main); letter-spacing: -0.02em;">
+                Run Payroll</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 1rem;">Calculate monthly salaries for
+                all staff.</p>
+        </div>
+        <div
+            style="background: var(--primary-light); padding: 0.8rem 1.5rem; border-radius: 14px; display: flex; align-items: center; gap: 1rem; border: 1px solid var(--border-color);">
+            <i class="fas fa-calendar-alt" style="color: var(--primary); font-size: 1.5rem;"></i>
+            <div>
+                <div
+                    style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">
+                    Payroll Month</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main);" id="header-period-display">--
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Step 1: Selection -->
-<div id="step-1" class="step-content">
-    <div class="card" style="max-width: 800px; margin: 0 auto;">
-        <h3 style="margin-bottom: 1.5rem;">Select Payroll Period</h3>
+<div class="stepper-container animate-entry animate-delay-1">
+    <div class="stepper-track"></div>
+    <!-- Step Indicators -->
+    <div style="display: flex; justify-content: space-between; width: 60%;">
+        <div class="step-item active" id="step-1-indicator">
+            <div class="step-circle">1</div>
+            <div class="step-label">Choose Staff</div>
+        </div>
+        <div class="step-item" id="step-2-indicator">
+            <div class="step-circle">2</div>
+            <div class="step-label">Review</div>
+        </div>
+        <div class="step-item" id="step-3-indicator">
+            <div class="step-circle">3</div>
+            <div class="step-label">Launch</div>
+        </div>
+    </div>
+</div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-            <div class="form-group">
-                <label class="form-label">Month & Year</label>
-                <input type="month" id="payroll-month" class="form-control" onchange="enableNext()">
+<div id="wizard-content" class="animate-entry animate-delay-2" style="position: relative; min-height: 400px;">
+
+    <!-- Step 1: Selection -->
+    <div id="step-1" class="step-content">
+        <div class="wizard-card">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h3 style="color: var(--text-main); font-weight: 850; font-size: 1.5rem; margin-bottom: 0.75rem;">
+                    Start</h3>
+                <p style="color: var(--text-muted); font-size: 1.1rem;">Pick a month and the staff to process.</p>
             </div>
-            <div class="form-group">
-                <label class="form-label">Employee Group</label>
-                <select id="employee-filter" class="form-control" onchange="handleFilterChange()">
-                    <option value="ALL">All Active Employees</option>
-                    <option value="DEPT">By Department</option>
-                    <option value="SELECT">Select Manually</option>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2.5rem;">
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 0.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Pay
+                        Month</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-calendar-alt"
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="month" id="payroll-month" class="form-control"
+                            style="padding-left: 2.5rem; font-weight: 600;" onchange="enableNext()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label
+                        style="display: block; font-size: 0.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Who
+                        to pay?</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-users"
+                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <select id="employee-filter" class="form-control" style="padding-left: 2.5rem;"
+                            onchange="handleFilterChange()">
+                            <option value="ALL">Everyone</option>
+                            <option value="DEPT">Specific Department</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="dept-selector" class="form-group hidden"
+                style="margin-bottom: 2.5rem; animation: fadeInUp 0.3s ease-out;">
+                <label
+                    style="display: block; font-size: 0.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase;">Select
+                    Department</label>
+                <select id="department-select" class="form-control">
+                    <!-- Loaded via JS -->
                 </select>
             </div>
-        </div>
 
-        <div id="dept-selector" class="form-group hidden">
-            <label class="form-label">Select Department</label>
-            <select id="department-select" class="form-control">
-                <!-- Departments loaded via JS -->
-            </select>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-            <button class="btn btn-primary" id="btn-next-1" onclick="goToStep2()" disabled>Next: Review Staff</button>
+            <div
+                style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 2rem;">
+                <button id="btn-next-1" onclick="goToStep2()"
+                    style="background: var(--primary); color: white; padding: 1rem 2.5rem; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 10px 20px var(--primary-light); transition: all 0.3s;">
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Step 2: Review Content -->
-<div id="step-2" class="step-content hidden">
-    <div class="card">
-        <h3 style="margin-bottom: 1.5rem;">Review Employees</h3>
-        <p style="color: var(--text-muted); margin-bottom: 1rem;">The following employees will be included in this
-            payroll run.</p>
+    <!-- Step 2: Review -->
+    <div id="step-2" class="step-content hidden">
+        <div class="wizard-card" style="max-width: 1000px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="color: var(--text-main); font-weight: 850; font-size: 1.5rem;">Review Staff</h3>
+                    <p style="color: var(--text-muted); margin: 0;">Remove anyone who should not be paid this month.</p>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge badge-primary" id="review-count-badge">0 Staff Selected</span>
+                </div>
+            </div>
 
-        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-            <table id="preview-table">
-                <thead>
-                    <tr>
-                        <th width="50"><input type="checkbox" onchange="toggleAll(this)"></th>
-                        <th>Employee Code</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="preview-table-body">
-                    <tr>
-                        <td colspan="5" class="text-center">Loading...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div
+                style="border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; max-height: 480px; overflow-y: auto; background: var(--bg-input);">
+                <table class="preview-table" id="preview-table">
+                    <thead>
+                        <tr>
+                            <th width="50" style="text-align: center;"><input type="checkbox" onchange="toggleAll(this)"
+                                    checked style="width: 16px; height: 16px; cursor: pointer;"></th>
+                            <th>Staff Member</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-table-body">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
 
-        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
-            <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
-            <button class="btn btn-primary" onclick="goToStep3()">Next: Finalize</button>
-        </div>
-    </div>
-</div>
-
-<!-- Step 3: Process -->
-<div id="step-3" class="step-content hidden">
-    <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 3rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">⚙️</div>
-        <h2 style="margin-bottom: 0.5rem;">Ready to Process</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">
-            You are about to calculate payroll for <span id="final-count"
-                style="font-weight: bold; color: var(--primary-color);">0</span> employees
-            for <span id="final-period" style="font-weight: bold;">--</span>.
-        </p>
-
-        <div class="alert alert-warning" style="text-align: left; margin-bottom: 2rem;">
-            <strong>Note:</strong> This action will create Draft entries. You can review and edit adjustments before
-            finalizing payout.
-        </div>
-
-        <div style="display: flex; justify-content: center; gap: 1rem;">
-            <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
-            <button class="btn btn-primary" onclick="runPayroll()">Run Payroll Calculation</button>
+            <div
+                style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 2rem; margin-top: 2rem;">
+                <button onclick="goToStep(1)"
+                    style="background: var(--bg-input); color: var(--text-muted); padding: 0.8rem 2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-chevron-left" style="margin-right: 8px;"></i> BACK
+                </button>
+                <button onclick="goToStep3()"
+                    style="background: var(--primary); color: white; padding: 1rem 2.5rem; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; box-shadow: 0 10px 20px var(--primary-light); transition: all 0.3s;">
+                    Next Step <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Success State -->
-<div id="step-success" class="step-content hidden">
-    <div class="card" style="text-align: center; max-width: 600px; margin: 0 auto; padding: 3rem;">
-        <div style="font-size: 3rem; margin-bottom: 1rem; color: #10b981;">✅</div>
-        <h2>Calculation Complete!</h2>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Payroll entries have been generated successfully.</p>
-        <button class="btn btn-primary" onclick="window.location.href='/dashboard/college/reports/'">View
-            Reports</button>
+    <!-- Step 3: Confirmation -->
+    <div id="step-3" class="step-content hidden">
+        <div class="wizard-card" style="max-width: 700px; text-align: center;">
+            <div
+                style="width: 100px; height: 100px; background: var(--primary-light); border-radius: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 2.5rem auto; box-shadow: 0 10px 20px var(--primary-light);">
+                <i class="fas fa-tachometer-alt" style="font-size: 3rem; color: var(--primary);"></i>
+            </div>
+
+            <h2
+                style="font-size: 2rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.03em;">
+                Last Step</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 3rem;">Make sure
+                everything is correct before calculating salaries.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+                <div class="summary-box">
+                    <div class="summary-icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="summary-details">
+                        <div class="summary-value" id="final-count">0</div>
+                        <div class="summary-label">Total Staff</div>
+                    </div>
+                </div>
+                <div class="summary-box">
+                    <div class="summary-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="summary-details">
+                        <div class="summary-value" id="final-period-display">--</div>
+                        <div class="summary-label">Payroll Month</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-alert" style="margin-bottom: 2.5rem;">
+                <i class="fas fa-info-circle" style="margin-top: 4px; font-size: 1.25rem;"></i>
+                <div>
+                    <span
+                        style="font-weight: 800; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">Important
+                        Notice</span><br />
+                    Saving this will overwrite any previous salary drafts for this month.
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 1rem;">
+                <button onclick="goToStep(2)"
+                    style="background: var(--bg-input); color: var(--text-muted); padding: 1rem 2rem; border-radius: 12px; font-weight: 700; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s;">
+                    GO BACK
+                </button>
+                <button id="btn-run-payroll" onclick="runPayroll()"
+                    style="background: #10b981; color: white; padding: 1rem 3.5rem; border-radius: 14px; font-weight: 850; border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); font-size: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.3s; letter-spacing: 0.02em;">
+                    <i class="fas fa-check-circle"></i> Calculate Now
+                </button>
+            </div>
+        </div>
     </div>
+
+    <!-- Success State -->
+    <div id="step-success" class="step-content hidden">
+        <div class="wizard-card" style="max-width: 600px; text-align: center; border-color: #bbf7d0;">
+            <div
+                style="width: 100px; height: 100px; background: rgba(16, 185, 129, 0.1); border-radius: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto 2.5rem auto;">
+                <i class="fas fa-check-double" style="font-size: 3rem; color: #10b981;"></i>
+            </div>
+
+            <h2
+                style="font-size: 2rem; font-weight: 900; color: var(--text-main); margin-bottom: 0.75rem; letter-spacing: -0.03em;">
+                Done!</h2>
+            <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 3rem;">Salaries are
+                calculated. Now you can check and approve payments.</p>
+
+            <button onclick="window.location.href='/dashboard/college/bank-payments/'"
+                style="background: #10b981; color: white; padding: 0.8rem 2rem; border-radius: 10px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                Check & Approve Payments <i class="fas fa-arrow-right" style="margin-left: 6px;"></i>
+            </button>
+        </div>
+    </div>
+
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
     let currentEmployees = [];
     let selectedEmployeeIds = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Set default month to current
+        // Set default month
         const now = new Date();
         const monthStr = now.toISOString().slice(0, 7);
-        document.getElementById('payroll-month').value = monthStr;
-        enableNext();
+        const monthInput = document.getElementById('payroll-month');
+        if (monthInput) {
+            monthInput.value = monthStr;
+            updateHeaderPeriod();
+            enableNext();
+        }
 
         fetchDepartments();
     });
 
+    function updateHeaderPeriod() {
+        const val = document.getElementById('payroll-month').value;
+        if (val) {
+            const date = new Date(val + '-01');
+            const display = date.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+            const headerDisplay = document.getElementById('header-period-display');
+            const finalDisplay = document.getElementById('final-period-display');
+            if (headerDisplay) headerDisplay.innerText = display;
+            if (finalDisplay) finalDisplay.innerText = display;
+        }
+    }
+
     function enableNext() {
         const month = document.getElementById('payroll-month').value;
         const btn = document.getElementById('btn-next-1');
-        btn.disabled = !month;
+        if (btn) {
+            btn.disabled = !month;
+            if (btn.disabled) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            } else {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            }
+        }
+        updateHeaderPeriod();
     }
 
     function handleFilterChange() {
@@ -161,90 +556,120 @@
 
     async function fetchDepartments() {
         try {
-            const res = await fetch('/api/employees/departments/');
-            const data = await res.json();
-            const select = document.getElementById('department-select');
-            data.forEach(d => {
-                select.innerHTML += `<option value="${d.id}">${d.name}</option>`;
-            });
-        } catch (e) { }
+            const res = await authFetch('/api/employees/departments/');
+            if (res.ok) {
+                const data = await res.json();
+                const select = document.getElementById('department-select');
+                select.innerHTML = '';
+                data.forEach(d => {
+                    select.innerHTML += `<option value="${d.id}">${d.name}</option>`;
+                });
+            }
+        } catch (e) { console.error("Dept Fetch Error", e); }
     }
 
     function goToStep(step) {
-        document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(`step-${step}`).classList.remove('hidden');
-        updateIndicators(step);
+        document.querySelectorAll('.step-content').forEach(el => {
+            el.classList.add('hidden');
+            el.style.opacity = 0;
+        });
+
+        const activeStep = document.getElementById(`step-${step}`) || document.getElementById('step-success');
+        if (activeStep) {
+            activeStep.classList.remove('hidden');
+            // Trigger reflow for animation
+            void activeStep.offsetWidth;
+            activeStep.style.animation = 'fadeInUp 0.5s ease-out forwards';
+        }
+
+        if (typeof step === 'number') updateIndicators(step);
     }
 
     function updateIndicators(step) {
         // Reset all
-        document.querySelectorAll('.step-item .step-circle').forEach(el => {
-            el.style.backgroundColor = '#e2e8f0';
-            el.style.color = '#64748b';
+        document.querySelectorAll('.step-item').forEach(el => {
+            el.classList.remove('active');
+            el.classList.remove('completed');
+            const circle = el.querySelector('.step-circle');
+            // Restore number
+            if (el.id === 'step-1-indicator') circle.innerText = '1';
+            if (el.id === 'step-2-indicator') circle.innerText = '2';
+            if (el.id === 'step-3-indicator') circle.innerText = '3';
         });
 
-        // Set active up to current
-        for (let i = 1; i <= step; i++) {
-            const circle = document.querySelector(`#step-${i}-indicator .step-circle`);
-            if (circle) {
-                circle.style.backgroundColor = 'var(--primary-color)';
-                circle.style.color = 'white';
+        // Set active/completed
+        for (let i = 1; i <= 3; i++) {
+            const item = document.getElementById(`step-${i}-indicator`);
+            if (i < step) {
+                item.classList.add('completed');
+                item.querySelector('.step-circle').innerHTML = '<i class="fas fa-check"></i>';
+            } else if (i === step) {
+                item.classList.add('active');
+                item.querySelector('.step-circle').innerText = i;
             }
+            // Future steps remain default
         }
     }
 
     async function goToStep2() {
-        goToStep(2);
-        updateIndicators(2);
-
-        const filter = document.getElementById('employee-filter').value;
-        const deptId = document.getElementById('department-select').value;
-
-        // Build query
-        let url = '/api/employees/';
-        if (filter === 'DEPT' && deptId) {
-            // Assuming API supports filtering by dept query param? 
-            // Or we filter client side for demo if API is simple
-            // Let's assume we fetch all and filter client side for safety as API wasn't explicitly updated for filter params
-        }
+        const btn = document.getElementById('btn-next-1');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        btn.disabled = true;
 
         try {
-            const res = await fetch(url); // Fetch all for now
+            const filter = document.getElementById('employee-filter').value;
+            const deptId = document.getElementById('department-select').value;
+            let url = '/api/employees/';
+
+            const res = await authFetch(url);
             const allData = await res.json();
 
-            if (filter === 'DEPT') {
-                currentEmployees = allData.filter(e => e.department == deptId || e.department_name == deptId); // Handle ID vs Name usage
+            // Helper for array or paginated results
+            const employees = Array.isArray(allData) ? allData : (allData.results || []);
+
+            if (filter === 'DEPT' && deptId) {
+                currentEmployees = employees.filter(e => e.department == deptId || e.department_name == deptId);
             } else {
-                currentEmployees = allData;
+                currentEmployees = employees;
             }
 
-            // Only Active employees usually
+            // Only Active employees
             currentEmployees = currentEmployees.filter(e => e.is_active);
 
             renderPreviewTable();
+            goToStep(2);
         } catch (e) {
             console.error(e);
-            document.getElementById('preview-table-body').innerHTML = `<tr><td colspan="5">Error loading employees</td></tr>`;
+            showToast("Error loading employee data", 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     }
 
     function renderPreviewTable() {
         const tbody = document.getElementById('preview-table-body');
         tbody.innerHTML = '';
+        const badge = document.getElementById('review-count-badge');
+
+        badge.innerText = `${currentEmployees.length} Staff Selected`;
 
         if (currentEmployees.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center">No employees found matching criteria.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="padding: 2rem; color: #94a3b8;">No employees found matching criteria.</td></tr>`;
             return;
         }
 
         currentEmployees.forEach(emp => {
             const row = `
                 <tr>
-                    <td><input type="checkbox" class="emp-check" value="${emp.id}" checked></td>
-                    <td>${emp.employee_code}</td>
-                    <td>${emp.first_name} ${emp.last_name}</td>
-                    <td>${emp.department_name || '--'}</td>
-                    <td><span class="badge badge-success">Active</span></td>
+                    <td style="text-align:center;"><input type="checkbox" class="emp-check" value="${emp.id}" checked style="width: 18px; height: 18px; cursor: pointer;"></td>
+                    <td>
+                        <div style="font-weight: 800; color: var(--text-main); font-size: 1rem;">${emp.first_name} ${emp.last_name}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-family: monospace; font-weight: 600;">CODE: ${emp.employee_code}</div>
+                    </td>
+                    <td style="color: var(--text-muted); font-weight: 600;">${emp.department_name || '--'}</td>
+                    <td><span class="status-badge badge-active" style="padding: 0.4rem 0.85rem; border-radius: 10px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">VALIDATED</span></td>
                 </tr>
             `;
             tbody.innerHTML += row;
@@ -253,30 +678,33 @@
 
     function toggleAll(source) {
         document.querySelectorAll('.emp-check').forEach(c => c.checked = source.checked);
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const count = document.querySelectorAll('.emp-check:checked').length;
+        document.getElementById('review-count-badge').innerText = `${count} Staff Selected`;
     }
 
     function goToStep3() {
-        // Collect selected IDs
         selectedEmployeeIds = [];
         document.querySelectorAll('.emp-check:checked').forEach(c => selectedEmployeeIds.push(parseInt(c.value)));
 
         if (selectedEmployeeIds.length === 0) {
-            alert("Please select at least one employee.");
+            showToast("Please select at least one employee.", 'warning');
             return;
         }
 
-        const monthStr = document.getElementById('payroll-month').value;
-        const niceDate = new Date(monthStr + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' });
-
         document.getElementById('final-count').innerText = selectedEmployeeIds.length;
-        document.getElementById('final-period').innerText = niceDate;
-
         goToStep(3);
-        updateIndicators(3);
     }
 
     async function runPayroll() {
-        const month = document.getElementById('payroll-month').value + "-01"; // YYYY-MM -> YYYY-MM-DD
+        const btn = document.getElementById('btn-run-payroll');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        const month = document.getElementById('payroll-month').value + "-01";
 
         const payload = {
             month: month,
@@ -284,12 +712,8 @@
         };
 
         try {
-            const res = await fetch('/api/payroll/run/', {
+            const res = await authFetch('/api/payroll/run/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
                 body: JSON.stringify(payload)
             });
 
@@ -297,27 +721,16 @@
                 goToStep('success');
             } else {
                 const err = await res.json();
-                alert("Error: " + (err.error || "Unknown error"));
+                showToast("Error: " + (err.error || "Unknown error"), 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-play"></i> Run Payroll';
             }
         } catch (e) {
             console.error(e);
-            alert("Network Error");
+            showToast("Network Error during processing", 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play"></i> Run Payroll';
         }
-    }
-
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
     }
 </script>
 {% endblock %}

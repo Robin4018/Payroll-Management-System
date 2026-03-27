@@ -1,0 +1,334 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Payroll Operations{% endblock %}
+
+{% block content_body %}
+<div class="payroll-container animate-entry">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">Disbursement Lifecycle
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Manage salary cycles, tax
+                compliance, and bank transfers.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="initiatePayroll()">
+            <i class="fas fa-rocket"></i> Launch Current Cycle
+        </button>
+    </div>
+
+    <!-- Cycle Selection -->
+    <div class="payroll-control-card">
+        <div style="display: flex; gap: 2rem; align-items: flex-end;">
+            <div class="setup-card" style="flex: 1;">
+                <span class="setup-card-label">Pay Cycle</span>
+                <select id="pay-cycle" class="form-control">
+                    <option value="">Loading cycles...</option>
+                </select>
+            </div>
+            <div class="setup-card" style="flex: 1;">
+                <span class="setup-card-label">Entity Status</span>
+                <div
+                    style="font-weight: 800; padding: 0.6rem; color: #10b981; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-check-circle"></i> Ready for Processing
+                </div>
+            </div>
+            <button class="btn btn-outline" onclick="fetchPayrollStatus()">
+                <i class="fas fa-sync-alt"></i> Refresh Stats
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Matrix -->
+    <div class="payroll-stats-matrix animate-entry" style="animation-delay: 0.2s;">
+        <div class="matrix-card">
+            <div class="matrix-label">Last Month Payroll</div>
+            <div class="matrix-value" id="stat-gross">₹ --</div>
+            <div class="matrix-subtext">Net Salary disbursed</div>
+        </div>
+        <div class="matrix-card">
+            <div class="matrix-label">YTD Payroll</div>
+            <div class="matrix-value" id="stat-ytd">₹ --</div>
+            <div class="matrix-subtext">Year-to-date total</div>
+        </div>
+        <div class="matrix-card">
+            <div class="matrix-label">Average Salary</div>
+            <div class="matrix-value" id="stat-avg">₹ --</div>
+            <div class="matrix-subtext">Per active employee</div>
+        </div>
+    </div>
+
+    <div class="payroll-log-container animate-entry" style="animation-delay: 0.3s;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h4 class="card-title-premium">Disbursement Logs</h4>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="setTab(this, 'DRAFT')">Pending</button>
+                <button class="tab-btn" onclick="setTab(this, 'PAID')">Completed</button>
+                <button class="tab-btn" onclick="setTab(this, 'LOCKED')">Locked</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Month</th>
+                        <th>Gross Pay</th>
+                        <th>Net Pay</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="payroll-table-body">
+                    <tr>
+                        <td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payroll-control-card {
+        background: var(--bg-card);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .setup-card-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.05em;
+    }
+
+    .payroll-stats-matrix {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .matrix-card {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .matrix-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .matrix-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-top: 0.5rem;
+    }
+
+    .matrix-subtext {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    .payroll-log-container {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--bg-input);
+        padding: 4px;
+        border-radius: 10px;
+    }
+
+    .tab-btn {
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+</style>
+
+<script>
+    let currentFilter = 'DRAFT';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Generate month options dynamically
+        const select = document.getElementById('pay-cycle');
+        select.innerHTML = '';
+        const now = new Date();
+        for (let i = 0; i < 6; i++) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const label = d.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            const value = d.toISOString().slice(0, 10);
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = (i === 0 ? 'Current Cycle · ' : '') + label;
+            select.appendChild(opt);
+        }
+
+        fetchPayrollStatus();
+        fetchPayrollLogs();
+    });
+
+    async function fetchPayrollStatus() {
+        try {
+            const res = await authFetch('/api/payroll/dashboard/stats/');
+            if (!res.ok) return;
+            const data = await res.json();
+            const stats = data.stats;
+            if (!stats) return;
+
+            document.getElementById('stat-gross').textContent =
+                '₹ ' + parseFloat(stats.last_month_payroll || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('stat-ytd').textContent =
+                '₹ ' + parseFloat(stats.ytd_payroll || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('stat-avg').textContent =
+                '₹ ' + parseFloat(stats.avg_salary || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+        } catch (e) { console.error('Stats error:', e); }
+    }
+
+    async function fetchPayrollLogs(statusFilter) {
+        if (!statusFilter) statusFilter = currentFilter;
+        currentFilter = statusFilter;
+        const tbody = document.getElementById('payroll-table-body');
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+        try {
+            const res = await authFetch('/api/payroll/?ordering=-month');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Could not load payroll data.</td></tr>';
+                return;
+            }
+            const data = await res.json();
+            let records = data.results || data;
+
+            // Filter client-side since API may not support status filter
+            if (statusFilter && statusFilter !== 'ALL') {
+                records = records.filter(r => r.status === statusFilter);
+            }
+
+            if (!records || records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:2rem; color:var(--text-muted);">No ${statusFilter.toLowerCase()} records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = records.slice(0, 20).map(p => {
+                const statusColor = p.status === 'PAID' ? '#10b981' : p.status === 'LOCKED' ? '#f59e0b' : '#6b7280';
+                return `
+                    <tr>
+                        <td style="font-weight:700;">${p.employee_name || 'Employee #' + p.employee}</td>
+                        <td style="color:var(--text-muted);">${p.month || '--'}</td>
+                        <td>₹ ${parseFloat(p.gross_pay || p.net_pay || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td style="font-weight:700; color:var(--primary);">₹ ${parseFloat(p.net_pay || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        <td><span style="background:${statusColor}22; color:${statusColor}; padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:700;">${p.status}</span></td>
+                        <td>
+                            ${(p.status === 'PAID' || p.status === 'LOCKED') ?
+                        `<button onclick="viewPayslipEntry(${p.id})" class="btn btn-outline" style="padding:3px 10px; font-size:0.75rem;">View Slip</button>` :
+                        '<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">Processing</span>'
+                    }
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Error loading data.</td></tr>';
+        }
+    }
+
+    function setTab(btn, filterStatus) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        fetchPayrollLogs(filterStatus);
+    }
+
+    async function initiatePayroll() {
+        const monthSelect = document.getElementById('pay-cycle');
+        const month = monthSelect.value;
+        const monthLabel = monthSelect.selectedOptions[0]?.textContent || month;
+
+        const confirmed = await confirm(`Run payroll for ${monthLabel}?\n\nThis will calculate earnings and deductions for all active employees.`);
+        if (!confirmed) return;
+
+        const launchBtn = document.querySelector('[onclick="initiatePayroll()"]');
+        const origHtml = launchBtn.innerHTML;
+        launchBtn.disabled = true;
+        launchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        try {
+            const res = await authFetch('/api/payroll/run/', {
+                method: 'POST',
+                body: JSON.stringify({ month })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showToast('Payroll processed successfully! Payslips are being generated.', 'success');
+                fetchPayrollStatus();
+                fetchPayrollLogs('DRAFT');
+            } else {
+                showToast(data.error || 'Payroll run failed. Check your payroll configuration.', 'error');
+            }
+        } catch (e) {
+            showToast('Connection error during payroll run.', 'error');
+        } finally {
+            launchBtn.disabled = false;
+            launchBtn.innerHTML = origHtml;
+        }
+    }
+
+    async function viewPayslipEntry(id) {
+        try {
+            const res = await authFetch(`/api/payroll/${id}/payslip/`);
+            const data = await res.json();
+            if (data.payslip) {
+                window.open(data.payslip, '_blank');
+            } else {
+                showToast('Payslip not ready yet.', 'error');
+            }
+        } catch (e) { showToast('Error fetching payslip', 'error'); }
+    }
+</script>
+{% endblock %}

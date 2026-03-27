@@ -22,7 +22,7 @@ def run():
     tenant = Tenant.objects.first()
     if not tenant:
         print("Creating tenant...")
-        tenant = Tenant.objects.create(name="Test Tenant 2", subdomain="test2", schema_name="test2", email="test2@example.com", phone="000")
+        tenant = Tenant.objects.create(name="Test Tenant 2", type='CORPORATE', email="test2@example.com", phone="000")
     
     print(f"Using tenant: {tenant}")
 

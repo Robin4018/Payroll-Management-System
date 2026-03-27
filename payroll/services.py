@@ -316,7 +316,9 @@ class PayrollCalculator:
                 'pt_amount': pt_amt,
                 'tds_amount': tds_amt,
                 'calculations_breakdown': breakdown,
-                'status': PayrollLedger.Status.DRAFT
+                'status': PayrollLedger.Status.DRAFT,
+                'utr_number': None, # Clear on re-calculation
+                'payment_date': None # Clear on re-calculation
             }
         )
         return ledger

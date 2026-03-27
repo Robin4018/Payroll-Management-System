@@ -30,14 +30,15 @@ class TaxDeclarationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'employee'):
-            # Employee sees own, Admin/HR sees all for tenant?
-            # Simplified: filter by tenant implicitly via employee relation if we had tenant on Declaration?
-            # Declaration has employee -> tenant.
-            # If user is admin (superuser or specific role), view all.
-            # For now: return own if normal employee.
-            # TODO: Add role check. Assuming all valid users for now.
-             return self.queryset.filter(employee=user.employee)
+              return self.queryset.filter(employee=user.employee)
         return self.queryset
+
+    def perform_create(self, serializer):
+        financial_year = self.request.data.get('financial_year', '2024-2025')
+        if hasattr(self.request.user, 'employee'):
+            serializer.save(employee=self.request.user.employee, financial_year=financial_year)
+        else:
+            serializer.save(financial_year=financial_year)
 
     @action(detail=True, methods=['post'], url_path='verify')
     def verify(self, request, pk=None):

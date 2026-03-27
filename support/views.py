@@ -12,27 +12,17 @@ class SupportTicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, 'employee'):
-            # Employees see their own tickets
-            # Admins (HR/Higher roles) should see all or tenant specific
-            # For simplicity, if standard employee, filter by self.
-            # If Admin (checked via role logic ideally), return all.
-            # Assuming 'Admin' role check or simple logic:
+        if not hasattr(user, 'employee'):
+            return SupportTicket.objects.none()
             
-            # Simple check: If user is admin (superuser) see all, else filter
-            # But we have tenants.
-            # Let's return all for now if staff, else filter.
-            # Real implementation needs Role check from Employee profile.
+        employee = user.employee
+        # If user is superuser or has 'Admin'/'HR' in designation (simple check)
+        # Or better: check for specific role if we had a role model.
+        # For now, if superuser, show all in tenant.
+        if user.is_superuser:
+            return SupportTicket.objects.filter(employee__tenant=employee.tenant)
             
-            # For demo: If "HR" designation or similar, show all. 
-            # We'll stick to: Everyone sees their own, verify admin differently?
-            # Let's filter by tenant at least if we had tenant field.
-            # Ticket has employee -> tenant.
-            
-            return SupportTicket.objects.filter(employee=user.employee)
-            
-            # TODO: Improve for Admin view (needs identifying admin role)
-        return SupportTicket.objects.none()
+        return SupportTicket.objects.filter(employee=employee)
 
     def perform_create(self, serializer):
         if hasattr(self.request.user, 'employee'):

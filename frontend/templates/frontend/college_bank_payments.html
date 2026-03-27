@@ -3,367 +3,829 @@
 
 {% block header_title %}Bank & Payments{% endblock %}
 
-{% block content %}
-<div class="dashboard-layout">
-    <main class="main-content">
-        <header class="glass-header">
-            <h3>Bank & Payments</h3>
-            <div class="header-actions">
-                <button onclick="downloadBankFile()" class="btn-primary">Generate Bank File</button>
-            </div>
-        </header>
+{% block content_body %}
+<style>
+    /* Professional Design System - Financial Disbursement Refinement */
+    .header-card-premium {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 2.25rem 2.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        margin-top: -1.5rem;
+    }
 
-        <section class="content-section">
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('disburse')">Disbursement</button>
-                <button class="tab-btn" onclick="switchTab('details')">Employee Bank Details</button>
-            </div>
+    /* Executive Stats Grid */
+    .exec-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
 
-            <!-- Disbursement Tab -->
-            <div id="disburseTab" class="glass-panel" style="padding: 2rem;">
-                <h4 style="color: #6366f1; margin-bottom: 1rem;">Salary Disbursement</h4>
-                <div style="display: flex; gap: 1rem; align-items: flex-end;">
-                    <div class="form-group">
-                        <label>Select Month</label>
-                        <input type="month" id="disburseMonth" class="form-control" style="width: auto;">
-                    </div>
-                </div>
+    .exec-summary-box {
+        background: var(--bg-card);
+        padding: 1.75rem 2rem;
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-sm);
+    }
 
-                <div class="table-container" style="margin-top: 2rem;">
-                    <h5>Payment Status</h5>
-                    <table id="paymentTable">
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Net Pay</th>
-                                <th>Bank</th>
-                                <th>Reference (UTR)</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="paymentList"></tbody>
-                    </table>
-                </div>
-            </div>
+    .exec-summary-box:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 12px 20px -8px rgba(37, 99, 235, 0.12);
+        transform: translateY(-3px);
+    }
 
-            <!-- Bank Details Tab -->
-            <div id="detailsTab" class="table-container glass-panel hidden">
-                <h4 style="padding: 1rem; color: #f59e0b;">Employee Bank Information</h4>
-                <table id="detailsTable">
-                    <thead>
-                        <tr>
-                            <th>Employee</th>
-                            <th>Bank Name</th>
-                            <th>Account No</th>
-                            <th>IFSC</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="detailsList"></tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-</div>
+    .exec-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
 
-<!-- Edit Bank Modal -->
-<div id="bankModal" class="modal hidden">
-    <div class="modal-content glass-panel">
-        <span class="close-btn" onclick="closeBankModal()">&times;</span>
-        <h2>Update Bank Details</h2>
-        <form id="bankForm">
-            <input type="hidden" id="bankEmpId">
-            <div class="form-group">
-                <label>Bank Name</label>
-                <input type="text" id="bankName" required>
-            </div>
-            <div class="form-group">
-                <label>Account Number</label>
-                <input type="text" id="accNo" required>
-            </div>
-            <div class="form-group">
-                <label>IFSC Code</label>
-                <input type="text" id="ifsc" required>
-            </div>
-            <div class="form-group">
-                <label>Branch</label>
-                <input type="text" id="branch">
-            </div>
-            <button type="submit" class="btn-primary">Save Details</button>
-        </form>
+    .exec-details {
+        flex: 1;
+    }
+
+    .exec-value {
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+        letter-spacing: -0.03em;
+    }
+
+    .exec-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 850;
+    }
+
+    /* Modern Tabs */
+    .table-container-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .tab-nav-bar {
+        background: var(--primary-light);
+        padding: 0 2rem;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 80px;
+    }
+
+    .tab-group {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        gap: 2rem;
+    }
+
+    .tab-item {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        padding: 0 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+    }
+
+    .tab-item:hover {
+        color: var(--text-main);
+    }
+
+    .tab-item.active {
+        color: var(--primary);
+    }
+
+    .tab-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary);
+        border-radius: 4px 4px 0 0;
+    }
+
+    /* Professional Table */
+    .disbursement-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .disbursement-table th {
+        background: var(--primary-light);
+        padding: 1.5rem 2rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 900;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        border-bottom: 2px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .disbursement-table td {
+        padding: 1.75rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+
+    tr.row-hover:hover {
+        background: var(--primary-light);
+    }
+
+    /* Glassmorphic Badges */
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 110px;
+    }
+
+    .badge-draft {
+        background: rgba(100, 116, 139, 0.1);
+        color: #94a3b8;
+        border: 1px solid var(--border-color);
+    }
+
+    .badge-approved {
+        background: var(--primary-light);
+        color: var(--primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .badge-paid {
+        background: rgba(34, 197, 94, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .badge-sent {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .badge-missing {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    /* Action Buttons */
+    .action-btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 850;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 10px var(--primary-light);
+    }
+
+    .action-btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px var(--primary-light);
+    }
+
+    .action-btn-success {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 0.6rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 850;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+    }
+
+    .action-btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Premium Action Buttons */
+    .btn-premium-finalize {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        height: 48px;
+        padding: 0 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.3), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-premium-finalize:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+        filter: brightness(1.05);
+    }
+
+    .btn-premium-finalize:active {
+        transform: translateY(0);
+    }
+
+    .btn-premium-bank {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        height: 48px;
+        padding: 0 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-premium-bank:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        filter: brightness(1.05);
+    }
+
+    .btn-premium-bank:active {
+        transform: translateY(0);
+    }
+
+    .btn-premium-finalize:disabled,
+    .btn-premium-bank:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        box-shadow: none;
+        cursor: not-allowed;
+        filter: grayscale(1);
+        opacity: 0.6;
+    }
+
+    /* Animations */
+    @keyframes slideUpFade {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-slide-up {
+        animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    tr.row-animate {
+        opacity: 0;
+        animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
+<div class="header-card-premium animate-slide-up">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 2rem; font-weight: 900; color: var(--text-main); letter-spacing: -0.04em;">
+                Bank & Payments</h3>
+            <p style="margin: 0.6rem 0 0 0; color: var(--text-muted); font-size: 1.1rem; font-weight: 500;">Check salary
+                payments and staff bank accounts.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button id="btn-finalize-month" onclick="finalizeMonth()" class="btn-premium-finalize">
+                <i class="fas fa-check-double" style="font-size: 0.9rem;"></i>
+                <span>Finalize & Notify Principal</span>
+            </button>
+            <button onclick="downloadBankFile()" class="btn-premium-bank">
+                <i class="fas fa-file-invoice-dollar" style="font-size: 1rem;"></i>
+                <span>Download Bank List</span>
+            </button>
+        </div>
     </div>
 </div>
 
+<!-- Executive Stats Grid -->
+<div class="exec-grid">
+    <div class="exec-summary-box animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="exec-icon" style="background: rgba(37, 99, 235, 0.08); color: #2563eb;">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="exec-details">
+            <div class="exec-value" id="total-payout-label"
+                style="font-family: 'JetBrains Mono', monospace; color: var(--primary);">₹ 0.00</div>
+            <div class="exec-label">Total Salaries</div>
+        </div>
+    </div>
+    <div class="exec-summary-box animate-slide-up" style="animation-delay: 0.2s;">
+        <div class="exec-icon" style="background: rgba(16, 185, 129, 0.08); color: #10b981;">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="exec-details">
+            <div class="exec-value" id="staff-count-label">0</div>
+            <div class="exec-label">Staff Count</div>
+        </div>
+    </div>
+    <div class="exec-summary-box animate-slide-up" style="animation-delay: 0.3s;">
+        <div class="exec-icon" style="background: rgba(245, 158, 11, 0.08); color: #f59e0b;">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="exec-details">
+            <div class="exec-value" id="pending-count-label">0</div>
+            <div class="exec-label">Pending Payments</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-container-card animate-slide-up" style="animation-delay: 0.4s;">
+    <div class="tab-nav-bar">
+        <div class="tab-group">
+            <button class="tab-item active" id="tab-disburse" onclick="switchTab('disburse')">Payments</button>
+            <button class="tab-item" id="tab-details" onclick="switchTab('details')">Staff Bank Details</button>
+            <button class="tab-item" onclick="window.location.href='/dashboard/college/payslips/'">
+                See Payslips <i class="fas fa-external-link-alt"
+                    style="font-size: 0.65rem; margin-left: 8px; opacity: 0.6;"></i>
+            </button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1.25rem;">
+            <div id="bulkActions"
+                style="display: none; align-items: center; gap: 0.75rem; background: var(--bg-input); padding: 0.5rem 1rem; border-radius: 12px; border: 1px solid var(--primary);">
+                <span style="font-weight: 900; font-size: 0.85rem; color: var(--primary);"><span
+                        id="selectedCount">0</span> Staff Chosen</span>
+                <button onclick="bulkApprove()" class="btn"
+                    style="background: var(--primary); color: white; border: none; font-size: 0.75rem; font-weight: 800; padding: 6px 14px; border-radius: 8px;">APPROVE</button>
+                <button onclick="bulkRemit()" class="btn"
+                    style="background: #10b981; color: white; border: none; font-size: 0.75rem; font-weight: 800; padding: 6px 14px; border-radius: 8px;">SUBMIT</button>
+            </div>
+
+            <div
+                style="display: flex; align-items: center; gap: 0.8rem; border-left: 2px solid var(--border-color); padding-left: 1.25rem;">
+                <span
+                    style="font-size: 0.75rem; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Month:</span>
+                <div style="position: relative; width: 220px;">
+                    <i class="far fa-calendar-alt"
+                        style="position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 0.95rem; z-index: 2;"></i>
+                    <input type="month" id="disburseMonth" class="form-control"
+                        style="padding-left: 2.8rem; font-weight: 800; height: 46px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-input); font-size: 0.95rem; color: var(--text-main); cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salaries Tab Content -->
+    <div id="disburseTab" class="tab-content">
+        <table class="disbursement-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px; text-align: center;">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"
+                            style="width: 18px; height: 18px; cursor: pointer;">
+                    </th>
+                    <th style="width: 320px;">Staff Member</th>
+                    <th style="text-align: right; width: 180px;">Amount (₹)</th>
+                    <th style="text-align: center;">Bank Account</th>
+                    <th style="text-align: center; width: 180px;">Payment ID</th>
+                    <th style="text-align: center; width: 160px;">Status</th>
+                    <th style="text-align: center; width: 180px;">Options</th>
+                </tr>
+            </thead>
+            <tbody id="paymentList">
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 6rem;">
+                        <div class="fas fa-circle-notch fa-spin"
+                            style="font-size: 2.5rem; color: var(--primary); margin-bottom: 2rem;"></div>
+                        <div style="font-weight: 800; color: var(--text-muted); font-size: 1.2rem;">Loading...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Repository Tab Content -->
+    <div id="detailsTab" class="tab-content" style="display: none;">
+        <table class="disbursement-table">
+            <thead>
+                <tr>
+                    <th style="padding-left: 2.5rem;">Staff Member</th>
+                    <th style="text-align: center;">Bank Name</th>
+                    <th style="text-align: center;">Account Number</th>
+                    <th style="text-align: center;">IFSC Code</th>
+                    <th style="text-align: right; padding-right: 2.5rem;">Edit</th>
+                </tr>
+            </thead>
+            <tbody id="detailsList">
+                <!-- Loaded via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_modals %}
+<!-- Edit Bank Modal -->
+<div id="bankModal" class="common-modal-overlay">
+    <div class="premium-popup-box"
+        style="width: 100%; max-width: 540px; text-align: left; padding: 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color);">
+        <div class="confirm-title" style="margin-bottom: 0.5rem; color: var(--text-main);">Bank Info</div>
+        <p class="confirm-desc" style="margin-bottom: 2rem; color: var(--text-muted);">Enter simple bank details for
+            this person.</p>
+
+        <form id="bankForm" onsubmit="saveBankDetails(event)">
+            <input type="hidden" id="bankEmpId">
+            <div style="display: grid; gap: 1.5rem;">
+                <div>
+                    <label
+                        style="display: block; font-size: 0.75rem; font-weight: 850; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">Bank
+                        Name *</label>
+                    <input type="text" id="bankName" class="form-control"
+                        style="height: 50px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); padding: 0 1rem; font-weight: 700;"
+                        placeholder="e.g. HDFC Bank" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; font-weight: 850; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">Account
+                            Number *</label>
+                        <input type="text" id="accNo" class="form-control"
+                            style="height: 50px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); padding: 0 1rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;"
+                            required>
+                    </div>
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.75rem; font-weight: 850; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">IFSC
+                            Code *</label>
+                        <input type="text" id="ifsc" class="form-control"
+                            style="height: 50px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); padding: 0 1rem; font-weight: 700; text-transform: uppercase;"
+                            required>
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        style="display: block; font-size: 0.75rem; font-weight: 850; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">Account
+                        Holder Name *</label>
+                    <input type="text" id="holderName" class="form-control"
+                        style="height: 50px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-input); color: var(--text-main); padding: 0 1rem; font-weight: 700;"
+                        required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
+                <button type="button" class="btn"
+                    style="flex: 1; height: 50px; border-radius: 12px; font-weight: 800; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-color);"
+                    onclick="closeBankModal()">Cancel</button>
+                <button type="submit" class="btn"
+                    style="flex: 1.5; height: 50px; border-radius: 12px; font-weight: 850; background: var(--primary); color: white; border: none;">Save
+                    Info</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
+    let draftLedgerIds = [];
+    let selectedLedgers = new Set();
+
     document.addEventListener('DOMContentLoaded', () => {
         const today = new Date();
-        document.getElementById('disburseMonth').value = today.toISOString().slice(0, 7);
+        const monthInput = document.getElementById('disburseMonth');
+        monthInput.value = today.toISOString().slice(0, 7);
+
         loadPaymentStatus();
         loadBankDetails();
 
-        document.getElementById('disburseMonth').addEventListener('change', loadPaymentStatus);
+        monthInput.addEventListener('change', loadPaymentStatus);
     });
 
     function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('disburseTab').classList.add('hidden');
-        document.getElementById('disburseTab').style.display = 'none';
-        document.getElementById('detailsTab').classList.add('hidden');
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
 
         if (tab === 'disburse') {
-            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
-            document.getElementById('disburseTab').classList.remove('hidden');
+            document.getElementById('tab-disburse').classList.add('active');
             document.getElementById('disburseTab').style.display = 'block';
+            loadPaymentStatus();
         } else {
-            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-            document.getElementById('detailsTab').classList.remove('hidden');
+            document.getElementById('tab-details').classList.add('active');
+            document.getElementById('detailsTab').style.display = 'block';
+            loadBankDetails();
         }
     }
 
     async function loadPaymentStatus() {
-        // Fetch payroll for month
-        const token = localStorage.getItem('access_token');
         const month = document.getElementById('disburseMonth').value;
-        const response = await fetch('/api/payroll/', { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
-
         const tbody = document.getElementById('paymentList');
-        tbody.innerHTML = '';
+        const totalLabel = document.getElementById('total-payout-label');
+        const countLabel = document.getElementById('staff-count-label');
+        const pendingLabel = document.getElementById('pending-count-label');
 
-        data.forEach(p => {
-            // Filter locally for now
-            if (!p.month.startsWith(month)) return;
+        selectedLedgers = new Set();
+        updateBulkUI();
 
-            tbody.innerHTML += `<tr>
-                <td>${p.employee}</td>
-                <td>₹${p.net_pay}</td>
-                <td>${p.bank_details ? p.bank_details.bank_name : '<span style="color:#ef4444">Missing</span>'}</td>
-                <td>${p.utr_number || '-'}</td>
-                <td><span class="badge">${p.status}</span></td>
-                <td>
-                    ${p.status !== 'PAID' ? `<button class="btn-sm" onclick="markPaid(${p.id})">Mark Paid</button>` : '✅'}
-                </td>
-             </tr>`;
-        });
+        try {
+            const response = await authFetch(`/api/payroll/?_t=${Date.now()}`);
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+            let totalPayout = 0;
+            let pendingTransactions = 0;
+            draftLedgerIds = [];
+
+            let monthRecords = data.filter(p => p.month.startsWith(month));
+
+            if (monthRecords.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 6rem; color: #94a3b8; font-weight: 700;">No payments for this month.</td></tr>`;
+                totalLabel.innerText = "₹ 0.00";
+                countLabel.innerText = "0";
+                pendingLabel.innerText = "0";
+                return;
+            }
+
+            monthRecords.forEach((p, index) => {
+                totalPayout += parseFloat(p.net_pay);
+                if (p.status !== 'PAID') pendingTransactions++;
+
+                let actionHtml = '';
+                let statusBadge = '';
+                let checkDisabled = '';
+
+                if (p.status === 'DRAFT') {
+                    draftLedgerIds.push(p.id);
+                    statusBadge = '<span class="status-badge badge-draft">Draft</span>';
+                    actionHtml = `<button class="action-btn-primary" onclick="approveLedger(${p.id}, this)">APPROVE</button>`;
+                } else if (p.status === 'LOCKED') {
+                    statusBadge = '<span class="status-badge badge-approved">Approved</span>';
+                    actionHtml = `<button class="action-btn-success" onclick="markPaid(${p.id})">SUBMIT</button>`;
+                } else if (p.status === 'PAID') {
+                    if (p.utr_number && p.utr_number.includes('PENDING')) {
+                        statusBadge = '<span class="status-badge badge-sent">SUBMITTED</span>';
+                        actionHtml = '<span style="color: #3b82f6; font-weight: 850; font-size: 0.75rem; letter-spacing: 0.05em;"><i class="fas fa-paper-plane"></i> SENT TO BANK</span>';
+                    } else {
+                        statusBadge = '<span class="status-badge badge-paid">PAID</span>';
+                        actionHtml = '<span style="color: #10b981; font-weight: 850; font-size: 0.75rem; letter-spacing: 0.05em;"><i class="fas fa-check-circle"></i> PAID</span>';
+                    }
+                    checkDisabled = 'disabled';
+                }
+
+                const bd = p.bank_details;
+                const bankName = bd ? bd.bank_name : (p.bank_name || '—');
+                const bankAcc = bd ? bd.account_number : (p.bank_account || '—');
+
+                const bankDisplay = (bankName !== '—' && bankAcc !== '—') ?
+                    `<div style="font-weight: 850; font-size: 0.95rem; color: var(--text-main);">${bankName}</div>
+                     <div style="font-size: 0.8rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-weight: 750; margin-top: 4px; opacity: 0.8;">${bankAcc}</div>` :
+                    `<span class="status-badge badge-missing" style="font-size: 0.65rem;">MISSING BANK INFO</span>`;
+
+                const delay = Math.min(index * 0.04, 1.0);
+                tbody.innerHTML += `<tr class="row-hover row-animate" style="animation-delay: ${delay}s;">
+                    <td style="text-align: center;"><input type="checkbox" class="ledger-check" value="${p.id}" onchange="toggleLedger(${p.id})" style="width: 18px; height: 18px; cursor: pointer;" ${checkDisabled}></td>
+                    <td>
+                        <div style="font-weight: 900; color: var(--text-main); font-size: 1.05rem; letter-spacing: -0.01em;">${p.employee_name || p.employee}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 750; margin-top: 5px; text-transform: uppercase;">REF: ${p.employee_code || p.id}</div>
+                    </td>
+                    <td style="text-align: right; font-weight: 950; color: var(--primary); font-size: 1.1rem; font-family: 'JetBrains Mono', monospace;">₹${parseFloat(p.net_pay).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align: center;">${bankDisplay}</td>
+                    <td style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #64748b; font-weight: 750;">${p.utr_number || '—'}</td>
+                    <td style="text-align: center;">${statusBadge}</td>
+                    <td style="text-align: center;">${actionHtml}</td>
+                </tr>`;
+            });
+
+            totalLabel.innerText = "₹ " + totalPayout.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            countLabel.innerText = monthRecords.length;
+            pendingLabel.innerText = pendingTransactions;
+
+            const finalizeBtn = document.getElementById('btn-finalize-month');
+            if (finalizeBtn) {
+                finalizeBtn.disabled = (draftLedgerIds.length === 0);
+            }
+        } catch (e) { console.error(e); }
     }
-
-    document.getElementById('bankForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const empId = document.getElementById('bankEmpId').value;
-        const bankName = document.getElementById('bankName').value;
-        const accNo = document.getElementById('accNo').value;
-        const ifsc = document.getElementById('ifsc').value;
-        const branch = document.getElementById('branch').value;
-
-        const payload = {
-            employee: empId,
-            bank_name: bankName,
-            account_number: accNo,
-            ifsc_code: ifsc,
-            branch_name: branch,
-            account_holder_name: "Fetch Me" // Ideally user input
-        };
-
-        const token = localStorage.getItem('access_token');
-
-        // Check if exists (update) or new (create)
-        // For simplicity, we assume we might need to check first or just try create.
-        // However, OneToOne constraint means we should check if 'details' id exists.
-        // Since we don't have the ID easily here without fetching, let's try a POST and if 400 (unique constraint), maybe PUT?
-        // Better: The User should ideally know if they are editing. 
-        // Let's assume we are creating fresh or filtering by employee.
-
-        // First, check if record exists for this employee
-        // We can do this by filtering our endpoint (if we added filter) or relying on the list we loaded.
-        // Let's assume we can POST to a custom action or just use list logic.
-
-        // Workaround: We will Delete existing if any, then Create New (lazy update) OR just try Create.
-        // Getting the specific ID is needed for PUT.
-
-        // Let's rely on the fact that loadBankDetails already loaded entries.
-        // We can store the bank_details_id in the button or global map.
-
-        // Let's do a GET to find the ID first
-        let method = 'POST';
-        let url = '/api/employees/bank-details/';
-
-        // Find existing via filter? No filter implemented yet.
-        // Let's use the data from the loadBankDetails (we can cache it).
-        // For now, let's just try to POST. If it fails due to constraint, we alert.
-        // A proper implementation requires the ID.
-
-        // Hack for this turn: We will just try to Create. If one exists, the user should have used an 'Edit' button that passed the ID.
-        // But our modal "Edit" button passed Employee ID, not Bank ID.
-
-        // New Strategy: The backend ViewSet for BankDetails should probably allow lookup by Employee ID?
-        // Or we pass the BankDetails ID if it exists in the 'load' step.
-
-        // Re-implementing 'loadBankDetails' below to pass BankDetails ID if present.
-        // See updated loadBankDetails.
-
-        const bankId = document.getElementById('bankForm').dataset.bankId; // We will set this
-
-        if (bankId && bankId !== 'undefined' && bankId !== 'null') {
-            method = 'PUT';
-            url = `/api/employees/bank-details/${bankId}/`;
-        }
-
-        const res = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            alert("Bank details saved!");
-            closeBankModal();
-            loadBankDetails();
-        } else {
-            const err = await res.json();
-            alert("Error: " + JSON.stringify(err));
-        }
-    });
 
     async function loadBankDetails() {
-        const token = localStorage.getItem('access_token');
-        const empResponse = await fetch('/api/employees/', { headers: { 'Authorization': `Bearer ${token}` } });
-        const employees = await empResponse.json();
-
         const tbody = document.getElementById('detailsList');
-        tbody.innerHTML = '';
+        try {
+            const res = await authFetch('/api/employees/');
+            const employees = await res.json();
+            tbody.innerHTML = '';
 
-        employees.forEach(e => {
-            const bd = e.bank_details_data; // From updated serializer
-            const bankName = bd ? bd.bank_name : '-';
-            const accNo = bd ? bd.account_number : '-';
-            const ifsc = bd ? bd.ifsc_code : '-';
-            const bankId = bd ? bd.id : null;
-
-            // Escape quotes for onclick
-            const sBankId = bankId ? bankId : 'null';
-            const sBankName = bd ? `'${bd.bank_name}'` : `''`;
-            const sAcc = bd ? `'${bd.account_number}'` : `''`;
-            const sIfsc = bd ? `'${bd.ifsc_code}'` : `''`;
-            const sBranch = bd ? `'${bd.branch_name}'` : `''`;
-
-            tbody.innerHTML += `<tr>
-                <td>${e.first_name} ${e.last_name}</td>
-                <td>${bankName}</td>
-                <td>${accNo}</td>
-                <td>${ifsc}</td>
-                <td>
-                    <button onclick="openBankModal(${e.id}, ${sBankId}, ${sBankName}, ${sAcc}, ${sIfsc}, ${sBranch})" class="btn-sm">
-                        ${bd ? 'Edit' : 'Add'}
-                    </button>
-                </td>
-             </tr>`;
-        });
+            employees.forEach((e, index) => {
+                const bd = e.bank_details;
+                const delay = Math.min(index * 0.04, 1.0);
+                tbody.innerHTML += `<tr class="row-hover row-animate" style="animation-delay: ${delay}s;">
+                    <td style="padding-left: 2.5rem;">
+                        <div style="font-weight: 900; color: var(--text-main); font-size: 1.05rem; letter-spacing: -0.01em;">${e.first_name} ${e.last_name}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 750; margin-top: 5px; text-transform: uppercase;">STAFF CODE: ${e.employee_code || '---'}</div>
+                    </td>
+                    <td style="text-align: center; font-weight: 850; font-size: 0.95rem;">${bd ? bd.bank_name : '<span style="opacity: 0.4;">Not Set</span>'}</td>
+                    <td style="text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 750;">${bd ? bd.account_number : '•••• •••• ••••'}</td>
+                    <td style="text-align: center; font-family: 'JetBrains Mono', monospace; color: var(--primary); font-weight: 900;">${bd ? bd.ifsc_code : '-------'}</td>
+                    <td style="text-align: right; padding-right: 2.5rem;">
+                        <button class="action-btn-primary" style="background: var(--bg-input); color: var(--primary); border: 1.5px solid var(--border-color);" onclick="openBankModal(${e.id}, ${bd ? bd.id : 'null'}, '${bd ? bd.bank_name : ''}', '${bd ? bd.account_number : ''}', '${bd ? bd.ifsc_code : ''}', '${bd ? bd.branch_name : ''}', '${bd ? bd.account_holder_name.replace(/'/g, "\\'") : (e.first_name + ' ' + e.last_name).replace(/'/g, "\\'")}')">UPDATE</button>
+                    </td>
+                </tr>`;
+            });
+        } catch (e) { console.error(e); }
     }
 
-    function openBankModal(empId, bankId, bankName, accNo, ifsc, branch) {
-        document.getElementById('bankModal').classList.remove('hidden');
-        document.getElementById('bankEmpId').value = empId;
-        document.getElementById('bankForm').dataset.bankId = bankId; // Store ID for update
+    function toggleSelectAll() {
+        const master = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.ledger-check:not([disabled])');
+        checkboxes.forEach(cb => {
+            cb.checked = master.checked;
+            if (master.checked) selectedLedgers.add(parseInt(cb.value));
+            else selectedLedgers.delete(parseInt(cb.value));
+        });
+        updateBulkUI();
+    }
 
-        document.getElementById('bankName').value = bankName || '';
-        document.getElementById('accNo').value = accNo || '';
-        document.getElementById('ifsc').value = ifsc || '';
-        document.getElementById('branch').value = branch || '';
+    function toggleLedger(id) {
+        if (selectedLedgers.has(id)) selectedLedgers.delete(id);
+        else selectedLedgers.add(id);
+        updateBulkUI();
+    }
+
+    function updateBulkUI() {
+        const toolbar = document.getElementById('bulkActions');
+        document.getElementById('selectedCount').innerText = selectedLedgers.size;
+        toolbar.style.display = selectedLedgers.size > 0 ? 'flex' : 'none';
+    }
+
+    function openBankModal(empId, bankId, bankName, accNo, ifsc, branch, holderName) {
+        document.getElementById('bankModal').classList.add('active');
+        document.getElementById('bankEmpId').value = empId;
+        document.getElementById('bankForm').dataset.bankId = bankId;
+        document.getElementById('bankName').value = bankName;
+        document.getElementById('accNo').value = accNo;
+        document.getElementById('ifsc').value = ifsc;
+        document.getElementById('holderName').value = holderName;
+    }
+
+    function closeBankModal() { document.getElementById('bankModal').classList.remove('active'); }
+
+    async function saveBankDetails(e) {
+        e.preventDefault();
+        const empId = document.getElementById('bankEmpId').value;
+        const bankId = document.getElementById('bankForm').dataset.bankId;
+        const payload = {
+            employee: empId,
+            bank_name: document.getElementById('bankName').value,
+            account_number: document.getElementById('accNo').value,
+            ifsc_code: document.getElementById('ifsc').value,
+            account_holder_name: document.getElementById('holderName').value
+        };
+        let method = (bankId && bankId !== 'null') ? 'PATCH' : 'POST';
+        let url = (bankId && bankId !== 'null') ? `/api/bank-details/${bankId}/` : '/api/bank-details/';
+        try {
+            const res = await authFetch(url, { method, body: JSON.stringify(payload) });
+            if (res.ok) { showToast("Details saved.", "success"); closeBankModal(); loadBankDetails(); }
+        } catch (e) { showToast("Sync Error", "error"); }
+    }
+
+    async function approveLedger(id, btn) {
+        if (!await customConfirm("Approve this salary payment?", "Verify Payment")) return;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        try {
+            const res = await authFetch(`/api/payroll/${id}/approve/`, { method: 'POST' });
+            if (res.ok) { showToast("Payment Approved", "success"); loadPaymentStatus(); }
+        } catch (e) { showToast("Error", "error"); }
+    }
+
+    async function markPaid(id) {
+        if (!await customConfirm("Forward this salary record to the Principal and Bank for final transfer?", "Submit for Payment")) return;
+        try {
+            // No longer requiring UTR here, setting a temp one or marking it as 'SENT' or similar
+            // Actually let's just use 'SENT_TO_BANK' as UTR for now
+            const res = await authFetch(`/api/payroll/${id}/mark_paid/`, {
+                method: 'POST',
+                body: JSON.stringify({ utr_number: 'PENDING_BANK_TRANSFER' })
+            });
+            if (res.ok) { showToast("Forwarded to Bank", "success"); loadPaymentStatus(); }
+        } catch (e) { showToast("Communication Error", "error"); }
+    }
+
+    async function bulkApprove() {
+        const ids = Array.from(selectedLedgers);
+        if (!await customConfirm(`Approve ${ids.length} selected records?`, "Bulk Approval")) return;
+        try {
+            const res = await authFetch('/api/payroll/bulk-approve/', { method: 'POST', body: JSON.stringify({ ledger_ids: ids }) });
+            if (res.ok) { showToast("Batch Approved", "success"); loadPaymentStatus(); }
+        } catch (e) { showToast("Sync Failure", "error"); }
+    }
+
+    async function bulkRemit() {
+        const ids = Array.from(selectedLedgers);
+        if (!await customConfirm(`Forward ${ids.length} records to Bank & Principal for disbursement?`, "Submit to Bank")) return;
+        try {
+            const res = await authFetch('/api/payroll/bulk-remit/', {
+                method: 'POST',
+                body: JSON.stringify({ ledger_ids: ids, utr_number: 'PENDING_BANK_BATCH' })
+            });
+            if (res.ok) { showToast("Batch Sent to Bank", "success"); loadPaymentStatus(); }
+        } catch (e) { showToast("Sync Failure", "error"); }
+    }
+
+    async function finalizeMonth() {
+        if (!await customConfirm(`Finalize ALL ${draftLedgerIds.length} draft records and notify the Principal?`, "Month Closure")) return;
+        const btn = document.getElementById('btn-finalize-month');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finalizing...';
+        try {
+            const res = await authFetch('/api/payroll/bulk-approve/', { method: 'POST', body: JSON.stringify({ ledger_ids: draftLedgerIds }) });
+            if (res.ok) { showToast("Forwarded to Principal", "success"); loadPaymentStatus(); }
+        } catch (e) { showToast("Sync Failure", "error"); }
+        finally { btn.innerHTML = '<i class="fas fa-check-double"></i> Finalize & Notify Principal'; }
+    }
+
+    async function downloadBankFile() {
+        const month = document.getElementById('disburseMonth').value;
+        if (!month) return showToast("Please select a month", "error");
+
+        showToast("Generating Bank Transfer File...", "info");
+        try {
+            const res = await authFetch('/api/payroll/generate-bank-file/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    month: month + "-01",
+                    ledger_ids: Array.from(selectedLedgers)
+                })
+            });
+
+            let data;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            }
+
+            if (res.ok && data && data.file_url) {
+                window.open(data.file_url, '_blank');
+                showToast("Bank File Generated", "success");
+            } else {
+                const errMsg = (data && data.error) ? data.error : `HTTP Error ${res.status}`;
+                showToast(errMsg, "error");
+            }
+        } catch (e) {
+            console.error("Bank File Error:", e);
+            showToast("System Communication Error", "error");
+        }
     }
 </script>
-
-<style>
-    .tabs {
-        margin-bottom: 1rem;
-        display: flex;
-        gap: 1rem;
-    }
-
-    .tab-btn {
-        padding: 0.5rem 1.5rem;
-        border: none;
-        background: transparent;
-        color: #94a3b8;
-        cursor: pointer;
-        border-bottom: 2px solid transparent;
-        font-weight: 600;
-    }
-
-    .tab-btn.active {
-        color: #6366f1;
-        border-color: #6366f1;
-    }
-
-    .badge {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.9em;
-    }
-
-    .btn-sm {
-        padding: 4px 8px;
-        font-size: 0.8rem;
-        background: #334155;
-        border: none;
-        color: white;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .modal.hidden {
-        display: none;
-    }
-
-    .modal-content {
-        padding: 2rem;
-        border-radius: 12px;
-        width: 400px;
-        background: #1e293b;
-        color: white;
-    }
-
-    .close-btn {
-        float: right;
-        cursor: pointer;
-        font-size: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1rem;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #94a3b8;
-    }
-
-    .form-group input,
-    .form-group select {
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-    }
-</style>
 {% endblock %}

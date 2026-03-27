@@ -1,114 +1,592 @@
 {% extends 'frontend/base.html' %}
+{% load static %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
+<style>
+    /* Full Page Layout - Premium Motion Portal */
+    body,
+    html {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #020617;
+        /* Deep Navy Base */
+        font-family: 'Inter', sans-serif;
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPMS | Login</title>
-    <link rel="stylesheet" href="/static/frontend/css/style.css?v=3">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    .login-container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+    }
 
-<body>
-    <div class="auth-container">
-        <div class="auth-card glass-panel">
-            <div class="logo-area">
-                <div class="auth-title">UPMS</div>
-                <div class="auth-subtitle">Unified Payroll Management System</div>
+    /* Left Side: Dynamic Visual Engine */
+    .login-visual {
+        flex: 1.25;
+        background: #0f172a;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 5rem;
+        color: white;
+        overflow: hidden;
+    }
+
+    /* Moving Cosmic Mesh */
+    .bg-mesh {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background:
+            radial-gradient(circle at 10% 20%, rgba(67, 56, 202, 0.4) 0%, transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(109, 40, 217, 0.4) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, rgba(30, 27, 75, 1) 0%, transparent 100%);
+        filter: blur(60px);
+        opacity: 0.8;
+        animation: pulseMesh 25s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseMesh {
+        0% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1.2) rotate(3deg);
+            opacity: 0.9;
+        }
+    }
+
+    .admin-bg-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #09090b 0%, #171717 100%);
+        opacity: 0;
+        transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+    }
+
+    .login-container.mode-admin .admin-bg-overlay {
+        opacity: 0.95;
+    }
+
+    /* Orbital Glass Circles */
+    .visual-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        z-index: 2;
+    }
+
+    .c1 {
+        width: 450px;
+        height: 450px;
+        top: -100px;
+        right: -100px;
+        animation: orbit1 30s linear infinite;
+    }
+
+    .c2 {
+        width: 300px;
+        height: 300px;
+        bottom: -50px;
+        left: -50px;
+        animation: orbit2 35s linear infinite;
+    }
+
+    .c3 {
+        width: 180px;
+        height: 180px;
+        top: 30%;
+        left: 35%;
+        animation: orbit3 25s linear infinite;
+    }
+
+    @keyframes orbit1 {
+        0% {
+            transform: rotate(0deg) translate(20px) rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg) translate(20px) rotate(-360deg);
+        }
+    }
+
+    @keyframes orbit2 {
+        0% {
+            transform: rotate(360deg) translate(40px) rotate(-360deg);
+        }
+
+        100% {
+            transform: rotate(0deg) translate(40px) rotate(0deg);
+        }
+    }
+
+    @keyframes orbit3 {
+        0% {
+            transform: scale(1) translate(0, 0);
+        }
+
+        50% {
+            transform: scale(1.1) translate(30px, 20px);
+        }
+
+        100% {
+            transform: scale(1) translate(0, 0);
+        }
+    }
+
+    .brand-content {
+        position: relative;
+        z-index: 3;
+        max-width: 550px;
+    }
+
+    .brand-logo {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background: linear-gradient(to right, #ffffff, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .brand-desc {
+        font-size: 1.4rem;
+        line-height: 1.6;
+        color: #94a3b8;
+        font-weight: 300;
+    }
+
+    .feature-list {
+        margin-top: 4rem;
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        backdrop-filter: blur(5px);
+    }
+
+    /* Right Side: High-Performance Form */
+    .login-form-wrapper {
+        flex: 0.75;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+    }
+
+    .form-card {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .login-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1px;
+    }
+
+    .login-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    /* Master Tab System */
+    .login-tabs {
+        display: flex !important;
+        background: #f1f5f9;
+        padding: 5px;
+        border-radius: 14px;
+        margin-bottom: 2rem;
+        position: relative;
+        border: 1px solid #e2e8f0;
+    }
+
+    .tab-slider {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: calc(50% - 5px);
+        height: calc(100% - 10px);
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        z-index: 1;
+    }
+
+    .login-container.mode-admin .tab-slider {
+        transform: translateX(100%);
+    }
+
+    .tab-btn {
+        flex: 1;
+        border: none !important;
+        background: transparent !important;
+        padding: 0.8rem;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: color 0.3s;
+    }
+
+    .tab-btn.active {
+        color: #2563eb;
+    }
+
+    .tab-btn.active-admin {
+        color: #7c3aed;
+    }
+
+    /* Premium Inputs */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-input-wrapper {
+        position: relative;
+    }
+
+    .form-input {
+        width: 100% !important;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 1rem 1rem 3.25rem;
+        font-size: 1rem;
+        color: #1e293b;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        background: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        z-index: 2;
+    }
+
+    .toggle-pass {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        z-index: 2;
+    }
+
+    /* Submit Engine */
+    .btn-submit {
+        width: 100% !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white !important;
+        border: none;
+        border-radius: 12px;
+        padding: 1.1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+        opacity: 0;
+        z-index: -1;
+        transition: opacity 0.5s ease;
+    }
+
+    .login-container.mode-admin .btn-submit::before {
+        opacity: 1;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-submit:active {
+        transform: scale(0.98);
+    }
+
+    .footer-links {
+        margin-top: 2.5rem;
+        text-align: center;
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+
+    .footer-links a {
+        color: #2563eb;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    /* Animations */
+    .fade-content {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .fading-out {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    @media (max-width: 1024px) {
+        .login-visual {
+            display: none;
+        }
+
+        .login-form-wrapper {
+            flex: 1;
+        }
+    }
+</style>
+
+<div class="login-container">
+    <div class="login-visual" id="visual-section">
+        <div class="bg-mesh"></div>
+        <div class="admin-bg-overlay"></div>
+        <div class="visual-circle c1"></div>
+        <div class="visual-circle c2"></div>
+        <div class="visual-circle c3"></div>
+
+        <div class="brand-content fade-content" id="brand-text-Area">
+            <div class="brand-logo">
+                <i class="fas fa-layer-group"></i> UPMS
+            </div>
+            <p class="brand-desc" id="brand-desc-text">
+                Universal Payroll Management System designed for modern institutions.
+                Experience seamless payroll processing, attendance tracking, and comprehensive reporting.
+            </p>
+
+            <div class="feature-list" id="feature-list-area">
+                <div class="feature-item"><i class="fas fa-shield-alt"></i> Secure</div>
+                <div class="feature-item"><i class="fas fa-bolt"></i> Fast</div>
+                <div class="feature-item"><i class="fas fa-chart-line"></i> Analytics</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-form-wrapper">
+        <div class="form-card">
+            <div class="login-header fade-content" id="login-header-area">
+                <div class="login-title" id="form-title">Welcome Back</div>
+                <div class="login-subtitle" id="form-subtitle">Please sign in to your staff dashboard</div>
             </div>
 
-            <!-- Login Form -->
+            <div class="login-tabs">
+                <div class="tab-slider"></div>
+                <button class="tab-btn active" onclick="switchMode('employee')">
+                    <i class="fas fa-user-tie"></i> Employee
+                </button>
+                <button class="tab-btn" onclick="switchMode('admin')">
+                    <i class="fas fa-user-shield"></i> Admin
+                </button>
+            </div>
+
             <form id="loginForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="username" placeholder="e.g. admin" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password" placeholder="••••••••" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword('password')">
-                            <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" style="display: none;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                        </button>
+                <input type="hidden" id="login_mode_input" value="employee">
+
+                <div class="form-group fade-content" id="form-fields-area">
+                    <label class="form-label">Username / Email</label>
+                    <div class="form-input-wrapper">
+                        <i class="fas fa-user-circle input-icon"></i>
+                        <input type="text" id="username" class="form-input" placeholder="Enter username or email"
+                            required>
+                    </div>
+
+                    <div style="margin-top: 1.5rem;">
+                        <label class="form-label">Password</label>
+                        <div class="form-input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                            <button type="button" class="toggle-pass" onclick="togglePassword()">
+                                <i class="far fa-eye" id="eye-icon"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary">Sign In</button>
-                <div id="loginError" class="error-msg hidden"></div>
 
-                <div id="signup-link-container" style="margin-top: 1.5rem; color: var(--text-dim); font-size: 0.9rem;">
-                    Don't have an account? <a href="/signup/"
-                        style="color: var(--primary); text-decoration: none; font-weight: 500;">Create Account</a>
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    <span>Sign In</span> <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div id="loginError" class="hidden"
+                    style="color: #ef4444; text-align: center; margin-top: 1rem; font-size: 0.9rem;">
                 </div>
-                <div id="switch-login-container" style="margin-top: 0.5rem; font-size: 0.8rem;">
-                    <a href="/?login_type=admin&next=/dashboard/college/"
-                        style="color: var(--text-dim); text-decoration: none; opacity: 0.7;">Admin Login</a>
+
+                <div class="footer-links" id="signup-area">
+                    New staff member? <a href="/signup/">Create Account</a>
                 </div>
             </form>
         </div>
     </div>
-    <script src="/static/frontend/js/app.js?v=5"></script>
-    <script>
-        // Password Toggle
-        function togglePassword(fieldId) {
-            const input = document.getElementById(fieldId);
-            const button = input.nextElementSibling;
-            const eyeShow = button.querySelector('.eye-show');
-            const eyeHide = button.querySelector('.eye-hide');
+</div>
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeShow.style.display = 'none';
-                eyeHide.style.display = 'block';
+<script>
+    let currentMode = 'employee';
+
+    function togglePassword() {
+        const input = document.getElementById('password');
+        const icon = document.getElementById('eye-icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function switchMode(mode) {
+        if (currentMode === mode) return;
+        currentMode = mode;
+        const modeInput = document.getElementById('login_mode_input');
+        if (modeInput) modeInput.value = mode;
+
+        const container = document.querySelector('.login-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const signupArea = document.getElementById('signup-area');
+        const tabs = document.querySelectorAll('.tab-btn');
+
+        if (container) {
+            if (mode === 'admin') {
+                container.classList.add('mode-admin');
+                if (signupArea) {
+                    signupArea.style.opacity = '0';
+                    signupArea.style.pointerEvents = 'none';
+                }
             } else {
-                input.type = 'password';
-                eyeShow.style.display = 'block';
-                eyeHide.style.display = 'none';
+                container.classList.remove('mode-admin');
+                if (signupArea) {
+                    signupArea.style.opacity = '1';
+                    signupArea.style.pointerEvents = 'auto';
+                }
             }
         }
 
-        // Dynamic UI based on login_type
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const loginType = urlParams.get('login_type');
-
-            if (loginType === 'admin') {
-                // Admin UI Changes
-                document.querySelector('.auth-title').innerText = 'UPMS Admin';
-                document.querySelector('.auth-subtitle').innerText = 'Administrative Access Portal';
-                document.querySelector('.auth-card').style.borderTop = '4px solid #f59e0b'; // Gold border for admin
-
-                // Update Button
-                const btn = document.querySelector('.btn-primary');
-                btn.innerText = 'Admin Sign In';
-                btn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-
-                // Hide Signup
-                document.getElementById('signup-link-container').style.display = 'none';
-
-                // Change "Admin Login" link to "Employee Login"
-                const switchLinkContainer = document.getElementById('switch-login-container');
-                switchLinkContainer.innerHTML = `
-                    <a href="/" style="color: var(--text-dim); text-decoration: none; opacity: 0.7;">← Back to Employee Login</a>
-                `;
+        tabs.forEach(t => {
+            t.classList.remove('active', 'active-admin');
+            if (t.innerText.toLowerCase().includes(mode)) {
+                t.classList.add('active');
+                if (mode === 'admin') t.classList.add('active-admin');
             }
         });
-    </script>
-</body>
 
-</html>
+        const animEls = [
+            document.getElementById('brand-text-Area'),
+            document.getElementById('login-header-area'),
+            submitBtn ? submitBtn.querySelector('span') : null,
+            submitBtn ? submitBtn.querySelector('i') : null
+        ].filter(el => el !== null);
+
+        animEls.forEach(el => el.classList.add('fading-out'));
+
+        setTimeout(() => {
+            const title = document.getElementById('form-title');
+            const subtitle = document.getElementById('form-subtitle');
+            const span = submitBtn ? submitBtn.querySelector('span') : null;
+            const icon = submitBtn ? submitBtn.querySelector('i') : null;
+
+            if (mode === 'admin') {
+                if (title) title.innerText = 'Admin Portal';
+                if (subtitle) subtitle.innerText = 'Secure access for administrators';
+                if (span) span.innerText = 'Admin Sign In';
+                if (icon) icon.className = 'fas fa-key';
+            } else {
+                if (title) title.innerText = 'Welcome Back';
+                if (subtitle) subtitle.innerText = 'Please sign in to your staff dashboard';
+                if (span) span.innerText = 'Sign In';
+                if (icon) icon.className = 'fas fa-arrow-right';
+            }
+
+            animEls.forEach(el => el.classList.remove('fading-out'));
+        }, 300);
+    }
+</script>
 {% endblock %}

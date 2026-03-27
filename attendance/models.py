@@ -62,6 +62,9 @@ class Attendance(models.Model):
     check_in = models.TimeField(null=True, blank=True)
     check_out = models.TimeField(null=True, blank=True)
     
+    face_image_check_in = models.ImageField(upload_to='attendance_faces/', null=True, blank=True)
+    face_image_check_out = models.ImageField(upload_to='attendance_faces/', null=True, blank=True)
+    
     class Meta:
         unique_together = ('employee', 'date')
 

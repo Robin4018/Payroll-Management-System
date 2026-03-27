@@ -179,7 +179,8 @@ class LoanRepayment(models.Model):
 class Reimbursement(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', 'Pending Approval'
-        APPROVED = 'APPROVED', 'Approved (Unpaid)'
+        LOCKED = 'LOCKED', 'Admin Approved'
+        APPROVED = 'APPROVED', 'Approved (Final)'
         REJECTED = 'REJECTED', 'Rejected'
         PAID = 'PAID', 'Paid (Processed)'
 

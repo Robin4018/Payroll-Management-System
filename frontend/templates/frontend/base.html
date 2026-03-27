@@ -5,18 +5,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UPMS | Unified Payroll</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome (Modern & Stable) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"
+        crossorigin="anonymous">
+
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('upms_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     {% load static %}
-    <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'frontend/css/premium-modals.css' %}?v=2">
+    <!-- Base styles are dynamically overridden by pages, but we keep core global definitions here -->
+    <style>
+        :root {
+            --primary: #2563eb;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Global Icon Visibility Fix */
+        i[class*="fa-"],
+        i.fas,
+        i.far,
+        i.fab,
+        i.fa-solid,
+        i.fa-regular,
+        i.fa-brands {
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body>
     <div id="app">
         {% block content %}{% endblock %}
     </div>
-    <script src="{% static 'frontend/js/app.js' %}?v=4"></script>
+    {% block page_modals %}{% endblock %}
+
+    <!-- Global Popups & Toasts -->
+    <div id="toast-container"></div>
+
+    <div id="globalCustomConfirm" class="common-modal-overlay">
+        <div class="premium-popup-box">
+            <div class="popup-icon" id="globalConfirmIcon">
+                <i class="fas fa-question-circle" style="color: #2563eb;"></i>
+            </div>
+            <div class="popup-title" id="globalConfirmTitle">Confirm Action</div>
+            <p class="popup-desc" id="globalConfirmMessage">Are you sure you want to proceed with this operation?</p>
+            <div class="popup-actions">
+                <button class="btn btn-secondary" id="btnGlobalConfirmCancel"
+                    style="min-width: 130px; border-radius: 14px; font-weight: 600;">No, Cancel</button>
+                <button class="btn btn-primary" id="btnGlobalConfirmYes"
+                    style="min-width: 150px; border-radius: 14px; font-weight: 700;">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global App JS -->
+    <script src="{% static 'frontend/js/app.js' %}?v=10"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>

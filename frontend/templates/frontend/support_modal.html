@@ -1,0 +1,317 @@
+{% comment %}
+Support Modal Template
+Provides a reusable modal for creating support tickets from the staff dashboard.
+{% endcomment %}
+
+<style>
+    .request-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .request-modal {
+        background: var(--bg-card, #ffffff);
+        width: 90%;
+        max-width: 520px;
+        border-radius: 32px;
+        padding: 3rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--border-color, #e2e8f0);
+        position: relative;
+        animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        overflow: visible;
+    }
+
+    [data-theme='dark'] .request-modal {
+        background: #0f172a;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-close {
+        position: absolute;
+        top: -16px;
+        right: -16px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        z-index: 10001;
+        border: 1px solid #e2e8f0;
+    }
+
+    [data-theme='dark'] .modal-close {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+    }
+
+    .modal-close:hover {
+        background: #ef4444;
+        color: #ffffff;
+        transform: rotate(90deg) scale(1.1);
+        border-color: #ef4444;
+    }
+
+    .modal-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 900;
+        color: var(--text-main, #1e293b);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+    }
+
+    .modal-header p {
+        color: var(--text-muted, #64748b);
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.5;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    .form-group {
+        margin-bottom: 1.75rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted, #64748b);
+        margin-bottom: 0.75rem;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        border: 2px solid var(--border-color, #e2e8f0);
+        background: var(--bg-card, #ffffff);
+        color: var(--text-main, #1e293b);
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    [data-theme='dark'] .form-input,
+    [data-theme='dark'] .form-textarea {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    [data-theme='dark'] .form-input:focus,
+    [data-theme='dark'] .form-textarea:focus {
+        background: #0f172a;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+
+    .btn-submit-request {
+        width: 100%;
+        padding: 1.1rem;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        border: none;
+        border-radius: 18px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        margin-top: 0.5rem;
+    }
+
+    .btn-submit-request:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5);
+        filter: brightness(1.1);
+    }
+
+    .btn-submit-request:active {
+        transform: translateY(0);
+    }
+
+    .btn-submit-request:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .request-modal {
+            padding: 2rem;
+            border-radius: 24px;
+        }
+
+        .modal-close {
+            top: 1rem;
+            right: 1rem;
+            width: 36px;
+            height: 36px;
+        }
+    }
+</style>
+
+<!-- Support Request Modal -->
+<div class="request-modal-overlay" id="supportModalOverlay">
+    <div class="request-modal">
+        <div class="modal-close" onclick="closeSupportModal()" title="Close">
+            <i class="fas fa-times"></i>
+        </div>
+        <div class="modal-header">
+            <h3>Support Request</h3>
+            <p>Admin will review and update you regarding your request.</p>
+        </div>
+        <form id="supportForm" onsubmit="submitSupportRequest(event)">
+            <div class="form-group">
+                <label for="supportSubject">Subject</label>
+                <input type="text" id="supportSubject" class="form-input" placeholder="What is this regarding?"
+                    required>
+            </div>
+            <div class="form-group">
+                <label for="supportCategory">Category</label>
+                <select id="supportCategory" class="form-input">
+                    <option value="PROFILE_UPDATE">Update Profile</option>
+                    <option value="PAYROLL">Payroll Issue</option>
+                    <option value="IT">IT Support</option>
+                    <option value="HR">HR Query</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="supportDescription">Message/Details</label>
+                <textarea id="supportDescription" class="form-textarea" rows="4" placeholder="Discription"
+                    required></textarea>
+            </div>
+            <button type="submit" class="btn-submit-request" id="btnSubmitSupport">
+                Send Request
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openSupportModal(subject = '', category = 'PROFILE_UPDATE') {
+        const overlay = document.getElementById('supportModalOverlay');
+        if (!overlay) return;
+
+        if (subject) document.getElementById('supportSubject').value = subject;
+        if (category) document.getElementById('supportCategory').value = category;
+
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSupportModal() {
+        document.getElementById('supportModalOverlay').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close on overlay click
+    document.getElementById('supportModalOverlay').addEventListener('click', (e) => {
+        if (e.target.id === 'supportModalOverlay') closeSupportModal();
+    });
+
+    async function submitSupportRequest(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmitSupport');
+        const subject = document.getElementById('supportSubject').value;
+        const category = document.getElementById('supportCategory').value;
+        const description = document.getElementById('supportDescription').value;
+
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = 'Sending...';
+
+        try {
+            const res = await authFetch('/api/support/tickets/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    subject: subject,
+                    category: category,
+                    description: description,
+                    priority: 'MEDIUM'
+                })
+            });
+
+            if (res.ok) {
+                if (window.showToast) {
+                    showToast('Your request has been sent to the administration.', 'success');
+                } else {
+                    alert('Your request has been sent to the administration.');
+                }
+                closeSupportModal();
+                document.getElementById('supportForm').reset();
+            } else {
+                const err = await res.json();
+                const msg = err.error || 'Submission failed. Please try again.';
+                if (window.showToast) showToast(msg, 'error');
+                else alert(msg);
+            }
+        } catch (err) {
+            console.error(err);
+            if (window.showToast) showToast('A connection error occurred.', 'error');
+            else alert('A connection error occurred.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+</script>

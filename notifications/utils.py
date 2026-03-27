@@ -1,5 +1,6 @@
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 from .models import Notification
 
 def send_notification(user, title, message, notif_type=Notification.Type.GENERAL, channels=['db', 'email']):
@@ -25,13 +26,20 @@ def send_notification(user, title, message, notif_type=Notification.Type.GENERAL
                 message=message,
                 from_email=settings.EMAIL_HOST_USER,
                 recipient_list=[user.email],
-                fail_silently=True # Fail silently to avoiding blocking main threads
+                fail_silently=True 
             )
-            # Update DB to show sent? (Complex if DB entry not created, but fine)
         except Exception as e:
             print(f"Error sending email: {e}")
 
     # 3. SMS Notification (Mock)
     if 'sms' in channels:
-        # Mock SMS
         print(f"Sending SMS to {user.username}: {message}")
+
+def notify_admins(title, message, notif_type=Notification.Type.GENERAL):
+    """
+    Notifies all administrative users (Superusers and Staff).
+    """
+    from django.contrib.auth.models import User
+    admins = User.objects.filter(Q(is_superuser=True) | Q(is_staff=True))
+    for admin in admins:
+        send_notification(admin, title, message, notif_type)

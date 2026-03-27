@@ -11,11 +11,11 @@ router.register(r"", PayrollLedgerViewSet, basename='payroll') # Default /api/pa
 router.register(r"components", SalaryComponentViewSet, basename='components')
 router.register(r"salary-structures", EmployeeSalaryStructureViewSet, basename='salary-structures')
 router.register(r"adjustments", PayrollAdjustmentViewSet, basename='adjustments')
-from .views import SalaryTemplateViewSet, LoanViewSet, ReportViewSet, ReimbursementViewSet
+from .views import SalaryTemplateViewSet, LoanViewSet, ReimbursementViewSet
 router.register(r"templates", SalaryTemplateViewSet, basename='templates')
 router.register(r"loans", LoanViewSet, basename='loans')
 router.register(r"reimbursements", ReimbursementViewSet, basename='reimbursements')
-router.register(r"report-analytics", ReportViewSet, basename='report-analytics')
+# router.register(r"report-analytics", ReportViewSet, basename='report-analytics')
 
 urlpatterns = [
     path("dashboard/stats/", DashboardStatsView.as_view(), name="dashboard-stats"),

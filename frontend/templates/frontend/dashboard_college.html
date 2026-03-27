@@ -1,276 +1,419 @@
 {% extends 'frontend/dashboard_base.html' %}
+{% load static %}
 
-{% block header_title %}College Dashboard{% endblock %}
+{% block header_title %}Dashboard{% endblock %}
 
 {% block content_body %}
+<!-- Dashboard Specific Utility Styles -->
+<style>
+    /* Institutional & Ticker Styles */
+    .institution-blue {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .institution-emerald {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .institution-purple {
+        background: rgba(124, 58, 237, 0.1);
+        color: #7c3aed;
+    }
+
+    .institution-amber {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    /* Performance Animations */
+    @keyframes contentExit {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes contentEnter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .content-exit {
+        animation: contentExit 0.3s ease forwards;
+    }
+
+    .content-enter {
+        animation: contentEnter 0.3s ease forwards;
+    }
+
+    .stat-pulse {
+        animation: statPulse 0.4s ease;
+    }
+
+    @keyframes statPulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.02);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    /* Layout & Scroll Fixes */
+    .dashboard-stats-grid,
+    .dashboard-charts-grid,
+    .dashboard-bottom-grid {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .dashboard-charts-grid,
+    .dashboard-bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        align-items: stretch;
+    }
+
+    .chart-card-premium,
+    .activity-card-premium,
+    .actions-card-premium {
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        height: 100%;
+    }
+
+    .chart-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-body {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+
+<!-- Import Chart.js Core -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div style="display: flex; flex-direction: column; gap: 2rem;">
 
-    <!-- 1. Key Metrics Row -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
-        <!-- Employee Count -->
-        <div class="card"
-            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
-            <div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">
-                    Total Employees</p>
-                <h3 id="stat-total-emp" style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin: 0;">
-                    --</h3>
-            </div>
-            <div style="margin-top: 1rem; font-size: 0.85rem;">
-                <span class="badge badge-success" id="stat-active-emp">-- Active</span>
-                <span class="badge badge-neutral" id="stat-inactive-emp">-- Inactive</span>
-            </div>
+<div class="dashboard-stats-grid">
+    <!-- 1. Total Staff -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.1s;">
+        <div class="stat-icon-box institution-blue">
+            <i class="fas fa-users"></i>
         </div>
-
-        <!-- Last Month Payroll -->
-        <div class="card"
-            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
-            <div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">
-                    Last Month Payroll</p>
-                <h3 id="stat-last-pay" style="font-size: 2rem; font-weight: 700; color: var(--text-main); margin: 0;">--
-                </h3>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">TOTAL STAFF</div>
             </div>
-            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);" id="stat-last-date">
-                Month: --
-            </div>
-        </div>
-
-        <!-- YTD Payroll -->
-        <div class="card"
-            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
-            <div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">YTD
-                    Expenses</p>
-                <h3 id="stat-ytd" style="font-size: 2rem; font-weight: 700; color: var(--primary); margin: 0;">--</h3>
-            </div>
-            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
-                Current Financial Year
-            </div>
-        </div>
-
-        <!-- Avg Salary -->
-        <div class="card"
-            style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
-            <div>
-                <p style="font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 0.5rem;">
-                    Pending Approvals</p>
-                <h3 id="stat-approvals" style="font-size: 2rem; font-weight: 700; color: #f59e0b; margin: 0;">--</h3>
-            </div>
-            <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
-                Requires Attention
+            <div class="stat-value" id="stat-total-emp">--</div>
+            <div class="stat-footer" style="display: flex; gap: 8px; margin-top: 0.5rem;">
+                <span class="status-badge status-success" id="stat-active-emp"
+                    style="font-size: 0.65rem; padding: 2px 8px;">-- Active</span>
+                <span class="trend-text" id="stat-inactive-emp" style="font-size: 0.65rem; color: var(--text-muted);">--
+                    Inactive</span>
             </div>
         </div>
     </div>
 
-    <!-- 2. Charts Row -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
-
-        <!-- Salary Trend Chart -->
-        <div class="card" style="margin-bottom: 0; min-height: 400px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-                <h3>Salary Trend</h3>
-                <select class="form-control" style="width: auto; padding: 0.25rem 0.5rem;">
-                    <option>Last 6 Months</option>
-                    <option>Last 12 Months</option>
-                </select>
-            </div>
-            <div style="position: relative; height: 300px; width: 100%;">
-                <canvas id="salaryTrendChart"></canvas>
-            </div>
+    <!-- 2. Monthly Salaries -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.2s;">
+        <div class="stat-icon-box institution-emerald">
+            <i class="fas fa-wallet"></i>
         </div>
-
-        <!-- Department Distribution -->
-        <div class="card" style="margin-bottom: 0; min-height: 400px;">
-            <h3>Department Distribution</h3>
-            <div style="position: relative; height: 250px; width: 100%; margin-top: 2rem;">
-                <canvas id="deptDistChart"></canvas>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">MONTHLY SALARIES</div>
             </div>
-            <div id="dept-legend" style="margin-top: 2rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                <!-- Legend populated via JS if needed -->
+            <div class="stat-value" id="stat-last-pay">₹ 0.00</div>
+            <div class="stat-footer">
+                <span class="stat-subtext" id="stat-last-date" style="font-size: 0.7rem; font-weight: 600;">Cycle:
+                    --</span>
             </div>
         </div>
     </div>
 
-    <!-- 3. Recent Activity & Quick Actions -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
-
-        <!-- Recent Activity -->
-        <div class="card" style="margin-bottom: 0;">
-            <h3>Recent Activity</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Action</th>
-                            <th>User</th>
-                            <th>Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="activity-table">
-                        <!-- Loaded via JS -->
-                    </tbody>
-                </table>
+    <!-- 3. Total Year Spend -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.3s; cursor: pointer;" id="annual-stat-card"
+        onclick="cycleAnnualMetric()">
+        <div class="stat-icon-box institution-purple" id="annual-icon-box">
+            <i class="fas fa-chart-line" id="annual-icon"></i>
+        </div>
+        <div class="stat-main" id="annual-ticker-container">
+            <div class="stat-header">
+                <div class="stat-label" id="annual-label">TOTAL YEAR SPEND</div>
+            </div>
+            <div class="stat-value" id="stat-ytd" style="color: #7c3aed;">₹ 0.00</div>
+            <div class="stat-footer">
+                <span class="stat-subtext" style="font-size: 0.7rem; font-weight: 600;">Fiscal Year 2026-27</span>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Actions -->
-        <div class="card" style="margin-bottom: 0;">
-            <h3>Quick Actions</h3>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <a href="/dashboard/college/payroll/" class="btn btn-primary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">🚀</span> Run Payroll
-                </a>
-                <a href="/dashboard/college/employees/" class="btn btn-secondary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">👥</span> Add Employee
-                </a>
-                <a href="/dashboard/college/salary-structure/" class="btn btn-primary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">💰</span> Update Salary Structure
-                </a>
-                <a href="/dashboard/college/attendance/" class="btn btn-primary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">📅</span> Attendance & Leave
-                </a>
-                <a href="/dashboard/college/tax/" class="btn btn-secondary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">🧾</span> Tax Declarations
-                </a>
-                <a href="/dashboard/college/loans/" class="btn btn-primary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">💸</span> Loan & Advance
-                </a>
-                <a href="/dashboard/college/reimbursements/" class="btn btn-primary"
-                    style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">🧾</span> Reimbursements
-                </a>
-                <button class="btn btn-secondary" style="justify-content: flex-start; padding: 1rem;">
-                    <span style="font-size: 1.2rem;">📄</span> Download Reports
-                </button>
+    <!-- 4. Pending Tasks -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.4s;">
+        <div class="stat-icon-box institution-amber">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">PENDING TASKS</div>
             </div>
+            <div class="stat-value" id="stat-approvals">0</div>
+            <div class="stat-footer">
+                <span class="stat-subtext" style="font-size: 0.7rem; font-weight: 600;">Tasks to complete</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-charts-grid">
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.5s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Salary Trends</h3>
+            </div>
+            <div class="chart-badge">12-MONTH VIEW</div>
+        </div>
+        <div class="chart-body">
+            <canvas id="salaryTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Faculty Distribution -->
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.6s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Staff by Department</h3>
+            </div>
+            <div class="chart-badge">BY DEPARTMENT</div>
+        </div>
+        <div class="chart-body">
+            <canvas id="deptDistChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section: Recent Activity & Quick Actions -->
+<div class="dashboard-bottom-grid">
+
+    <!-- Recent Activity -->
+    <div class="activity-card-premium animate-in" style="animation-delay: 0.7s;">
+        <div class="chart-header" style="margin-bottom: 2rem;">
+            <h3 class="card-title-premium" style="margin: 0;">Recent Activity</h3>
+            <a href="/dashboard/college/audit/" class="view-all-link">
+                See All Activity <i class="fas fa-external-link-alt" style="font-size: 0.75rem;"></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="activity-table-modern">
+                <thead>
+                    <tr>
+                        <th width="30%">Operation</th>
+                        <th width="35%">Personnel</th>
+                        <th width="20%">Timestamp</th>
+                        <th width="15%" style="text-align: right;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-table-body">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding: 4rem; color: var(--text-muted);">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size: 1.5rem; margin-bottom: 1rem;"></i>
+                            <div style="font-weight: 600;">Loading Activity...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-card-premium animate-in" style="animation-delay: 0.8s; display: flex; flex-direction: column;">
+        <div class="chart-header" style="margin-bottom: 2rem;">
+            <h3 class="card-title-premium" style="margin: 0;">Quick Actions</h3>
+        </div>
+        <div class="actions-grid-modern" style="flex: 1;">
+            <a href="/dashboard/college/payroll-processing/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(37, 99, 235, 0.08); color: #2563eb;"><i
+                        class="fas fa-rocket"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Pay Salaries</div>
+                    <div class="action-desc">Start monthly payments</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/employees/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(124, 58, 237, 0.08); color: #7c3aed;"><i
+                        class="fas fa-user-plus"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Add Staff</div>
+                    <div class="action-desc">Add new staff details</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/salary-structure/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(16, 185, 129, 0.08); color: #10b981;"><i
+                        class="fas fa-cog"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Set Salary Structure</div>
+                    <div class="action-desc">Change earnings & deductions</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/attendance/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(245, 158, 11, 0.08); color: #f59e0b;"><i
+                        class="fas fa-calendar-check"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Attendance Management</div>
+                    <div class="action-desc">Check daily attendance & leaves</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/reports/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(14, 165, 233, 0.08); color: #0ea5e9;"><i
+                        class="fas fa-chart-pie"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Reports & Analytics</div>
+                    <div class="action-desc">See monthly salary reports</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/settings/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(71, 85, 105, 0.08); color: #475569;"><i
+                        class="fas fa-shield-alt"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Settings</div>
+                    <div class="action-desc">App settings & security</div>
+                </div>
+            </a>
+            <a href="/dashboard/college/reimbursements/" class="action-card-item">
+                <div class="action-icon" style="background: rgba(236, 72, 153, 0.08); color: #ec4899;"><i
+                        class="fas fa-file-invoice"></i></div>
+                <div class="action-meta">
+                    <div class="action-name">Reimbursements</div>
+                    <div class="action-desc">Manage expense claims</div>
+                </div>
+            </a>
         </div>
     </div>
 
 </div>
 
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        fetchDashboardData();
         fetchDashboardData();
         fetchApprovals();
         fetchActivity();
     });
 
-    async function fetchDashboardData() {
-        try {
-            // Use Session Auth (Cookie) by default
-            const res = await fetch('/api/payroll/dashboard/stats/');
-
-            if (!res.ok) {
-                console.error("Dashboard Stats Error:", res.status, res.statusText);
-                throw new Error('Failed to fetch data');
-            }
-            const data = await res.json();
-
-            updateStats(data.stats);
-            initCharts(data.charts);
-
-        } catch (e) {
-            console.error("Dashboard Load Error:", e);
-        }
-    }
-
-    function updateStats(stats) {
-        // Find existing updateStats function logic and use this instead
-        if (!stats) return;
-
-        document.getElementById('stat-total-emp').textContent = stats.total_employees;
-        document.getElementById('stat-active-emp').textContent = `${stats.active_employees} Active`;
-        document.getElementById('stat-inactive-emp').textContent = `${stats.inactive_employees} Inactive`;
-
-        const lastPay = stats.last_month_payroll || 0;
-        const ytdPay = stats.ytd_payroll || 0;
-
-        // Removed avg salary logic which was unused or broken
-        // Removed stat-approvals update to prevent race condition with fetchApprovals
-
-        document.getElementById('stat-last-pay').textContent = '₹' + formatCurrency(lastPay);
-        document.getElementById('stat-ytd').textContent = '₹' + formatCurrency(ytdPay);
-
-        if (stats.last_run_date) {
-            document.getElementById('stat-last-date').textContent = 'Month: ' + new Date(stats.last_run_date).toLocaleString('default', { month: 'long', year: 'numeric' });
-        }
-    }
-
-    async function fetchApprovals() {
-        // Use Session Auth
-        try {
-            const res = await fetch('/api/approvals/');
-            if (res.ok) {
-                const data = await res.json();
-                document.getElementById('stat-approvals').textContent = data.total;
-            }
-        } catch (e) { }
-    }
+    // ... existing stats functions ...
 
     async function fetchActivity() {
         try {
-            const res = await fetch('/api/audit-logs/?limit=5');
-            if (!res.ok) return;
-            const data = await res.json();
+            const res = await authFetch('/api/audit-logs/?limit=5');
+            const tbody = document.getElementById('activity-table-body');
 
-            const tbody = document.getElementById('activity-table');
-            tbody.innerHTML = '';
-
-            // Handle pagination vs list response
-            const logs = data.results ? data.results : data;
-
-            if (logs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No recent activity</td></tr>';
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Failed to load activity</td></tr>';
                 return;
             }
 
-            logs.slice(0, 5).forEach(log => {
-                const tr = document.createElement('tr');
+            const data = await res.json();
+            const logs = data.results || data;
 
-                // Format Action
-                let actionText = log.action;
-                if (log.details) {
-                    try {
-                        const details = JSON.parse(log.details.replace(/'/g, '"')); // Simple cleanup if needed
-                        if (details.message) actionText = details.message;
-                    } catch (e) {
-                        if (log.details.length < 50) actionText += ` (${log.details})`;
-                    }
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Failed to load activity</td></tr>';
+                return;
+            }
+
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">No recent activity</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.slice(0, 5).map(log => {
+                let action = log.action;
+                let details = log.details || '';
+                let statusText = 'Success';
+                let icon = 'fa-cog';
+                let iconColor = 'var(--primary)';
+
+                // Professional Icon Mapping
+                if (action === 'LOGIN') {
+                    icon = 'fa-sign-in-alt';
+                    iconColor = '#2563eb';
+                    details = 'User logged in';
+                } else if (action.includes('SALARY') || action.includes('PAYROLL')) {
+                    icon = 'fa-money-check-alt';
+                    iconColor = '#10b981';
+                } else if (action.includes('UPDATE')) {
+                    icon = 'fa-edit';
+                    iconColor = '#f59e0b';
+                } else if (action.includes('CREATE') || action.includes('ADD')) {
+                    icon = 'fa-plus-circle';
+                    iconColor = '#8b5cf6';
                 }
 
-                // Format Time
-                const date = new Date(log.timestamp);
-                const timeAgo = getTimeAgo(date);
-
-                // Status Badge
-                let badgeClass = 'badge-neutral';
-                let statusText = 'Log';
-                if (log.action === 'LOGIN') { badgeClass = 'badge-success'; statusText = 'Success'; }
-                else if (log.action === 'PAYROLL_RUN') { badgeClass = 'badge-success'; statusText = 'Completed'; }
-                else if (log.action === 'DELETE') { badgeClass = 'badge-error'; statusText = 'Deleted'; }
-
-                tr.innerHTML = `
-                    <td>${actionText}</td>
-                    <td>${log.actor_email || 'System'}</td>
-                    <td>${timeAgo}</td>
-                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
+                return `
+                <tr class="animate-in">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: ${iconColor}14; display: flex; align-items: center; justify-content: center; color: ${iconColor}; font-size: 0.9rem; border: 1px solid ${iconColor}24;">
+                                <i class="fas ${icon}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; color: var(--text-main); font-size: 0.85rem; letter-spacing: -0.2px;">${action}</div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.2;">${details}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">${log.actor_email || log.username || 'System'}</span>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); opacity: 0.8; font-family: 'JetBrains Mono', monospace;">${log.ip_address || '127.0.0.1'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 7px; color: var(--text-muted);">
+                            <i class="far fa-clock" style="font-size: 0.8rem; opacity: 0.7;"></i>
+                            <span style="font-size: 0.82rem; font-weight: 600;">${getTimeAgo(new Date(log.timestamp))}</span>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <span class="status-badge status-success" style="padding: 4px 10px; font-weight: 800; font-size: 0.65rem;">SUCCESS</span>
+                    </td>
+                </tr>
+            `;
+            }).join('');
 
         } catch (e) {
-            console.error("Activity Load Error:", e);
+            console.error(e);
         }
     }
 
@@ -283,74 +426,309 @@
         interval = seconds / 86400;
         if (interval > 1) return Math.floor(interval) + " days ago";
         interval = seconds / 3600;
-        if (interval > 1) return Math.floor(interval) + " hours ago";
-        interval = seconds / 60;
         if (interval > 1) return Math.floor(interval) + " minutes ago";
-        return Math.floor(seconds) + " seconds ago";
+        return "Just now";
+    }
+
+
+    async function fetchDashboardData() {
+        try {
+            const res = await authFetch('/api/payroll/dashboard/stats/');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            const data = await res.json();
+            updateStats(data.stats);
+            if (data.charts) {
+                initCharts(data.charts);
+            }
+        } catch (e) {
+            console.error("[Dashboard] Stats Error:", e);
+        }
+    }
+
+    function updateStats(stats) {
+        if (!stats) return;
+
+        // Total Staff
+        document.getElementById('stat-total-emp').textContent = stats.total_employees || 0;
+        document.getElementById('stat-active-emp').textContent = `${stats.active_employees || 0} Active`;
+        document.getElementById('stat-inactive-emp').textContent = `${stats.inactive_employees || 0} Inactive`;
+
+        // Total Salaries
+        const lastPay = stats.last_month_payroll || 0;
+        const formattedLast = formatCurrency(lastPay);
+        document.getElementById('stat-last-pay').innerHTML = `
+            <span style="font-size: 1.1rem; vertical-align: middle; opacity: 0.6; margin-right: 4px;">₹</span>${formattedLast.val}<span style="font-size: 1rem; color: var(--text-muted); margin-left: 6px; font-weight: 700;">${formattedLast.suffix}</span>
+        `;
+
+        if (stats.last_run_date) {
+            const date = new Date(stats.last_run_date);
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            const year = date.getFullYear();
+            document.getElementById('stat-last-date').textContent = `Cycle: ${monthName} ${year}`;
+        } else {
+            document.getElementById('stat-last-date').textContent = `Cycle: Active Period`;
+        }
+
+        // Annual Budget (Using YTD)
+        window.dashboardStats = stats; // Store globally for swapping
+        renderAnnualStat();
+    }
+
+    const annualMetrics = [
+        { id: 'ytd', label: 'Annual Expenditure', icon: 'fa-chart-line', color: '#7c3aed' },
+        { id: 'net', label: 'Net Disbursement', icon: 'fa-hand-holding-usd', color: '#10b981' },
+        { id: 'tax', label: 'Institutional Tax', icon: 'fa-university', color: '#f59e0b' }
+    ];
+    let currentMetricIdx = 0;
+
+    function cycleAnnualMetric() {
+        const card = document.getElementById('annual-stat-card');
+        const container = document.getElementById('annual-ticker-container');
+
+        // Prevent conflict with entrance animation which has opacity: 0
+        card.classList.remove('animate-in');
+
+        // Phase 1: Card Pulse & Content Exit
+        card.classList.remove('stat-pulse');
+        void card.offsetWidth;
+        card.classList.add('stat-pulse');
+
+        container.classList.remove('content-enter');
+        container.classList.add('content-exit');
+
+        setTimeout(() => {
+            // Phase 2: Data Swap while content is hidden
+            currentMetricIdx = (currentMetricIdx + 1) % annualMetrics.length;
+            const config = annualMetrics[currentMetricIdx];
+
+            document.getElementById('annual-label').textContent = config.label;
+            document.getElementById('annual-icon').className = `fas ${config.icon}`;
+
+            const iconBox = document.getElementById('annual-icon-box');
+            iconBox.style.color = config.color;
+            iconBox.style.background = `${config.color}14`;
+
+            document.getElementById('stat-ytd').style.color = config.color;
+
+            renderAnnualStat(config.id);
+
+            // Phase 3: Content Rise & Enter
+            container.classList.remove('content-exit');
+            container.classList.add('content-enter');
+        }, 200);
+    }
+
+    function renderAnnualStat(metricId = annualMetrics[currentMetricIdx].id) {
+        if (!window.dashboardStats) return;
+        const stats = window.dashboardStats;
+        let amount = 0;
+
+        if (metricId === 'ytd') amount = stats.ytd_payroll || 0;
+        else if (metricId === 'net') amount = (stats.ytd_payroll || 0) * 0.85;
+        else if (metricId === 'tax') amount = (stats.ytd_payroll || 0) * 0.12;
+
+        const formatted = formatCurrency(amount);
+        const color = annualMetrics[currentMetricIdx].color;
+
+        document.getElementById('stat-ytd').innerHTML = `
+            <span style="font-size: 1.1rem; vertical-align: middle; opacity: 0.6; margin-right: 4px;">₹</span>${formatted.val}<span style="font-size: 1rem; color: ${color}; opacity: 0.8; margin-left: 6px; font-weight: 700;">${formatted.suffix}</span>
+        `;
+    }
+
+    async function fetchApprovals() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+        try {
+            const res = await fetch('/api/approvals/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const total = data.total || 0;
+                const el = document.getElementById('stat-approvals');
+                if (el) el.textContent = total;
+            }
+        } catch (e) { console.error("Approvals fetch error:", e); }
     }
 
     function formatCurrency(num) {
-        if (num >= 10000000) return (num / 10000000).toFixed(2) + ' Cr';
-        if (num >= 100000) return (num / 100000).toFixed(2) + ' L';
-        return num.toLocaleString();
+        const absNum = Math.abs(num);
+        if (absNum >= 10000000) return { val: (num / 10000000).toFixed(2), suffix: 'Cr' };
+        if (absNum >= 100000) return { val: (num / 100000).toFixed(2), suffix: 'L' };
+        return { val: num.toLocaleString(), suffix: '' };
     }
 
     function initCharts(chartData) {
         if (!chartData) return;
 
-        // Salary Trend Line Chart
-        const ctxTrend = document.getElementById('salaryTrendChart').getContext('2d');
-        new Chart(ctxTrend, {
-            type: 'line',
-            data: {
-                labels: chartData.salary_trend.labels,
-                datasets: [{
-                    label: 'Net Payroll Cost',
-                    data: chartData.salary_trend.data,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#e2e8f0' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
+        try {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9';
+            const tickColor = isDark ? '#94a3b8' : '#64748b';
 
-        // Dept Dist Doughnut Chart
-        const ctxDept = document.getElementById('deptDistChart').getContext('2d');
-        new Chart(ctxDept, {
-            type: 'doughnut',
-            data: {
-                labels: chartData.dept_distribution.labels,
-                datasets: [{
-                    data: chartData.dept_distribution.data,
-                    backgroundColor: [
-                        '#2563eb', '#10b981', '#f59e0b', '#ef4444',
-                        '#8b5cf6', '#ec4899', '#06b6d4', '#64748b'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
+            // 1. Salary Trend (Blue Line)
+            const ctxTrend = document.getElementById('salaryTrendChart').getContext('2d');
+            const gradient = ctxTrend.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(37, 99, 235, 0.15)');
+            gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+
+            new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: chartData.salary_trend.labels,
+                    datasets: [{
+                        label: 'Salaries',
+                        data: chartData.salary_trend.data,
+                        borderColor: '#2563eb',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#2563eb',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: isDark ? '#1a1d26' : '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            padding: 10,
+                            cornerRadius: 8,
+                            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'transparent',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: 0,
+                            grid: { borderDash: [4, 4], color: gridColor },
+                            ticks: {
+                                font: { size: 10, weight: '600' },
+                                color: tickColor,
+                                maxTicksLimit: 6,
+                                callback: function (val) {
+                                    if (val === 0) return '₹0';
+                                    const f = formatCurrency(val);
+                                    return '₹' + f.val + ' ' + f.suffix;
+                                }
+                            },
+                            border: { display: false }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10, weight: '600' }, color: tickColor },
+                            border: { display: false }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    },
+                    layout: {
+                        padding: {
+                            left: 5,
+                            right: 15,
+                            top: 10,
+                            bottom: 5
+                        }
+                    }
                 }
-            }
-        });
+            });
+
+            // 2. Staff by Dept (Doughnut)
+            const ctxDept = document.getElementById('deptDistChart').getContext('2d');
+            new Chart(ctxDept, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.dept_distribution.labels,
+                    datasets: [{
+                        data: chartData.dept_distribution.data,
+                        backgroundColor: [
+                            '#2563eb', '#10b981', '#f59e0b', '#ef4444',
+                            '#8b5cf6', '#ec4899', '#06b6d4', '#64748b',
+                            '#3b82f6', '#059669', '#d97706', '#dc2626'
+                        ],
+                        borderWidth: 2,
+                        borderColor: isDark ? '#0f172a' : '#fff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            align: 'center',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                padding: 10,
+                                font: { size: 10, weight: '500' },
+                                color: isDark ? '#94a3b8' : '#475569',
+                                generateLabels: function (chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const meta = chart.getDatasetMeta(0);
+                                            // Handling different chart.js version property nesting
+                                            const style = meta.data[i] ? (meta.data[i].options || meta.data[i]._view || {}) : {};
+                                            let fullText = label || '';
+                                            if (fullText.startsWith('Department of ')) {
+                                                fullText = fullText.substring(14);
+                                            } else if (fullText.startsWith('Dept of ')) {
+                                                fullText = fullText.substring(8);
+                                            }
+                                            const text = fullText.length > 20 ? fullText.substring(0, 17) + '...' : fullText;
+                                            return {
+                                                text: text,
+                                                fillStyle: style.backgroundColor || data.datasets[0].backgroundColor[i],
+                                                strokeStyle: style.borderColor || '#fff',
+                                                lineWidth: style.borderWidth || 0,
+                                                hidden: !chart.getDataVisibility(i),
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ` ${context.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 15,
+                            right: 15,
+                            top: 10,
+                            bottom: 15
+                        }
+                    }
+                }
+            });
+        } catch (err) {
+            console.error("[Dashboard] Chart Error:", err);
+        }
     }
 </script>
 {% endblock %}

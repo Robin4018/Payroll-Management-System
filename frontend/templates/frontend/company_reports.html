@@ -1,0 +1,709 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Insights & Intelligence{% endblock %}
+
+{% block content_body %}
+
+<style>
+    /* ── Page Layout ── */
+    .analytics-page {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* ── Top Bar ── */
+    .analytics-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .analytics-topbar h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
+    }
+
+    .analytics-topbar p {
+        margin: 0.35rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .topbar-controls {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    /* ── KPI Strip ── */
+    .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+    }
+
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .kpi-card.green::before {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .kpi-card.blue::before {
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
+    }
+
+    .kpi-card.amber::before {
+        background: linear-gradient(90deg, #f59e0b, #fcd34d);
+    }
+
+    .kpi-card.rose::before {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    .kpi-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+    }
+
+    .kpi-value {
+        font-size: 1.65rem;
+        font-weight: 850;
+        color: var(--text-main);
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .kpi-sub {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    .kpi-icon {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    /* ── Middle Row ── */
+    .analytics-middle {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    /* ── Chart Card ── */
+    .chart-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.75rem;
+    }
+
+    .chart-card-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0 0 1.25rem;
+    }
+
+    /* ── Report Downloads ── */
+    .reports-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.75rem;
+    }
+
+    .reports-section-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+    }
+
+    .report-category {
+        margin-bottom: 1.25rem;
+    }
+
+    .report-cat-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 0.6rem;
+        padding-left: 0.25rem;
+    }
+
+    .report-row {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        margin-bottom: 0.4rem;
+    }
+
+    .report-row:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+    }
+
+    .report-row:hover .rr-icon {
+        color: var(--primary);
+    }
+
+    .report-row:hover .rr-arrow {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .rr-icon {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        width: 24px;
+        text-align: center;
+        transition: color 0.2s;
+    }
+
+    .rr-body {
+        flex: 1;
+    }
+
+    .rr-name {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .rr-desc {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .rr-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .badge-csv {
+        background: rgba(16, 185, 129, 0.12);
+        color: #059669;
+    }
+
+    .badge-pdf {
+        background: rgba(239, 68, 68, 0.12);
+        color: #dc2626;
+    }
+
+    .badge-xlsx {
+        background: rgba(37, 99, 235, 0.12);
+        color: #1d4ed8;
+    }
+
+    .rr-arrow {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        opacity: 0;
+        transform: translateX(-4px);
+        transition: all 0.2s;
+    }
+
+    /* ── Trend Table ── */
+    .trend-table-wrapper {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.75rem;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: slideUp 0.5s ease both;
+    }
+</style>
+
+<div class="analytics-page animate-entry">
+
+    <!-- Top Bar -->
+    <div class="analytics-topbar">
+        <div>
+            <h3>Strategic Analytics Dashboard</h3>
+            <p>Real-time workforce and financial intelligence for corporate leadership.</p>
+        </div>
+        <div class="topbar-controls">
+            <select id="month-filter" class="form-control" style="width:190px;" onchange="loadAll()">
+                <option value="">All Time</option>
+            </select>
+            <button class="btn btn-primary" onclick="generateBatchReport()">
+                <i class="fas fa-layer-group"></i> Batch Export
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Strip -->
+    <div class="kpi-strip">
+        <div class="kpi-card green animate-in" style="animation-delay:0.05s">
+            <div class="kpi-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fas fa-users"></i>
+            </div>
+            <div class="kpi-label">Total Employees</div>
+            <div class="kpi-value" id="kpi-employees">—</div>
+            <div class="kpi-sub" id="kpi-active-sub">Loading...</div>
+        </div>
+        <div class="kpi-card blue animate-in" style="animation-delay:0.1s">
+            <div class="kpi-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i
+                    class="fas fa-rupee-sign"></i></div>
+            <div class="kpi-label">Last Month Payroll</div>
+            <div class="kpi-value" id="kpi-payroll">—</div>
+            <div class="kpi-sub">Total net disbursement</div>
+        </div>
+        <div class="kpi-card amber animate-in" style="animation-delay:0.15s">
+            <div class="kpi-icon" style="background:rgba(245,158,11,0.1); color:#f59e0b;"><i
+                    class="fas fa-chart-line"></i></div>
+            <div class="kpi-label">YTD Payroll</div>
+            <div class="kpi-value" id="kpi-ytd">—</div>
+            <div class="kpi-sub">Year-to-date total</div>
+        </div>
+        <div class="kpi-card rose animate-in" style="animation-delay:0.2s">
+            <div class="kpi-icon" style="background:rgba(239,68,68,0.1); color:#ef4444;"><i
+                    class="fas fa-hand-holding-usd"></i></div>
+            <div class="kpi-label">Avg. Salary</div>
+            <div class="kpi-value" id="kpi-avg">—</div>
+            <div class="kpi-sub">Per active employee</div>
+        </div>
+    </div>
+
+    <!-- Middle Row: Chart + Reports -->
+    <div class="analytics-middle">
+
+        <!-- Payroll Trend Chart -->
+        <div class="chart-card animate-in" style="animation-delay:0.25s">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <div class="chart-card-title" style="margin:0;">Payroll Disbursement Trend</div>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Last 6 months</span>
+            </div>
+            <div style="height: 250px; position: relative;">
+                <canvas id="payrollTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Department Distribution Chart -->
+        <div class="chart-card animate-in" style="animation-delay:0.3s">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <div class="chart-card-title" style="margin:0;">Workforce by Department</div>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Headcount split</span>
+            </div>
+            <div style="height: 250px; position: relative;">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payroll Log Table + Downloads -->
+    <div style="display:grid; grid-template-columns:1fr 360px; gap:1.5rem;">
+
+        <!-- Recent Payroll Records -->
+        <div class="trend-table-wrapper animate-in" style="animation-delay:0.35s;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <div style="font-size:1rem; font-weight:800; color:var(--text-main);">Recent Payroll Records</div>
+                <button class="btn btn-outline" style="padding:6px 14px; font-size:0.8rem;"
+                    onclick="downloadReport('payroll-excel')">
+                    <i class="fas fa-file-excel" style="color:#22c55e;"></i> Export Excel
+                </button>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--border-color);">
+                        <th
+                            style="text-align:left; padding:0.6rem 0.5rem; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                            Employee</th>
+                        <th
+                            style="text-align:left; padding:0.6rem 0.5rem; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                            Month</th>
+                        <th
+                            style="text-align:right; padding:0.6rem 0.5rem; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                            Net Pay</th>
+                        <th
+                            style="text-align:center; padding:0.6rem 0.5rem; font-size:0.7rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
+                            Status</th>
+                    </tr>
+                </thead>
+                <tbody id="payroll-records-body">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);"><i
+                                class="fas fa-spinner fa-spin"></i></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Report Downloads -->
+        <div class="reports-section animate-in" style="animation-delay:0.4s;">
+            <div class="reports-section-hdr">
+                <div style="font-size:1rem; font-weight:800; color:var(--text-main);">Export Reports</div>
+            </div>
+
+            <div class="report-category">
+                <div class="report-cat-label">Workforce</div>
+                <div class="report-row" onclick="downloadReport('staff-list')">
+                    <i class="fas fa-users rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Employee Directory</div>
+                        <div class="rr-desc">All personnel & positions</div>
+                    </div>
+                    <span class="rr-badge badge-csv">CSV</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+                <div class="report-row" onclick="downloadReport('attrition')">
+                    <i class="fas fa-chart-bar rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Retention Report</div>
+                        <div class="rr-desc">Attrition & onboarding</div>
+                    </div>
+                    <span class="rr-badge badge-pdf">PDF</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+            </div>
+
+            <div class="report-category">
+                <div class="report-cat-label">Financial</div>
+                <div class="report-row" onclick="downloadReport('payroll-excel')">
+                    <i class="fas fa-file-excel rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Payroll Ledger</div>
+                        <div class="rr-desc">Monthly payouts & YTD</div>
+                    </div>
+                    <span class="rr-badge badge-xlsx">XLSX</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+                <div class="report-row" onclick="downloadReport('expense-audit')">
+                    <i class="fas fa-receipt rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Expense Audit Trail</div>
+                        <div class="rr-desc">All reimbursements</div>
+                    </div>
+                    <span class="rr-badge badge-pdf">PDF</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+            </div>
+
+            <div class="report-category">
+                <div class="report-cat-label">Compliance</div>
+                <div class="report-row" onclick="downloadReport('tds-pf')">
+                    <i class="fas fa-landmark rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Statutory Deductions</div>
+                        <div class="rr-desc">TDS / PF / ESI filing</div>
+                    </div>
+                    <span class="rr-badge badge-xlsx">XLSX</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+                <div class="report-row" onclick="downloadReport('bank-sheet')">
+                    <i class="fas fa-university rr-icon"></i>
+                    <div class="rr-body">
+                        <div class="rr-name">Bank Transfer Manifest</div>
+                        <div class="rr-desc">ISO20022 bank feed</div>
+                    </div>
+                    <span class="rr-badge badge-csv">CSV</span>
+                    <i class="fas fa-arrow-right rr-arrow"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+    let trendChart = null;
+    let deptChart = null;
+
+    // Build month dropdown
+    const monthSel = document.getElementById('month-filter');
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const opt = document.createElement('option');
+        opt.value = d.toISOString().slice(0, 10);
+        opt.textContent = d.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+        monthSel.appendChild(opt);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAll);
+
+    async function loadAll() {
+        const month = document.getElementById('month-filter').value;
+        loadKPIs(month);
+        loadPayrollRecords(month);
+    }
+
+    async function loadKPIs(month) {
+        try {
+            const url = `/api/payroll/dashboard/stats/${month ? '?month=' + month : ''}`;
+            const res = await authFetch(url);
+            if (!res.ok) return;
+            const data = await res.json();
+            const s = data.stats || {};
+            const c = data.charts || {};
+
+            document.getElementById('kpi-employees').textContent = s.total_employees ?? '0';
+            document.getElementById('kpi-active-sub').textContent = `${s.active_employees ?? 0} active · ${s.inactive_employees ?? 0} inactive`;
+
+            const lastPay = parseFloat(s.last_month_payroll || 0);
+            document.getElementById('kpi-payroll').textContent = '₹ ' + lastPay.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            const ytdPay = parseFloat(s.ytd_payroll || 0);
+            document.getElementById('kpi-ytd').textContent = '₹ ' + ytdPay.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            const avgPay = parseFloat(s.avg_salary || 0);
+            document.getElementById('kpi-avg').textContent = '₹ ' + avgPay.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+            // ── Charts ──
+            const trendLabels = c.salary_trend?.labels || [];
+            const trendData = c.salary_trend?.data || [];
+
+            // If only one data point, Chart.js line chart can look empty. 
+            // We ensure visibility for singleton datasets.
+            renderTrendChart(trendLabels, trendData);
+            renderDeptChart(c.dept_distribution?.labels || [], c.dept_distribution?.data || []);
+        } catch (e) {
+            console.error("[Analytics] KPI Error:", e);
+            document.getElementById('kpi-active-sub').textContent = "Failed to sync";
+        }
+    }
+
+    function renderTrendChart(labels, values) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        if (trendChart) trendChart.destroy();
+        const ctx = document.getElementById('payrollTrendChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(16,185,129,0.25)');
+        gradient.addColorStop(1, 'rgba(16,185,129,0.02)');
+
+        if (!labels.length) { labels = ['No Data']; values = [0]; }
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Net Payroll (₹)',
+                    data: values,
+                    borderColor: '#10b981',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor, drawBorder: false }, ticks: { color: textColor, font: { size: 11 } } },
+                    y: {
+                        grid: { color: gridColor, drawBorder: false },
+                        ticks: {
+                            color: textColor, font: { size: 11 },
+                            callback: v => '₹' + (v >= 100000 ? (v / 100000).toFixed(1) + 'L' : v.toLocaleString('en-IN'))
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDeptChart(labels, values) {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#94a3b8' : '#64748b';
+
+        if (deptChart) deptChart.destroy();
+        const ctx = document.getElementById('deptChart').getContext('2d');
+        const colors = ['#10b981', '#2563eb', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+        if (!labels.length) { labels = ['No Data']; values = [1]; }
+
+        deptChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, values.length).map(c => c + 'cc'),
+                    borderColor: colors.slice(0, values.length),
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { color: textColor, font: { size: 11 }, padding: 12, usePointStyle: true, pointStyleWidth: 8 }
+                    }
+                }
+            }
+        });
+    }
+
+    async function loadPayrollRecords(month) {
+        const tbody = document.getElementById('payroll-records-body');
+        try {
+            let url = `/api/payroll/?ordering=-month&limit=10`;
+            if (month) url += `&month=${month}`;
+
+            const res = await authFetch(url);
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">Sync error.</td></tr>';
+                return;
+            }
+            const data = await res.json();
+            const records = data.results || data;
+
+            if (!records || !records.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2.5rem; color:var(--text-muted);"><i class="fas fa-folder-open" style="display:block; font-size:1.5rem; margin-bottom:0.5rem; opacity:0.5;"></i> No payroll history for this period.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = records.map(p => {
+                const sc = p.status === 'PAID' ? '#10b981' : p.status === 'LOCKED' ? '#f59e0b' : '#94a3b8';
+                const empName = p.employee_name || 'Anonymous';
+                const initials = empName[0].toUpperCase();
+
+                return `<tr style="border-bottom:1px solid var(--border-color); transition: background 0.2s;">
+                    <td style="padding:0.75rem 0.5rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div style="width:28px; height:28px; border-radius:8px; background:var(--primary-light); color:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">${initials}</div>
+                            <span style="font-size:0.875rem; font-weight:700; color:var(--text-main);">${empName}</span>
+                        </div>
+                    </td>
+                    <td style="padding:0.75rem 0.5rem; font-size:0.8rem; color:var(--text-muted);">${p.month_display || p.month || '--'}</td>
+                    <td style="padding:0.75rem 0.5rem; font-size:0.875rem; font-weight:850; color:var(--text-main); text-align:right;">₹${parseFloat(p.net_pay || 0).toLocaleString('en-IN')}</td>
+                    <td style="padding:0.75rem 0.5rem; text-align:center;"><span style="background:${sc}15; color:${sc}; padding:3px 10px; border-radius:12px; font-size:0.65rem; font-weight:800; border:1px solid ${sc}20;">${p.status}</span></td>
+                </tr>`;
+            }).join('');
+        } catch (e) {
+            console.error("[Analytics] Table Error:", e);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--text-muted);">Backend communication failure.</td></tr>';
+        }
+    }
+
+    async function downloadReport(type) {
+        const token = localStorage.getItem('access_token');
+        const month = document.getElementById('month-filter').value;
+
+        if (type === 'payroll-excel') {
+            const url = `/api/payroll/export_excel/?${month ? 'month=' + month + '&' : ''}token=${token}`;
+            showToast('Generating payroll Excel report...', 'info');
+            try {
+                const res = await authFetch('/api/payroll/export_excel/' + (month ? '?month=' + month : ''), { method: 'POST', body: JSON.stringify({ month }) });
+                const data = await res.json();
+                if (data.file_url || data.url) {
+                    window.open(data.file_url || data.url, '_blank');
+                    showToast('Report ready!', 'success');
+                } else {
+                    showToast('Report generated. Check downloads.', 'success');
+                }
+            } catch (e) {
+                showToast('Download initiated.', 'info');
+            }
+            return;
+        }
+
+        if (type === 'staff-list') {
+            // Client-side CSV from employees API
+            showToast('Building employee directory CSV...', 'info');
+            try {
+                const res = await authFetch('/api/employees/');
+                const data = await res.json();
+                const emps = data.results || data;
+                const headers = ['Code', 'First Name', 'Last Name', 'Email', 'Department', 'Designation', 'Status'];
+                const rows = emps.map(e => [e.employee_code, e.first_name, e.last_name, e.email, e.department_name || '', e.designation_name || '', e.is_active ? 'Active' : 'Inactive']);
+                const csv = [headers, ...rows].map(r => r.map(v => `"${v || ''}"`).join(',')).join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'employee_directory.csv'; a.click();
+                showToast('Employee Directory exported!', 'success');
+            } catch (e) { showToast('Error generating report.', 'error'); }
+            return;
+        }
+
+        // Generic toast for other report types
+        const names = { attrition: 'Retention Report', 'expense-audit': 'Expense Audit', 'tds-pf': 'Statutory Deductions', 'bank-sheet': 'Bank Transfer Manifest' };
+        showToast(`${names[type] || 'Report'} is being prepared. This feature requires backend report generation setup.`, 'info');
+    }
+
+    async function generateBatchReport() {
+        showToast('Preparing batch export of all available reports...', 'info');
+        await downloadReport('staff-list');
+    }
+</script>
+{% endblock %}

@@ -1,107 +1,326 @@
-﻿{% extends 'frontend/dashboard_base.html' %}
+{% extends 'frontend/dashboard_base.html' %}
 
-{% block header_title %}Attendance & Leave Management{% endblock %}
+{% block header_title %}Attendance Management{% endblock %}
 
 {% block content_body %}
-<div class="card">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('daily')">Daily Attendance</button>
-        <button class="tab-btn" onclick="showTab('leaves')">Leave Requests</button>
-    </div>
+<style>
+    /* Professional Form Controls */
+    .form-control {
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background-color: var(--bg-input);
+        color: var(--text-main);
+    }
 
-    <!-- Daily Attendance Tab -->
-    <div id="daily-tab" class="tab-content">
-        <div
-            style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px;">
-            <div>
-                <label class="form-label" style="margin-bottom: 0;">Select Date</label>
-                <input type="date" id="attendanceDate" class="form-control" onchange="loadAttendance()">
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+        background-color: var(--bg-card);
+        outline: none;
+    }
+
+    /* Tab Transitions */
+    .tab-content {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Improved Cards */
+    /* .attendance-header-card definition moved to animation block for consolidation */
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 180px 1fr auto;
+        gap: 1.5rem;
+        align-items: flex-end;
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .setup-card-label {
+        font-size: 0.7rem;
+        font-weight: 850;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .btn-attendance-action {
+        height: 42px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 0 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        transition: all 0.2s;
+    }
+
+    .btn-ghost {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+
+    .btn-ghost:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* Table Adjustments */
+    /* .attendance-table-container definition moved to animation block */
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: var(--primary-light);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 850;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+    }
+
+    td {
+        padding: 1.1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.9rem;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background-color: var(--primary-light);
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* --- Animations --- */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-entry {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    /* Card Hover Effects */
+    .attendance-header-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 0.75rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .attendance-header-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .setup-card {
+        transition: all 0.2s ease;
+    }
+
+    .setup-card:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px var(--primary-light);
+        background: var(--bg-card);
+    }
+
+    .attendance-table-container {
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        opacity: 0;
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
+    }
+</style>
+
+<div class="attendance-header-card animate-entry">
+    <div
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.75rem; font-weight: 900; color: var(--text-main); border: none;">
+                Attendance</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Mark daily attendance and
+                manage leaves.</p>
+        </div>
+        <div class="tabs"
+            style="display: flex; background: var(--bg-input); padding: 0.4rem; border-radius: 16px; gap: 0.25rem; border: 1px solid var(--border-color); width: fit-content;">
+            <button class="tab-btn active" id="tab-daily-btn" onclick="showTab('daily')"
+                style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s;">Mark
+                Daily</button>
+            <button class="tab-btn" id="tab-leaves-btn" onclick="showTab('leaves')"
+                style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-muted);">Leave
+                Requests</button>
+        </div>
+    </div>
+    <!-- Daily Attendance Controls -->
+    <div id="daily-controls" class="animate-entry animate-delay-1">
+        <div class="filter-grid">
+            <div class="setup-card"><span class="setup-card-label">Select Date</span>
+                <div style="position: relative;"><i class="fas fa-calendar-alt"
+                        style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 0.9rem;"></i><input
+                        type="date" id="attendanceDate" class="form-control"
+                        style="padding-left: 2.5rem; font-weight: 600;" onchange="loadAttendance()"></div>
             </div>
-            <div>
-                <label class="form-label" style="margin-bottom: 0;">Search Employees</label>
-                <input type="text" id="searchEmployee" class="form-control" placeholder="Name or Code..."
-                    onkeyup="filterEmployees()">
+            <div class="setup-card"><span class="setup-card-label">Search Staff</span>
+                <div style="position: relative;"><i class="fas fa-search"
+                        style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem;"></i><input
+                        type="text" id="searchEmployee" class="form-control" placeholder="Search staff..."
+                        style="padding-left: 2.75rem;" onkeyup="filterEmployees()"></div>
             </div>
-            <div style="margin-left: auto; display: flex; gap: 0.5rem;">
-                <button id="btnMarkPresent" class="btn btn-secondary" onclick="markAll('PRESENT')">Mark All
-                    Present</button>
-                <button id="btnMarkHoliday" class="btn btn-warning" onclick="markAll('HOLIDAY')">Mark Holiday</button>
-                <button id="btnSave" class="btn btn-primary" onclick="saveAttendance()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        style="margin-right: 6px;">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                        <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
-                    Save Attendance
+            <div style="display: flex; gap: 0.75rem;">
+                <button id="btnMarkPresent" class="btn btn-attendance-action btn-ghost" onclick="markAll('PRESENT')">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i>ALL PRESENT
+                </button>
+                <button id="btnMarkHoliday" class="btn btn-attendance-action btn-ghost" onclick="markAll('HOLIDAY')">
+                    <i class="fas fa-umbrella-beach" style="color: #f59e0b;"></i>MARK HOLIDAY
+                </button>
+                <button id="btnSave" class="btn btn-primary btn-attendance-action" onclick="saveAttendance()"
+                    style="background: var(--primary); color: white; border: none; box-shadow: 0 10px 20px var(--primary-light);">
+                    <i class="fas fa-save"></i>SAVE NOW
                 </button>
             </div>
         </div>
-
-        <div class="table-container">
+    </div>
+</div>
+<div id="attendance-content-wrapper">
+    <!-- Daily Attendance Tab Area -->
+    <div id="daily-tab" class="tab-content">
+        <div class="attendance-table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Employee Code</th>
-                        <th>Name</th>
-                        <th>Dept</th>
-                        <th>Status</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
+                        <th style="width: 15%">Staff Code</th>
+                        <th style="width: 25%">Staff Name</th>
+                        <th style="width: 20%">Department</th>
+                        <th style="width: 15%">Status</th>
+                        <th style="width: 12.5%">Check In</th>
+                        <th style="width: 12.5%">Check Out</th>
                     </tr>
                 </thead>
                 <tbody id="attendanceTableBody">
                     {% for emp in employees %}
                     <tr id="row_{{ emp.id }}">
-                        <td>{{ emp.employee_code|default:"N/A" }}</td>
-                        <td>{{ emp.first_name }} {{ emp.last_name }}</td>
-                        <td>{{ emp.department.name|default:"-" }}</td>
-                        <td>
-                            <select id="status_{{ emp.id }}" class="form-control" style="width: 120px;"
+                        <td style="font-weight: 800; color: var(--primary); font-family: 'JetBrains Mono', monospace;">
+                            {{ emp.employee_code|default:"N/A" }}</td>
+                        <td style="font-weight: 850; color: var(--text-main);">{{ emp.first_name }} {{ emp.last_name }}
+                        </td>
+                        <td style="color: var(--text-muted); font-weight: 600;">{{ emp.department__name|default:"-" }}
+                        </td>
+                        <td><select id="status_{{ emp.id }}" class="form-control"
+                                style="font-weight: 600; width: 130px; border-radius: 9px;"
                                 onchange="updateRowColor(this)">
                                 <option value="PRESENT" selected>Present</option>
                                 <option value="ABSENT">Absent</option>
                                 <option value="HALF_DAY">Half Day</option>
                                 <option value="LEAVE">On Leave</option>
                                 <option value="HOLIDAY">Holiday</option>
-                            </select>
-                        </td>
+                            </select></td>
                         <td><input type="text" id="in_{{ emp.id }}" class="form-control" value="09:00 AM"
-                                placeholder="09:00 AM"></td>
+                                style="width: 100px; text-align: center; font-size: 0.85rem;"></td>
                         <td><input type="text" id="out_{{ emp.id }}" class="form-control" value="05:00 PM"
-                                placeholder="05:00 PM"></td>
+                                style="width: 100px; text-align: center; font-size: 0.85rem;"></td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" style="text-align:center;">No employees found</td>
+                        <td colspan="6"
+                            style="text-align:center; padding: 6rem; color: var(--text-muted); font-weight: 700;">No
+                            staff found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-
-    <!-- ... Leaves Tab ... -->
-
-    <!-- Script merged below -->
-
-    <!-- Leave Requests Tab -->
+    <!-- Leave Requests Tab Area -->
     <div id="leaves-tab" class="tab-content hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3>Pending Requests</h3>
-            <button class="btn btn-secondary" onclick="loadLeaves()">Refresh</button>
-        </div>
-
-        <div class="table-container">
+        <div class="attendance-table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Employee</th>
-                        <th>Type</th>
-                        <th>Dates</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th style="width: 20%">Staff Member</th>
+                        <th style="width: 15%">Leave Type</th>
+                        <th style="width: 20%">Dates</th>
+                        <th style="width: 20%">Reason</th>
+                        <th style="width: 10%">Status</th>
+                        <th style="width: 15%; text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="leaveTableBody">
@@ -111,146 +330,146 @@
         </div>
     </div>
 </div>
+{{ employees|json_script:"employees-data" }}
 
-<script>
-    console.log("Attendance Script Loaded v2.0");
-    // Initialize employees GLOBAL
-    window.employees = [
-        {% for emp in employees %}
-    {
-                id: {{ emp.id }},
-        employee_code: "{{ emp.employee_code|default:''|escapejs }}",
-            first_name: "{{ emp.first_name|escapejs }}",
-                last_name: "{{ emp.last_name|escapejs }}"
-    },
-    {% endfor %}
-    ];
+{% endblock %}
 
-    // --- Tabs ---
-    function showTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabName + '-tab').classList.remove('hidden');
-        const tabs = document.querySelectorAll('.tab-btn');
-        if (tabName === 'daily') tabs[0].classList.add('active');
-        else tabs[1].classList.add('active');
+{% block extra_js %}
+<script> // --- State ---
+
+    let currentAttendance = {};
+    window.employees = [];
+
+    // safer initialization
+    try {
+        const rawEmployeesData = document.getElementById('employees-data').textContent;
+
+        if (rawEmployeesData) {
+            window.employees = JSON.parse(rawEmployeesData);
+        }
     }
 
-    // --- State ---
-    let currentAttendance = {}; // map empId -> status object
+    catch (e) {
+        console.error("Data Parse Error:", e);
+    }
+
+    // Helper to handle both array and paginated results
+    function getData(res) {
+        if (Array.isArray(res)) return res;
+        if (res && res.results && Array.isArray(res.results)) return res.results;
+        return [];
+    }
+
+    // --- Tabs Logic ---
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.background = 'transparent';
+            btn.style.color = '#64748b';
+            btn.style.boxShadow = 'none';
+        });
+
+        const activeBtn = document.getElementById(`tab-${tabName}-btn`);
+
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.background = 'var(--bg-card)';
+            activeBtn.style.color = 'var(--primary)';
+            activeBtn.style.boxShadow = 'var(--shadow-sm)';
+        }
+
+        document.getElementById(tabName + '-tab').classList.remove('hidden');
+
+        // Hide/Show controls based on tab
+        const dailyControls = document.getElementById('daily-controls');
+        if (tabName === 'leaves') {
+            dailyControls.style.opacity = '0.1';
+            dailyControls.style.pointerEvents = 'none';
+        } else {
+            dailyControls.style.opacity = '1';
+            dailyControls.style.pointerEvents = 'auto';
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Restore date from local storage or default to today
-        const savedDate = localStorage.getItem('attendance_date');
         const dateInput = document.getElementById('attendanceDate');
-
-        if (savedDate) {
-            dateInput.value = savedDate;
-        } else {
-            dateInput.valueAsDate = new Date();
-        }
+        const savedDate = localStorage.getItem('attendance_date');
+        if (savedDate) dateInput.value = savedDate;
+        else dateInput.valueAsDate = new Date();
 
         loadAttendance();
 
-        // Add change listeners for "dirty" state detection
-        document.getElementById('attendanceTableBody').addEventListener('change', (e) => {
-            if (e.target.matches('input, select')) resetSaveButton();
-        });
-        document.getElementById('attendanceTableBody').addEventListener('input', (e) => {
-            if (e.target.matches('input')) resetSaveButton();
+        // Change feedback
+        document.getElementById('attendanceTableBody').addEventListener('change', () => resetSaveButton());
+
+        // Staggered Animation for Server-Side Rendered Table
+        const rows = document.querySelectorAll('#attendanceTableBody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.animation = `slideInUp 0.4s ease-out forwards ${index * 0.03}s`;
         });
     });
 
-    // Hook into loadAttendance to save date
-    // We removed the 'originalLoad' wrapper pattern to avoid confusion and scope issues.
-
     async function loadAttendance(preserveState = false) {
         const date = document.getElementById('attendanceDate').value;
-        // Save date persistence
-        if (date) localStorage.setItem('attendance_date', date);
         if (!date) return;
+        localStorage.setItem('attendance_date', date);
 
-        // Reset Buttons Logic
-        if (!preserveState) resetSaveButton();
-        document.getElementById('btnMarkPresent').classList.remove('active');
-        document.getElementById('btnMarkHoliday').classList.remove('active');
-
-        // Reset UI to defaults (Present)
-        document.querySelectorAll('select[id^="status_"]').forEach(s => { s.value = 'PRESENT'; updateRowColor(s); });
-        document.querySelectorAll('input[id^="in_"]').forEach(i => i.value = '09:00 AM');
-        document.querySelectorAll('input[id^="out_"]').forEach(i => i.value = '05:00 PM');
-
-        currentAttendance = {};
+        if (!preserveState) {
+            resetSaveButton();
+            // Only reset if NOT preserving state (initial load or manual date change)
+            document.querySelectorAll('select[id^="status_"]').forEach(s => {
+                s.value = 'PRESENT'; updateRowColor(s);
+            });
+            document.querySelectorAll('input[id^="in_"]').forEach(i => i.value = '09:00 AM');
+            document.querySelectorAll('input[id^="out_"]').forEach(i => i.value = '05:00 PM');
+        }
 
         try {
-            const res = await fetch(`/api/attendance/?date=${date}&_=${new Date().getTime()}`);
-            let existing = [];
+            const res = await authFetch(`/api/attendance/?date=${date}&_=${Date.now()}`);
 
             if (res.ok) {
-                existing = await res.json();
-                if (!Array.isArray(existing)) existing = [];
+                const data = await res.json();
+                const existing = getData(data);
+
+                existing.forEach(a => {
+                    const statusSelect = document.getElementById(`status_${a.employee}`);
+                    const inInput = document.getElementById(`in_${a.employee}`);
+                    const outInput = document.getElementById(`out_${a.employee}`);
+
+                    // On partial refresh, only update if the current value is default/inherited
+                    if (statusSelect) {
+                        statusSelect.value = a.status;
+                        updateRowColor(statusSelect);
+                    }
+                    if (inInput) {
+                        inInput.value = a.check_in ? formatTime12(a.check_in) : (preserveState ? inInput.value : '--');
+                    }
+                    if (outInput) {
+                        outInput.value = a.check_out ? formatTime12(a.check_out) : (preserveState ? outInput.value : '--');
+                    }
+                });
             }
-
-            // Auto-detect Sunday
-            const dateObj = new Date(date);
-            if (dateObj.getDay() === 0) { // 0 = Sunday
-                // Only auto-mark if no previous records exist for this date
-                if (existing.length === 0) {
-                    console.log("Sunday detected, marking all as Holiday");
-                    markAll('HOLIDAY');
-                    return; // markAll handles updates
-                }
-            }
-
-            // Check counts to set button active state
-            let holidayCount = 0;
-            let presentCount = 0;
-            let total = existing.length;
-
-            existing.forEach((a, index) => {
-                currentAttendance[a.employee] = a;
-                // Update UI
-                const statusSelect = document.getElementById(`status_${a.employee}`);
-                const inInput = document.getElementById(`in_${a.employee}`);
-                const outInput = document.getElementById(`out_${a.employee}`);
-
-                if (statusSelect) {
-                    statusSelect.value = a.status;
-                    updateRowColor(statusSelect);
-                    if (a.status === 'HOLIDAY') holidayCount++;
-                    if (a.status === 'PRESENT') presentCount++;
-                }
-
-                // Add staggered animation
-                const row = document.getElementById(`row_${a.employee}`);
-                if (row) {
-                    row.classList.remove('row-animate');
-                    void row.offsetWidth; // trigger reflow
-                    row.style.animationDelay = `${index * 0.03}s`; // 30ms stagger
-                    row.classList.add('row-animate');
-                }
-
-                if (inInput && a.check_in) inInput.value = formatTime12(a.check_in);
-                if (outInput && a.check_out) outInput.value = formatTime12(a.check_out);
-            });
-
-            // Heuristic for active button
-            if (total > 0 && holidayCount === total) {
-                document.getElementById('btnMarkHoliday').classList.add('active');
-            } else if (total > 0 && presentCount === total) {
-                document.getElementById('btnMarkPresent').classList.add('active');
-            }
-
-        } catch (e) { console.log("Error fetching attendance details", e); }
+        } catch (e) { console.error("Load Error:", e); }
 
         loadLeaves();
     }
 
+    // Auto-refresh every 30 seconds for realtime values
+    setInterval(() => {
+        if (!document.getElementById('leaves-tab').classList.contains('hidden')) return;
+        // Don't refresh if the save button is "unsaved" (dirty)
+        if (document.getElementById('btnSave').innerHTML.includes('SAVE NOW')) {
+            loadAttendance(true);
+        }
+    }, 30000);
 
     function updateRowColor(select) {
         const row = select.closest('tr');
-        if (select.value === 'ABSENT') row.style.backgroundColor = '#fee2e2';
-        else if (select.value === 'LEAVE') row.style.backgroundColor = '#fff7ed';
+        if (select.value === 'ABSENT') row.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        else if (select.value === 'LEAVE') row.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+        else if (select.value === 'HALF_DAY') row.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
         else row.style.backgroundColor = '';
     }
 
@@ -259,49 +478,32 @@
         document.querySelectorAll('select[id^="status_"]').forEach(sel => {
             sel.value = status;
             updateRowColor(sel);
-
-            // Also update time inputs based on status
             const empId = sel.id.split('_')[1];
             const inInput = document.getElementById(`in_${empId}`);
             const outInput = document.getElementById(`out_${empId}`);
-
             if (inInput && outInput) {
                 if (status === 'PRESENT') {
                     inInput.value = '09:00 AM';
                     outInput.value = '05:00 PM';
                 } else {
-                    // Start fresh for Holiday/Absent/Leave
                     inInput.value = '';
                     outInput.value = '';
                 }
             }
         });
-
-        // Update Button State
-        if (status === 'PRESENT') {
-            document.getElementById('btnMarkPresent').classList.add('active');
-            document.getElementById('btnMarkHoliday').classList.remove('active');
-        } else if (status === 'HOLIDAY') {
-            document.getElementById('btnMarkHoliday').classList.add('active');
-            document.getElementById('btnMarkPresent').classList.remove('active');
-        } else {
-            document.getElementById('btnMarkPresent').classList.remove('active');
-            document.getElementById('btnMarkHoliday').classList.remove('active');
-        }
     }
 
     async function saveAttendance() {
         const date = document.getElementById('attendanceDate').value;
         const updates = [];
         const btnSave = document.getElementById('btnSave');
-        const originalContent = btnSave.innerHTML;
+        const originalHtml = btnSave.innerHTML;
 
-        employees.forEach(emp => {
+        window.employees.forEach(emp => {
             const status = document.getElementById(`status_${emp.id}`).value;
             const checkIn = document.getElementById(`in_${emp.id}`).value;
             const checkOut = document.getElementById(`out_${emp.id}`).value;
 
-            // Only send actual data
             updates.push({
                 employee: emp.id,
                 date: date,
@@ -311,239 +513,131 @@
             });
         });
 
-        console.log("Sending Updates:", JSON.stringify(updates));
+        if (!await customConfirm(`Save attendance for ${updates.length} staff members?`, "Save Attendance")) return;
 
-        if (confirm(`Save attendance for ${updates.length} employees?`)) {
-            // Loading State
-            btnSave.disabled = true;
-            btnSave.innerHTML = `
-                <svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                </svg>
-                Saving...
-            `;
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            try {
-                const csrfToken = getCookie('csrftoken');
-                console.log("CSRF Token:", csrfToken);
-                if (!csrfToken) {
-                    alert("System Error: CSRF Token missing. Please refresh the page.");
-                    btnSave.disabled = false;
-                    btnSave.innerHTML = originalContent;
-                    return;
-                }
+        try {
+            const res = await authFetch('/api/attendance/mark_attendance/', {
+                method: 'POST',
+                body: JSON.stringify(updates)
+            });
 
-                const res = await fetch('/api/attendance/mark_attendance/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                    body: JSON.stringify(updates)
-                });
-
-                console.log("Response Status:", res.status);
-
-                if (res.ok) {
-                    // Success State
-                    console.log("Save successful");
-                    btnSave.classList.replace('btn-primary', 'btn-success'); // Assuming btn-success exists or we add it
-                    btnSave.style.backgroundColor = 'var(--success)';
-                    btnSave.innerHTML = `
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                        Saved!
-                    `;
-
-                    showToast('Success', 'Attendance saved successfully', 'success');
-
-                    // Removed timeout for revert
-                    // Button stays in "Saved" state until user changes something
-                    // setTimeout(() => { ... }, 2000);
-
-                    loadAttendance(true); // Reload data but keep button green
-                } else {
-                    const errorData = await res.json();
-                    let errorMsg = "Failed to save attendance";
-                    if (errorData.error) errorMsg += `: ${errorData.error}`;
-                    if (errorData.details) errorMsg += ` (${JSON.stringify(errorData.details)})`;
-
-                    console.error("Save failed:", errorData);
-                    showToast('Error', errorMsg, 'error');
-
-                    btnSave.disabled = false;
-                    btnSave.innerHTML = originalContent;
-                }
-            } catch (e) {
-                console.error(e);
-                showToast('Error', 'Network error occurred', 'error');
-                btnSave.disabled = false;
-                btnSave.innerHTML = originalContent;
+            if (res.ok) {
+                showToast("Saved", "Attendance has been saved.", "success");
+                btnSave.innerHTML = '<i class="fas fa-check"></i> ALL SAVED';
+                btnSave.style.background = '#10b981';
+                // Reload with current server data to ensure accuracy
+                await loadAttendance(true);
             }
 
+            else {
+                const err = await res.json();
+                showToast("Error", err.error || "Save failed", "error");
+                btnSave.disabled = false;
+                btnSave.innerHTML = originalHtml;
+            }
+        }
 
+        catch (e) {
+            console.error(e);
+            showToast("Error", "Network error", "error");
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalHtml;
         }
     }
 
     function resetSaveButton() {
         const btnSave = document.getElementById('btnSave');
-        if (!btnSave) return;
-
-        // Only reset if it is currently in success state or disabled
-        // We verify by checking if it contains "Saved!" or specific classes/styles
-        // But simplest is to just force reset it to "Save Attendance" state
-
+        if (!btnSave || btnSave.disabled === false) return;
         btnSave.disabled = false;
-        if (btnSave.classList.contains('btn-success')) {
-            btnSave.classList.replace('btn-success', 'btn-primary');
-            btnSave.style.backgroundColor = '';
-            btnSave.innerHTML = `
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    style="margin-right: 6px;">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                Save Attendance
-            `;
-        }
+        btnSave.style.background = 'var(--primary)';
+        btnSave.innerHTML = '<i class="fas fa-save"></i> SAVE NOW';
     }
 
-    // --- Toast Helper ---
-    function showToast(title, message, type = 'success') {
-        let container = document.querySelector('.toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <div style="display: flex; align-items: flex-start; gap: 12px; width: 100%;">
-                <div style="color: ${type === 'success' ? 'var(--success)' : 'var(--danger)'}; margin-top: 2px;">
-                    ${type === 'success'
-                ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
-                : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
-            }
-                </div>
-                <div class="toast-content">
-                    <div class="toast-title">${title}</div>
-                    <div class="toast-msg">${message}</div>
-                </div>
-                <button onclick="this.parentElement.parentElement.remove()" style="background:none; border:none; color: #94a3b8; cursor: pointer;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-        `;
-
-        container.appendChild(toast);
-
-        // Auto remove
-        setTimeout(() => {
-            toast.style.animation = 'toastSlideOut 0.3s forwards';
-            toast.addEventListener('animationend', () => toast.remove());
-        }, 3000);
-    }
-
-    // --- Leave Requests ---
     async function loadLeaves() {
         try {
-            const res = await fetch('/api/leave-requests/');
-            const leaves = await res.json();
+            const res = await authFetch('/api/leave-requests/');
+            const data = await res.json();
+            const leaves = getData(data);
             const tbody = document.getElementById('leaveTableBody');
             tbody.innerHTML = '';
 
-            leaves.forEach(l => {
+            leaves.forEach((l, index) => {
                 const row = `
-                    <tr>
-                         <td>${l.employee_name}</td>
-                         <td>${l.leave_type_name}</td>
-                         <td>${l.start_date} to ${l.end_date}</td>
-                         <td>${l.reason}</td>
-                         <td><span class="badge badge-${l.status === 'APPROVED' ? 'success' : l.status === 'REJECTED' ? 'danger' : 'warning'}">${l.status}</span></td>
-                         <td>
-                             ${l.status === 'PENDING' ? `
-                                 <button class="btn btn-sm btn-success" onclick="updateLeave(${l.id}, 'approve')">Approve</button>
-                                 <button class="btn btn-sm btn-danger" onclick="updateLeave(${l.id}, 'reject')">Reject</button>
-                             ` : '-'}
-                         </td>
+                    <tr style="animation: slideInUp 0.4s ease-out forwards ${index * 0.05}s; opacity: 0;">
+                        <td style="font-weight: 850; color: var(--text-main);">${l.employee_name}</td>
+                        <td><span class="badge" style="background: var(--bg-input); color: var(--primary); border: 1px solid var(--border-color);">${l.leave_type_name}</span></td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">${l.start_date} to ${l.end_date}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${l.reason}</td>
+                        <td><span class="badge badge-${l.status === 'APPROVED' ? 'success' : l.status === 'REJECTED' ? 'danger' : 'warning'}">${l.status}</span></td>
+                        <td style="text-align: right;">
+                            ${l.status === 'PENDING' ? `
+                                <button class="btn btn-primary" onclick="updateLeave(${l.id}, 'approve')" style="padding: 0.35rem 1rem; font-size:0.75rem; border-radius: 8px; font-weight: 800;">APPROVE</button>
+                                <button class="btn btn-ghost" onclick="updateLeave(${l.id}, 'reject')" style="padding: 0.35rem 1rem; font-size:0.75rem; border-radius: 8px; margin-left: 8px; font-weight: 800;">REJECT</button>
+                            ` : '<span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">DONE</span>'}
+                        </td>
                     </tr>
                 `;
                 tbody.innerHTML += row;
             });
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     async function updateLeave(id, action) {
-        if (!confirm(`Confirm ${action}?`)) return;
-        const res = await fetch(`/api/leave-requests/${id}/${action}/`, {
+        const actionText = action === 'approve' ? 'Approve' : 'Reject';
+        if (!await customConfirm(`${actionText} this leave request?`, "Leave Approval")) return;
+
+        const res = await authFetch(`/api/leave-requests/${id}/${action}/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
             body: JSON.stringify({})
         });
-        if (res.ok) loadLeaves();
-        else alert("Action failed");
-    }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+        if (res.ok) {
+            showToast("Success", `Request ${action}ed successfully.`, "success");
+            loadLeaves();
         }
-        return cookieValue;
+
+        else {
+            showToast("Error", "Action failed", "error");
+        }
     }
 
-    // --- Time Format Helpers ---
-    function formatTime12(time24) {
-        if (!time24) return '';
-        // Handle "HH:MM:SS" or "HH:MM"
-        let [h, m] = time24.split(':');
-        h = parseInt(h);
+    function formatTime12(t24) {
+        if (!t24) return '--';
+        // Handle HH:MM:SS or HH:MM
+        let parts = t24.split(':');
+        let h = parseInt(parts[0]);
+        let m = parts[1];
         const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12;
-        h = h ? h : 12; // the hour '0' should be '12'
+        h = h % 12 || 12;
+
         return `${h.toString().padStart(2, '0')}:${m} ${ampm}`;
     }
 
-    function formatTime24(time12) {
-        if (!time12) return null;
-        const [time, modifier] = time12.split(' ');
-        if (!modifier) return time12; // Fallback if no AM/PM
-
+    function formatTime24(t12) {
+        if (!t12) return null;
+        const parts = t12.split(' ');
+        if (parts.length < 2) return t12;
+        const [time, mod] = parts;
         let [h, m] = time.split(':');
         if (h === '12') h = '00';
-        if (modifier.toUpperCase() === 'PM') h = parseInt(h, 10) + 12;
-
+        if (mod.toUpperCase() === 'PM') h = parseInt(h) + 12;
         return `${h.toString().padStart(2, '0')}:${m}`;
     }
 
-    // --- Search ---
     function filterEmployees() {
         const query = document.getElementById('searchEmployee').value.toLowerCase().trim();
-        const rows = document.querySelectorAll('#attendanceTableBody tr');
 
-        rows.forEach(row => {
-            // Check if row has enough cells (header or empty row might cause issues)
+        document.querySelectorAll('#attendanceTableBody tr').forEach(row => {
             if (row.children.length < 3) return;
-
-            const code = row.children[0].textContent.toLowerCase();
-            const name = row.children[1].textContent.toLowerCase();
-            const dept = row.children[2].textContent.toLowerCase();
-
-            if (code.includes(query) || name.includes(query) || dept.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
         });
     }
+
 </script>
 {% endblock %}

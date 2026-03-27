@@ -1,0 +1,183 @@
+<!-- Edit Profile Modal -->
+<div id="edit-profile-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="width: 850px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header"
+            style="background: var(--bg-card); padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index:10;">
+            <h3 style="margin: 0; color: var(--text-main);">Update Personnel Dossier</h3>
+            <button onclick="document.getElementById('edit-profile-modal').classList.add('hidden')"
+                style="background:none; border:none; font-size: 1.5rem; color: var(--text-muted); cursor:pointer;">&times;</button>
+        </div>
+        <form id="edit-personnel-form" onsubmit="updatePersonnel(event)">
+            <div class="modal-body" style="padding: 2.5rem; background: var(--bg-card);">
+                <!-- Basic Segment -->
+                <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                    <h4
+                        style="margin: 0 0 1rem 0; color: var(--primary); font-size: 0.8rem; text-transform: uppercase;">
+                        Identity Details</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" id="edit-first-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" id="edit-last-name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Handle</label>
+                            <input type="email" name="email" id="edit-email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" name="phone" id="edit-phone" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workplace Segment -->
+                <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+                    <h4
+                        style="margin: 0 0 1rem 0; color: var(--primary); font-size: 0.8rem; text-transform: uppercase;">
+                        Corporate Placement</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Official Designation (Text)</label>
+                            <input type="text" name="designation" id="edit-designation" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Employment Classification</label>
+                            <select name="employment_type" id="edit-type" class="form-control">
+                                <option value="PERMANENT">Permanent</option>
+                                <option value="CONTRACT">Contract</option>
+                                <option value="GUEST_LECTURER">Guest / Consultant</option>
+                                <option value="INTERN">Intern</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Operational Hub</label>
+                            <input type="text" name="work_location" id="edit-location" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Current Status</label>
+                            <select name="is_active" id="edit-status" class="form-control">
+                                <option value="true">Active Asset</option>
+                                <option value="false">Inactive / Terminated</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bank Segment -->
+                <div>
+                    <h4
+                        style="margin: 0 0 1rem 0; color: var(--primary); font-size: 0.8rem; text-transform: uppercase;">
+                        Financial & Compensation Credentials</h4>
+                    <input type="hidden" id="edit-bank-id">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Banking Institution</label>
+                            <input type="text" id="edit-bank-name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Account Identifier</label>
+                            <input type="text" id="edit-account-number" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Routing Code (IFSC)</label>
+                            <input type="text" id="edit-ifsc" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tax ID (PAN)</label>
+                            <input type="text" id="edit-pan" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline"
+                    onclick="document.getElementById('edit-profile-modal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Commit Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Salary Modal (Upgraded for Corporate) -->
+<div id="salary-modal" class="modal-overlay hidden">
+    <div class="modal-box" style="width: 500px;">
+        <div class="modal-header" style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color);">
+            <h3 style="margin: 0; color: var(--text-main);">Adjust Compensation Package</h3>
+            <button onclick="document.getElementById('salary-modal').classList.add('hidden')"
+                style="background:none; border:none; font-size: 1.5rem; color: var(--text-muted); cursor:pointer;">&times;</button>
+        </div>
+        <form onsubmit="handleSalaryUpdate(event)">
+            <div class="modal-body" style="padding: 2.5rem;">
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label">Select Compensation Benchmarking Policy</label>
+                    <select id="input-template" class="form-control" required>
+                        <option value="">-- Choose Policy --</option>
+                    </select>
+                </div>
+                <div
+                    style="background: var(--primary-light); padding: 1rem; border-radius: 12px; border: 1px solid var(--primary);">
+                    <p style="margin:0; font-size: 0.8rem; color: var(--primary); font-weight: 700;">Instruction:</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                        Selecting a policy will automatically recalibrate the monthly yields based on the organizational
+                        standard formulae.</p>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-outline"
+                    onclick="document.getElementById('salary-modal').classList.add('hidden')">Abort</button>
+                <button type="submit" class="btn btn-primary">Apply Policy</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s;
+    }
+
+    .modal-overlay.active,
+    .modal-overlay:not(.hidden) {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal-box {
+        background: var(--bg-card);
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        transform: translateY(20px);
+        transition: all 0.3s;
+    }
+
+    .modal-overlay:not(.hidden) .modal-box {
+        transform: translateY(0);
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+</style>

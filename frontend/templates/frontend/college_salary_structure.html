@@ -1,227 +1,593 @@
 {% extends 'frontend/dashboard_base.html' %}
 
-{% block header_title %}Salary Structure Management{% endblock %}
+{% block header_title %}Salary Structure{% endblock %}
 
 {% block content_body %}
 <style>
-    /* Professional Form Controls */
+    /* Professional Table Reset */
+    .components-table-container {
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Custom Form Control Styling */
     .form-control {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-        transition: all 0.2s;
-        background-color: #f8fafc;
+        width: 100%;
+        height: 32px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        line-height: 1.5;
+        color: var(--text-main);
+        background-color: var(--bg-card);
+        background-clip: padding-box;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
 
     .form-control:focus {
+        color: var(--text-main);
+        background-color: var(--bg-card);
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        background-color: #fff;
-        outline: none;
+        outline: 0;
+        box-shadow: 0 0 0 3px var(--primary-light);
     }
 
     /* Custom Select Arrow */
     select.form-control {
         appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 0.5rem center;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
         background-repeat: no-repeat;
-        background-size: 1.5em 1.5em;
-        padding-right: 2.5rem;
+        background-position: right 0.5rem center;
+        background-size: 14px 10px;
+        padding-right: 2rem;
     }
 
-    /* Action Buttons */
-    .btn-action {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: none;
+    .components-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .components-table th {
+        background: var(--bg-body);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+    }
+
+    .components-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    .components-table tr:hover td {
+        background-color: var(--bg-body);
+    }
+
+    /* Fixed Column Widths for alignment */
+    .col-name {
+        width: 220px;
+    }
+
+    .col-type {
+        width: 140px;
+    }
+
+    .col-calc {
+        width: auto;
+    }
+
+    .col-actions {
+        width: 120px;
+        text-align: right !important;
+    }
+
+    .calc-tag {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-right: 4px;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: var(--bg-body);
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        white-space: nowrap;
     }
 
-    .btn-action.edit {
+    .header-card-premium {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        margin-top: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .add-component-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border-top: 4px solid var(--primary);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .setup-card-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .assignment-header-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+    }
+
+    .setup-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .setup-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .setup-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .setup-card h4 {
+        margin: 0 0 0.75rem 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .setup-card p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin: 0 0 1.5rem 0;
+        line-height: 1.6;
+    }
+
+    .salary-calc-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        margin-top: 2rem;
+        overflow: hidden;
+    }
+
+    .salary-calc-header {
+        background: var(--bg-body);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .salary-calc-body {
+        padding: 1.5rem;
+    }
+
+    .input-group-modern {
+        margin-bottom: 1rem;
+    }
+
+    .input-label-modern {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+
+    .amount-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .amount-input-wrapper .currency-symbol {
+        position: absolute;
+        left: 0.75rem;
+        color: #94a3b8;
+        font-weight: 500;
+        z-index: 10;
+        pointer-events: none;
+        font-family: sans-serif;
+        font-size: 0.8rem;
+    }
+
+    .amount-input-wrapper input {
+        padding-left: 1.75rem !important;
+        font-weight: 600;
+        color: var(--text-main);
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--bg-body);
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    .status-pill.auto {
         background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .salary-calc-footer {
+        background: var(--bg-body);
+        border-top: 1px solid var(--border-color);
+        padding: 1rem 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .footer-summary {
+        display: flex;
+        gap: 3rem;
+        align-items: center;
+    }
+
+    .total-item {
+        text-align: right;
+    }
+
+    .total-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.25rem;
+    }
+
+    .total-value {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-main);
+        font-family: inherit;
+    }
+
+    .total-value.net {
         color: var(--primary);
+        font-size: 1.5rem;
     }
 
-    .btn-action.edit:hover {
-        background: #dbeafe;
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .btn-action.delete {
-        background: #fef2f2;
-        color: var(--danger);
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    .btn-action.delete:hover {
-        background: #fee2e2;
+    @keyframes popIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
-    /* Table Styling */
-    .table-hover tbody tr:hover {
-        background-color: #f8fafc;
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
     }
 
-    td {
-        vertical-align: middle;
+    .animate-entry {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    .animate-delay-3 {
+        animation-delay: 0.3s;
+    }
+
+    .tab-content {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
     }
 </style>
 
-<div class="card">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('components')">Salary Components</button>
-        <button class="tab-btn" onclick="showTab('templates')">Salary Templates</button>
-        <button class="tab-btn" onclick="showTab('assignment')">Employee Assignment</button>
-    </div>
+<div class="header-card-premium animate-entry">
+    <div
+        style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 0;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border: none;">Salary
+                Structure</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Manage salary parts,
+                templates, and assign them to staff.</p>
+        </div>
 
+        <div class="tabs"
+            style="display: flex; background: var(--bg-input); padding: 0.4rem; border-radius: 16px; gap: 1px; border: 1px solid var(--border-color); width: fit-content;">
+            <button class="tab-btn active" id="tab-components-btn" onclick="showTab('components')"
+                style="padding: 0.7rem 2rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s;">
+                Salary Parts
+            </button>
+            <button class="tab-btn" id="tab-templates-btn" onclick="showTab('templates')"
+                style="padding: 0.7rem 2rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s;">
+                Templates
+            </button>
+            <button class="tab-btn" id="tab-assignment-btn" onclick="showTab('assignment')"
+                style="padding: 0.7rem 2rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; border: none; cursor: pointer; transition: all 0.2s;">
+                Assign Staff
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="main-structure-content">
     <!-- Components Tab -->
-    <div id="components-tab" class="tab-content">
-        <!-- ... existing dual column layout ... -->
-        <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+    <div id="components-tab" class="tab-content transition-all">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: stretch;">
             <!-- Earnings Column -->
-            <div style="flex: 1; min-width: 300px;">
-                <h3
-                    style="margin-bottom: 1rem; color: var(--success); display: flex; align-items: center; gap: 0.5rem;">
-                    <span>Earnings</span>
-                    <span class="badge badge-success">Credit</span>
-                </h3>
-                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-                    <table>
+            <div style="display: flex; flex-direction: column;">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                    <h4
+                        style="margin: 0; color: var(--text-main); font-weight: 800; display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-arrow-up" style="color: #10b981;"></i>
+                        Earnings (+)
+                        <span class="status-badge"
+                            style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.65rem;">CREDIT</span>
+                    </h4>
+                </div>
+
+                <div class="components-table-container" style="flex-grow: 1;">
+                    <table class="components-table">
                         <thead>
                             <tr>
-                                <th>Component Name</th>
-                                <th>Type</th>
-                                <th>Calculation</th>
-                                <th>Actions</th>
+                                <th class="col-name">Component</th>
+                                <th class="col-type">Type</th>
+                                <th class="col-calc">Calculation</th>
+                                <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="earningsTableBody"></tbody>
                     </table>
                 </div>
-                <!-- ... Add Form ... -->
-                <div class="glass-panel"
-                    style="margin-top: 1.5rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                    <div
-                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-dark); margin:0;">
-                            <i class="fas fa-plus-circle" style="color: var(--success); margin-right: 8px;"></i>New
-                            Earning
-                        </h4>
-                        <span
-                            style="font-size: 0.75rem; color: var(--text-muted); background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">Auto-suggest
-                            enabled</span>
-                    </div>
 
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                        <div>
-                            <label
-                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Component
-                                Name</label>
-                            <input type="text" id="newEarningName" list="earningSuggestions"
-                                placeholder="e.g. HRA, Bonus" class="form-control" style="width: 100%;">
-                            <datalist id="earningSuggestions">
-                                <option value="Basic Salary">
-                                <option value="House Rent Allowance">
-                                <option value="Dearness Allowance">
-                                <option value="Transport Allowance">
-                                <option value="Medical Allowance">
-                                <option value="Special Allowance">
-                                <option value="Performance Bonus">
-                                <option value="Overtime">
-                                <option value="Leave Travel Allowance">
-                                <option value="Conveyance Allowance">
-                            </datalist>
+                <div class="add-component-card" style="border-top-color: #10b981; min-height: 250px;">
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <span
+                                style="font-weight: 800; font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em;">Add
+                                Salary Part</span>
                         </div>
-                        <div>
-                            <label
-                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Calculation</label>
-                            <select id="newEarningType" class="form-control" style="width: 100%;">
-                                <option value="FLAT_AMOUNT">Flat Amount</option>
-                                <option value="FORMULA">Formula Based</option>
-                            </select>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="setup-card-label" style="display:block;">Name</label>
+                                <input type="text" id="newEarningName" list="earningSuggestions"
+                                    placeholder="e.g. Basic Salary" class="form-control" style="width: 100%;">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="setup-card-label" style="display:block;">Calculation</label>
+                                <select id="newEarningType" class="form-control" style="width: 100%;"
+                                    onchange="toggleNewFormula('EARNING')">
+                                    <option value="FLAT_AMOUNT">Flat Amount</option>
+                                    <option value="FORMULA">Formula</option>
+                                </select>
+                            </div>
                         </div>
+                        <div id="newEarningFormulaGroup" class="form-group hidden" style="margin-bottom: 1.25rem;">
+                            <label class="setup-card-label" style="display:block;">Formula</label>
+                            <input type="text" id="newEarningFormula" placeholder="e.g. {CTC} * 0.4"
+                                class="form-control"
+                                style="width: 100%; font-family: monospace; border-color: #3b82f6; background: #eff6ff;">
+                            <p style="font-size: 0.65rem; color: #3b82f6; margin-top: 4px; font-weight: 600;">Use
+                                {Basic}, {Gross}, or {CTC} in the formula.</p>
+                        </div>
+
+                        <!-- Suggestions for Earnings -->
+                        <datalist id="earningSuggestions">
+                            <option value="Basic Salary">
+                            <option value="Dearness Allowance (DA)">
+                            <option value="House Rent Allowance (HRA)">
+                            <option value="Transport Allowance (TA)">
+                            <option value="Special Allowance">
+                            <option value="Medical Allowance">
+                            <option value="Bonus">
+                            <option value="Performance Pay">
+                        </datalist>
                     </div>
-                    <button class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: 600;"
+                    <button class="btn btn-primary"
+                        style="width: 100%; justify-content: center; background: #10b981; border: none; font-weight: 700; padding: 0.8rem;"
                         onclick="addComponent('EARNING')">
-                        <i class="fas fa-check" style="margin-right: 8px;"></i> Add Earning Component
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i> ADD NOW
                     </button>
                 </div>
             </div>
 
             <!-- Deductions Column -->
-            <div style="flex: 1; min-width: 300px;">
-                <h3 style="margin-bottom: 1rem; color: var(--danger); display: flex; align-items: center; gap: 0.5rem;">
-                    <span>Deductions</span>
-                    <span class="badge badge-danger">Debit</span>
-                </h3>
-                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
-                    <table>
+            <div style="display: flex; flex-direction: column;">
+                <div
+                    style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+                    <h4
+                        style="margin: 0; color: var(--text-main); font-weight: 800; display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-arrow-down" style="color: #ef4444;"></i>
+                        Deductions (-)
+                        <span class="status-badge"
+                            style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.65rem;">DEBIT</span>
+                    </h4>
+                </div>
+
+                <div class="components-table-container" style="flex-grow: 1;">
+                    <table class="components-table">
                         <thead>
                             <tr>
-                                <th>Component Name</th>
-                                <th>Type</th>
-                                <th>Calculation</th>
-                                <th>Actions</th>
+                                <th class="col-name">Component</th>
+                                <th class="col-type">Type</th>
+                                <th class="col-calc">Calculation</th>
+                                <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="deductionsTableBody"></tbody>
                     </table>
                 </div>
-                <!-- ... Add Form ... -->
-                <div class="glass-panel"
-                    style="margin-top: 1.5rem; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 12px; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                    <div
-                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                        <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-dark); margin:0;">
-                            <i class="fas fa-minus-circle" style="color: var(--danger); margin-right: 8px;"></i>New
-                            Deduction
-                        </h4>
-                        <span
-                            style="font-size: 0.75rem; color: var(--text-muted); background: #f1f5f9; padding: 2px 8px; border-radius: 12px;">Auto-suggest
-                            enabled</span>
-                    </div>
 
-                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
-                        <div>
-                            <label
-                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Component
-                                Name</label>
-                            <input type="text" id="newDeductionName" list="deductionSuggestions"
-                                placeholder="e.g. PF, Tax" class="form-control" style="width: 100%;">
-                            <datalist id="deductionSuggestions">
-                                <option value="Provident Fund (PF)">
-                                <option value="Employees State Insurance (ESI)">
-                                <option value="Professional Tax (PT)">
-                                <option value="TDS (Income Tax)">
-                                <option value="Loan Recovery">
-                                <option value="Salary Advance">
-                                <option value="Unpaid Leave Deduction">
-                            </datalist>
+                <div class="add-component-card" style="border-top-color: #ef4444; min-height: 250px;">
+                    <div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <span
+                                style="font-weight: 800; font-size: 0.85rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em;">Add
+                                Deduction</span>
                         </div>
-                        <div>
-                            <label
-                                style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; display: block;">Calculation</label>
-                            <select id="newDeductionType" class="form-control" style="width: 100%;">
-                                <option value="FLAT_AMOUNT">Flat Amount</option>
-                                <option value="FORMULA">Formula Based</option>
-                            </select>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                            <div class="form-group" style="margin:0;">
+                                <label class="setup-card-label" style="display:block;">Name</label>
+                                <input type="text" id="newDeductionName" list="deductionSuggestions"
+                                    placeholder="e.g. Provident Fund" class="form-control" style="width: 100%;">
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label class="setup-card-label" style="display:block;">Calculation</label>
+                                <select id="newDeductionType" class="form-control" style="width: 100%;"
+                                    onchange="toggleNewFormula('DEDUCTION')">
+                                    <option value="FLAT_AMOUNT">Flat Amount</option>
+                                    <option value="FORMULA">Formula</option>
+                                </select>
+                            </div>
                         </div>
+                        <div id="newDeductionFormulaGroup" class="form-group hidden" style="margin-bottom: 1.25rem;">
+                            <label class="setup-card-label" style="display:block;">Formula</label>
+                            <input type="text" id="newDeductionFormula" placeholder="e.g. {Basic} * 0.12"
+                                class="form-control"
+                                style="width: 100%; font-family: monospace; border-color: #3b82f6; background: #eff6ff;">
+                            <p style="font-size: 0.65rem; color: #3b82f6; margin-top: 4px; font-weight: 600;">Use
+                                {Basic}, {Gross}, or {CTC} in the formula.</p>
+                        </div>
+
+                        <!-- Suggestions for Deductions -->
+                        <datalist id="deductionSuggestions">
+                            <option value="Provident Fund (PF)">
+                            <option value="Professional Tax (PT)">
+                            <option value="Income Tax (TDS)">
+                            <option value="Employee State Insurance (ESI)">
+                            <option value="Loan Repayment">
+                            <option value="Medical Insurance">
+                        </datalist>
                     </div>
                     <button class="btn btn-primary"
-                        style="width: 100%; background: var(--danger); border-color: var(--danger); justify-content: center; font-weight: 600;"
+                        style="width: 100%; justify-content: center; background: #ef4444; border: none; font-weight: 700; padding: 0.8rem;"
                         onclick="addComponent('DEDUCTION')">
-                        <i class="fas fa-check" style="margin-right: 8px;"></i> Add Deduction Component
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i> ADD NOW
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Templates Tab (New) -->
     <div id="templates-tab" class="tab-content hidden">
@@ -229,10 +595,10 @@
             <!-- List Column -->
             <div style="flex: 1; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="margin: 0; color: var(--text-dark); border-bottom: none;">Salary Templates</h3>
+                    <h3 style="margin: 0; color: var(--text-main); border-bottom: none;">Salary Templates</h3>
                     <button class="btn btn-primary" onclick="openCreateTemplateModal()"
                         style="font-size: 0.9rem; padding: 0.5rem 1rem;">
-                        <i class="fas fa-plus" style="margin-right: 6px;"></i> Create Template
+                        <i class="fas fa-plus" style="margin-right: 6px;"></i> New Template
                     </button>
                 </div>
 
@@ -241,25 +607,28 @@
                     <!-- Loaded via JS -->
                     <!-- Empty State Placeholder (Initially visible, hidden by JS if items exist) -->
                     <div id="noTemplatesMsg"
-                        style="text-align: center; padding: 3rem; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b;">
+                        style="text-align: center; padding: 3rem; background: var(--bg-body); border-radius: 12px; border: 1px dashed var(--border-color); color: var(--text-muted);">
                         <i class="fas fa-file-invoice-dollar"
-                            style="font-size: 2rem; margin-bottom: 1rem; color: #94a3b8;"></i>
-                        <p style="margin: 0;">No templates found.</p>
-                        <p style="font-size: 0.85rem;">Create a template to quickly assign structures.</p>
+                            style="font-size: 2rem; margin-bottom: 1rem; color: var(--text-muted); opacity: 0.5;"></i>
+                        <p style="margin: 0;">No templates.</p>
+                        <p style="font-size: 0.85rem;">Make a template to reuse salary settings.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Detail/Preview Column -->
             <div
-                style="flex: 1; background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-                <h4
-                    style="margin-top: 0; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; margin-bottom: 1rem; color: var(--text-dark);">
-                    Template Details
-                </h4>
-                <div id="templateDetailPlaceholder" style="text-align: center; color: #94a3b8; padding-top: 3rem;">
-                    <i class="fas fa-mouse-pointer" style="font-size: 1.5rem; margin-bottom: 1rem;"></i>
-                    <p>Select a template to view its components</p>
+                style="flex: 1.5; background: var(--bg-card); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);">
+                <div id="templateDetailPlaceholder"
+                    style="text-align: center; color: var(--text-muted); padding: 6rem 2rem;">
+                    <div
+                        style="width: 64px; height: 64px; background: var(--bg-body); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <i class="fas fa-mouse-pointer"
+                            style="font-size: 1.5rem; color: var(--text-muted); opacity: 0.5;"></i>
+                    </div>
+                    <h4 style="margin: 0; color: #64748b; font-size: 1.15rem;">Pick a Template</h4>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Choose a template from the list to see details.
+                    </p>
                 </div>
 
                 <div id="templateDetailContent" class="hidden">
@@ -275,11 +644,11 @@
                         </button>
                     </div>
 
-                    <div style="background: #f8fafc; border-radius: 8px; padding: 1rem;">
+                    <div style="background: var(--bg-body); border-radius: 8px; padding: 1rem;">
                         <div
                             style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
                             <h6
-                                style="margin:0; font-size: 0.8rem; text-transform: uppercase; color: #64748b; font-weight: 700;">
+                                style="margin:0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">
                                 Components</h6>
                             <button class="btn-action edit" onclick="openAddTemplateComponentModal()"
                                 title="Add Component" style="width:24px; height:24px;">
@@ -298,105 +667,213 @@
 
     <!-- Assignment Tab -->
     <div id="assignment-tab" class="tab-content hidden">
-        <!-- Bulk Assignment Section -->
-        <div class="glass-panel"
-            style="margin-bottom: 2rem; padding: 1.5rem; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="assignment-header-card">
+            <div
+                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
                 <div>
-                    <h4 style="margin-top:0; color: var(--primary); margin-bottom: 0.5rem;">
-                        <i class="fas fa-layer-group" style="margin-right: 8px;"></i>Bulk Structure Update
-                    </h4>
-                    <p style="font-size: 0.9rem; color: #475569; margin: 0;">
-                        Apply a salary template to <strong>all employees</strong>. existing structures will be
-                        overwritten.
-                    </p>
+                    <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border: none;">
+                        Set Salary</h3>
+                    <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Set up salary for
+                        staff members or the whole college.</p>
                 </div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <select id="bulkTemplateSelect" class="form-control" style="min-width: 250px; background: white;">
-                        <option value="">-- Select Template to Apply --</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="bulkUpdateStructure()"
-                        style="background: #2563eb; border: none; padding: 0.75rem 1.5rem; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
-                        UPDATE STRUCTURE FOR ALL
-                    </button>
+                <div
+                    style="background: var(--bg-body); padding: 0.5rem 1rem; border-radius: 10px; display: flex; gap: 1rem;">
+                    <div style="text-align: right;">
+                        <div
+                            style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                            Organization</div>
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Universal
+                            College
+                        </div>
+                    </div>
+                    <i class="fas fa-university"
+                        style="color: var(--text-muted); font-size: 1.5rem; display: flex; align-items: center;"></i>
                 </div>
             </div>
-        </div>
 
-        <div
-            style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
-            <div style="flex: 1;">
-                <label class="form-label">Select Employee to Assign Structure</label>
-                <select id="employeeSelect" class="form-control" onchange="loadEmployeeStructure()">
-                    <option value="">-- Choose Employee --</option>
-                </select>
-            </div>
-            <div style="flex: 1;">
-                <label class="form-label">Apply Template (Individual)</label>
-                <div style="display: flex; gap: 0.5rem;">
-                    <select id="templateApplySelect" class="form-control">
-                        <option value="">-- Select Template --</option>
-                    </select>
-                    <button class="btn btn-secondary" onclick="applyTemplateToEmployee()">Apply</button>
+            <div class="setup-grid">
+                <!-- Individual Selection -->
+                <div class="setup-card" style="border-top: 4px solid var(--primary);">
+                    <h4><i class="fas fa-user-tie" style="color: var(--primary);"></i> By Person</h4>
+                    <p>Pick a staff member to view or change their salary.</p>
+                    <div class="form-group" style="margin: 0;">
+                        <select id="employeeSelect" class="form-control" onchange="loadEmployeeStructure()">
+                            <option value="">-- Pick Staff --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Template Application -->
+                <div class="setup-card" style="border-top: 4px solid #0284c7;">
+                    <h4><i class="fas fa-magic" style="color: #0284c7;"></i> Use Template</h4>
+                    <p>Put a saved template on a person or everyone.</p>
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <select id="templateApplySelect" class="form-control">
+                                <option value="">-- Pick Template --</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="applyTemplateToEmployee()"
+                            style="height: 32px; padding: 0 1rem; font-weight: 600;">
+                            Apply
+                        </button>
+                        <button class="btn btn-secondary" onclick="bulkUpdateStructure()"
+                            style="height: 32px; border-color: var(--border-color); color: var(--text-muted); font-weight: 600; background: var(--bg-input);"
+                            title="Apply to ALL employees">
+                            Apply to Everyone
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="assignmentArea" class="hidden">
-            <h3 style="margin-bottom: 1rem;">Configure Amounts</h3>
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                <button class="btn btn-primary" onclick="saveStructure()">Save Assignment</button>
-            </div>
+            <div class="salary-calc-card">
+                <div class="salary-calc-header">
+                    <div id="selectionProfile" class="hidden" style="display: flex; align-items: center;">
+                        <!-- Injected by JS -->
+                    </div>
+                    <button class="btn btn-primary" onclick="saveStructure()"
+                        style="padding: 0.75rem 2rem; font-weight: 700; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);">
+                        <i class="fas fa-save" style="margin-right: 8px;"></i> SAVE NOW
+                    </button>
+                </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-                <div>
-                    <h4 style="margin-bottom: 0.5rem; color: var(--success);">Earnings</h4>
-                    <div id="assignEarningsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Inputs generated here -->
+                <div class="salary-calc-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <!-- Earnings -->
+                        <div>
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                                <h4
+                                    style="margin: 0; color: var(--success); font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    Earnings (+)</h4>
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 850; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">Addition</span>
+                            </div>
+                            <div id="assignEarningsContainer"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <!-- Inputs generated here -->
+                            </div>
+                        </div>
+
+                        <!-- Deductions -->
+                        <div>
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                                <h4
+                                    style="margin: 0; color: var(--danger); font-weight: 800; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    Deductions (-)</h4>
+                                <span
+                                    style="font-size: 0.75rem; font-weight: 850; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">Subtraction</span>
+                            </div>
+                            <div id="assignDeductionsContainer"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <!-- Inputs generated here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h4 style="margin-bottom: 0.5rem; color: var(--danger);">Deductions</h4>
-                    <div id="assignDeductionsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
-                        <!-- Inputs generated here -->
+            </div>
+            <div class="salary-calc-footer">
+                <div></div> <!-- Empty spacer for left side if needed, or remove justify-between CSS -->
+                <div class="footer-summary">
+                    <div class="total-item">
+                        <div class="total-label">Total Earnings</div>
+                        <div class="total-value" id="dispTotalEarnings">₹0.00</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">Total Deductions</div>
+                        <div class="total-value" style="color: #ef4444;" id="dispTotalDeductions">₹0.00</div>
+                    </div>
+                    <div style="width: 1px; height: 40px; background: #cbd5e1;"></div>
+                    <div class="total-item">
+                        <div class="total-label">Final Pay</div>
+                        <div class="total-value net" id="dispNetSalary">₹0.00</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="assignmentPlaceholder" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-            <p>Select an employee to view/edit structure</p>
+            <div id="assignmentPlaceholder"
+                style="text-align: center; padding: 6rem 2rem; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border-color); color: var(--text-muted); margin-top: 1rem;">
+                <div
+                    style="width: 80px; height: 80px; background: var(--bg-body); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-user-plus" style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;"></i>
+                </div>
+                <h3 style="margin:0; border:none; color: var(--text-muted); font-size: 1.25rem;">No Employee
+                    Selected
+                </h3>
+                <p style="margin: 0.5rem 0 1.5rem 0; font-size: 0.9rem;">Please select an employee from the list
+                    above to
+                    view or refine their salary structure.</p>
+                <button class="btn btn-secondary" onclick="document.getElementById('employeeSelect').focus()"
+                    style="border-radius: 10px; padding: 0.6rem 2rem; background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color);">
+                    Choose Now
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Simple Create Modal -->
-<div id="createTemplateModal" class="modal hidden"
-    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
-    <div class="modal-content"
-        style="background:white; width:500px; margin: 100px auto; padding:2rem; border-radius:8px;">
-        <h3>Create Salary Template</h3>
-        <div class="form-group">
-            <label>Template Name</label>
-            <input type="text" id="tplName" class="form-control">
+    <!-- Simple Create Modal -->
+    <div id="createTemplateModal" class="modal hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); z-index:1000; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.2s ease-in-out;">
+        <div class="modal-content"
+            style="background: var(--bg-card); width: 500px; max-width: 90%; border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow-md); overflow: hidden; animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+
+            <!-- Modal Header -->
+            <div
+                style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);">
+                <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Create Salary
+                    Template</h3>
+                <button onclick="document.getElementById('createTemplateModal').classList.add('hidden')"
+                    style="background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.2s;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div style="padding: 2rem;">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label
+                        style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                        Template Name
+                    </label>
+                    <input type="text" id="tplName" class="form-control" placeholder="e.g. Teaching Staff Template"
+                        style="height: 46px; border: 1px solid var(--border-color); border-radius: 8px; padding: 0 1rem; width: 100%; font-size: 0.95rem; color: var(--text-main); background: var(--bg-card);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label
+                        style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                        Description
+                    </label>
+                    <textarea id="tplDesc" class="form-control" rows="3"
+                        placeholder="Brief description of this salary structure..."
+                        style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; width: 100%; font-size: 0.95rem; color: var(--text-main); background: var(--bg-card); resize: none;"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div
+                style="padding: 1.25rem 2rem; background: var(--bg-body); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button onclick="document.getElementById('createTemplateModal').classList.add('hidden')"
+                    style="padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                    Cancel
+                </button>
+                <button onclick="createTemplate()"
+                    style="padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: white; background: var(--primary); border: none; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s;">
+                    Create Template
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Description</label>
-            <textarea id="tplDesc" class="form-control"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="createTemplate()">Create</button>
-        <button class="btn btn-secondary"
-            onclick="document.getElementById('createTemplateModal').classList.add('hidden')">Cancel</button>
     </div>
-</div>
 </div>
 
 <!-- Edit Component Modal -->
 <div id="editComponentModal" class="modal hidden"
-    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index:1000; display: flex; align-items: center; justify-content: center;">
     <div class="modal-content"
-        style="background:white; width:500px; margin: 100px auto; padding:2rem; border-radius:8px;">
-        <h3>Edit Component</h3>
+        style="background: var(--bg-card); width: 500px; max-width: 90%; border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow-md); padding: 2.5rem;">
+        <h3 style="margin-top: 0; color: var(--text-main);">Edit Component</h3>
         <input type="hidden" id="editCompId">
         <div class="form-group">
             <label>Component Name</label>
@@ -423,51 +900,130 @@
 
 <!-- Add Template Component Modal -->
 <div id="addTemplateComponentModal" class="modal hidden"
-    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100;">
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index:1000; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.2s ease-in-out;">
     <div class="modal-content"
-        style="background:white; width:400px; margin: 100px auto; padding:2rem; border-radius:8px;">
-        <h3>Add Component to Template</h3>
-        <input type="hidden" id="targetTplId">
-        <div class="form-group">
-            <label>Select Component</label>
-            <select id="tplCompSelect" class="form-control" onchange="checkComponentType()">
-                <!-- Loaded via JS -->
-            </select>
+        style="background:white; width: 500px; max-width: 90%; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+
+        <!-- Modal Header -->
+        <div
+            style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);">
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main);">Add Component to
+                Template</h3>
+            <button onclick="document.getElementById('addTemplateComponentModal').classList.add('hidden')"
+                style="background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.2s;">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div class="form-group">
-            <label>Default Amount (Optional)</label>
-            <input type="number" id="tplCompAmount" class="form-control" placeholder="0.00">
-            <small id="tplCompHint"
-                style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">
-                Enter amount only if fixed (e.g. Travel Allowance). Leave 0 for formula-based components.
-            </small>
+
+        <!-- Modal Body -->
+        <div style="padding: 2rem;">
+            <input type="hidden" id="targetTplId">
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Select Component
+                </label>
+                <div style="position: relative;">
+                    <select id="tplCompSelect" class="form-control" onchange="checkComponentType()"
+                        style="appearance: none; height: 46px; padding-right: 2.5rem; cursor: pointer; color: var(--text-main); background: var(--bg-card);">
+                        <!-- Loaded via JS -->
+                    </select>
+                    <div
+                        style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted);">
+                        <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label
+                    style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+                    Default Amount
+                </label>
+                <div class="input-group-modern" style="margin: 0;">
+                    <div class="amount-input-wrapper"
+                        style="border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; padding: 0 0.75rem; height: 46px; transition: all 0.2s;">
+                        <span
+                            style="color: var(--text-muted); font-weight: 600; font-family: monospace; font-size: 1rem;">₹</span>
+                        <input type="number" id="tplCompAmount"
+                            style="border: none; outline: none; width: 100%; height: 100%; padding: 0 0.5rem; font-size: 0.95rem; font-weight: 600; color: var(--text-main); background: transparent;"
+                            placeholder="0.00">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; align-items: flex-start;">
+                    <i class="fas fa-info-circle"
+                        style="color: var(--primary); font-size: 0.85rem; margin-top: 2px;"></i>
+                    <small id="tplCompHint" style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4;">
+                        Enter amount specific to this template (e.g., fixed Travel Allowance). Leave 0 if it varies
+                        per
+                        employee.
+                    </small>
+                </div>
+            </div>
         </div>
-        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
-            <button class="btn btn-primary" onclick="addTemplateComponent()">Add</button>
-            <button class="btn btn-secondary"
-                onclick="document.getElementById('addTemplateComponentModal').classList.add('hidden')">Cancel</button>
+
+        <!-- Modal Footer -->
+        <div
+            style="padding: 1.25rem 2rem; background: var(--bg-body); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 1rem;">
+            <button onclick="document.getElementById('addTemplateComponentModal').classList.add('hidden')"
+                style="padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s;">
+                Cancel
+            </button>
+            <button onclick="addTemplateComponent()"
+                style="padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; color: white; background: var(--primary); border: none; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s;">
+                Add Component
+            </button>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
     // --- Tabs Logic ---
-    function showTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    function showTab(id) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        const activeTab = document.getElementById(id + '-tab');
+        activeTab.classList.remove('hidden');
 
-        document.getElementById(tabName + '-tab').classList.remove('hidden');
-        // Simple active toggle based on order
-        const tabs = document.querySelectorAll('.tab-btn');
-        if (tabName === 'components') tabs[0].classList.add('active');
-        if (tabName === 'templates') tabs[1].classList.add('active');
-        if (tabName === 'assignment') tabs[2].classList.add('active');
+        // Restart Animation
+        activeTab.style.animation = 'none';
+        activeTab.offsetWidth; /* trigger reflow */
+        activeTab.style.animation = 'fadeIn 0.3s ease-out';
+
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.background = 'transparent';
+            b.style.color = 'var(--text-muted)';
+            b.style.boxShadow = 'none';
+            b.style.fontWeight = '500';
+        });
+
+        const activeBtn = document.getElementById('tab-' + id + '-btn');
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.background = 'var(--bg-card)';
+            activeBtn.style.color = 'var(--primary)';
+            activeBtn.style.boxShadow = 'var(--shadow-sm)';
+            activeBtn.style.fontWeight = '800';
+        }
     }
 
     // --- API & State ---
     let globalComponents = [];
+    let globalEmployees = [];
     let currentEmployeeStructure = {};
     let globalTemplates = [];
+
+    // Helper to handle both array and paginated results
+    function getData(res) {
+        if (!res) return [];
+        if (Array.isArray(res)) return res;
+        if (res.results && Array.isArray(res.results)) return res.results;
+        if (typeof res === 'object') return [res]; // Single object case
+        return [];
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         loadComponents();
@@ -476,57 +1032,87 @@
     });
 
     async function loadComponents() {
+        const bodies = ['earningsTableBody', 'deductionsTableBody'];
+        bodies.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted);"><i class="fas fa-circle-notch fa-spin" style="margin-right: 8px;"></i>Loading components...</td></tr>';
+        });
+
         try {
-            const res = await fetch('/api/components/');
-            if (!res.ok) throw new Error('Failed');
-            globalComponents = await res.json();
+            const res = await authFetch('/api/components/');
+            if (!res.ok) throw new Error('Failed to load components');
+            const data = await res.json();
+            globalComponents = getData(data);
+            console.log("Loaded Components:", globalComponents);
             renderComponentsTable();
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error("Components Error:", err);
+            bodies.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: #ef4444;">Failed to load components.</td></tr>';
+            });
+        }
     }
 
     async function loadEmployees() {
         try {
-            const res = await fetch('/api/employees/');
-            const employees = await res.json();
+            const res = await authFetch('/api/employees/');
+            if (!res.ok) throw new Error('Failed to load employees');
+            const data = await res.json();
+            globalEmployees = getData(data);
             const select = document.getElementById('employeeSelect');
             select.innerHTML = '<option value="">-- Choose Employee --</option>';
-            employees.forEach(emp => {
+            globalEmployees.forEach(emp => {
                 const opt = document.createElement('option');
                 opt.value = emp.id;
                 opt.textContent = `${emp.first_name} ${emp.last_name} (${emp.employee_code})`;
                 select.appendChild(opt);
             });
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Employees Error:", err); }
     }
 
     async function loadTemplates() {
         try {
-            const res = await fetch('/api/salary-templates/');
+            const res = await authFetch('/api/salary-templates/');
             if (res.ok) {
-                globalTemplates = await res.json();
+                const data = await res.json();
+                globalTemplates = getData(data);
                 renderTemplateList();
                 populateTemplateDropdown();
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Templates Error:", e); }
     }
 
     function renderComponentsTable() {
         const eBody = document.getElementById('earningsTableBody');
         const dBody = document.getElementById('deductionsTableBody');
+        if (!eBody || !dBody) return;
+
         eBody.innerHTML = '';
         dBody.innerHTML = '';
 
-        globalComponents.forEach(comp => {
-            const typeLabel = comp.calculation_type === 'FORMULA' ? 'Formula Based' : 'Flat Amount';
+        if (globalComponents.length === 0) {
+            const emptyRow = '<tr><td colspan="4" style="text-align:center; padding: 3rem; color: var(--text-muted);"><i class="fas fa-info-circle" style="margin-bottom: 0.5rem; display:block; font-size: 1.25rem; opacity: 0.5;"></i>No components defined yet.</td></tr>';
+            eBody.innerHTML = emptyRow;
+            dBody.innerHTML = emptyRow;
+            return;
+        }
 
-            // Logic Display Mapping from LOGICS.txt
+        let eCount = 0;
+        let dCount = 0;
+
+        globalComponents.forEach((comp, index) => {
+            const isFormula = comp.calculation_type === 'FORMULA';
+            const typeLabel = isFormula ? 'Formula' : 'Flat Amt';
+            const compType = (comp.type || '').toUpperCase();
+
+            // Logic Display Mapping
             let calcDisplay = '-';
-            const nameLower = comp.name.toLowerCase();
+            const nameLower = (comp.name || '').toLowerCase();
 
-            if (comp.calculation_type === 'FORMULA') {
+            if (isFormula) {
                 calcDisplay = comp.formula || 'N/A';
             } else {
-                // Static mapping for display purposes
                 if (nameLower.includes('basic salary')) calcDisplay = '40% of CTC';
                 else if (nameLower.includes('house rent')) calcDisplay = '50% of Basic';
                 else if (nameLower.includes('dearness')) calcDisplay = 'Varies (0-100% of Basic)';
@@ -543,27 +1129,45 @@
             }
 
             const row = `
-                <tr>
-                    <td style="font-weight: 500;">${comp.name}</td>
-                    <td><span class="badge" style="background: #f1f5f9; color: var(--text-muted);">${typeLabel}</span></td>
-                    <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">
+                <tr style="animation: slideInUp 0.4s ease-out forwards ${index * 0.05}s; opacity: 0;">
+                    <td class="col-name">
+                        <div style="font-weight: 700; color: var(--text-main);">${comp.name}</div>
+                    </td>
+                    <td class="col-type">
+                        <span class="calc-tag">
+                            <i class="fas ${isFormula ? 'fa-calculator' : 'fa-keyboard'}" style="font-size: 0.7rem; color: ${isFormula ? 'var(--primary)' : 'var(--text-muted)'};"></i>
+                            ${typeLabel}
+                        </span>
+                    </td>
+                    <td class="col-calc" style="font-family: monospace; font-size: 0.85rem; color: var(--text-muted);">
                         ${calcDisplay}
                     </td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <button class="btn-action edit" onclick="editComponent(${comp.id})" title="Edit Component">
-                                <i class="fas fa-edit"></i>
+                    <td class="col-actions">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                            <button class="btn btn-outline" style="padding: 0.4rem; border-radius: 8px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;" onclick="editComponent(${comp.id})" title="Edit Component">
+                                <i class="fas fa-edit" style="font-size: 0.85rem;"></i>
                             </button>
-                            <button class="btn-action delete" onclick="deleteComponent(${comp.id})" title="Delete Component">
-                                <i class="fas fa-trash"></i>
+                            <button class="btn btn-outline" style="padding: 0.4rem; border-radius: 8px; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: #ef4444; border-color: #fee2e2;" onclick="deleteComponent(${comp.id})" title="Delete Component">
+                                <i class="fas fa-trash-alt" style="font-size: 0.85rem;"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
             `;
-            if (comp.type === 'EARNING') eBody.innerHTML += row;
-            else dBody.innerHTML += row;
+
+            if (compType === 'EARNING') {
+                eBody.innerHTML += row;
+                eCount++;
+            } else {
+                dBody.innerHTML += row;
+                dCount++;
+            }
         });
+
+        // Final check for empty columns
+        const noDataHtml = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: var(--text-muted); font-size: 0.85rem;">No items</td></tr>';
+        if (eCount === 0) eBody.innerHTML = noDataHtml;
+        if (dCount === 0) dBody.innerHTML = noDataHtml;
     }
 
     async function addComponent(type) {
@@ -593,22 +1197,29 @@
             tenant: validTenantId
         };
 
+        if (calcType === 'FORMULA') {
+            const formula = document.getElementById(prefix + 'Formula').value;
+            if (!formula) return alert('Formula Required for Formula Based components');
+            payload.formula = formula;
+        }
+
         console.log("Sending Payload:", payload);
 
         try {
-            const res = await fetch('/api/components/', {
+            const res = await authFetch('/api/components/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
                 body: JSON.stringify(payload)
             });
 
             if (res.ok) {
                 document.getElementById(prefix + 'Name').value = '';
+                if (calcType === 'FORMULA') {
+                    document.getElementById(prefix + 'Formula').value = '';
+                    document.getElementById(prefix + 'FormulaGroup').classList.add('hidden');
+                    document.getElementById(prefix + 'Type').value = 'FLAT_AMOUNT';
+                }
                 loadComponents();
-                // Optional: Show success toast
+                showToast('Component created successfully', 'success');
             } else {
                 const err = await res.json();
                 console.error("API Error:", err);
@@ -617,6 +1228,18 @@
         } catch (e) {
             console.error("Fetch Error:", e);
             alert("Error adding component: " + e.message);
+        }
+    }
+
+    function toggleNewFormula(typePref) {
+        const prefix = typePref === 'EARNING' ? 'newEarning' : 'newDeduction';
+        const typeSelect = document.getElementById(prefix + 'Type');
+        const formulaGroup = document.getElementById(prefix + 'FormulaGroup');
+
+        if (typeSelect.value === 'FORMULA') {
+            formulaGroup.classList.remove('hidden');
+        } else {
+            formulaGroup.classList.add('hidden');
         }
     }
 
@@ -659,9 +1282,8 @@
         };
 
         try {
-            const res = await fetch(`/api/components/${id}/`, {
+            const res = await authFetch(`/api/components/${id}/`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify(payload)
             });
 
@@ -681,9 +1303,8 @@
         if (!await customConfirm("Are you sure you want to delete this component? This may affect existing salary structures.", "Delete Component", true)) return;
 
         try {
-            const res = await fetch(`/api/components/${id}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            const res = await authFetch(`/api/components/${id}/`, {
+                method: 'DELETE'
             });
 
             if (res.ok) {
@@ -715,9 +1336,8 @@
         }
 
         try {
-            const res = await fetch('/api/salary-templates/', {
+            const res = await authFetch('/api/salary-templates/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify({
                     name: name,
                     description: desc,
@@ -755,26 +1375,30 @@
             msg.classList.remove('hidden');
         } else {
             msg.classList.add('hidden');
-            globalTemplates.forEach(t => {
+            globalTemplates.forEach((t, index) => {
                 const item = document.createElement('div');
                 item.className = 'glass-panel';
-                item.style.padding = '1rem';
+                item.style.padding = '1.25rem';
                 item.style.cursor = 'pointer';
                 item.style.border = '1px solid var(--border-color)';
-                item.style.borderRadius = '8px';
-                item.style.backgroundColor = 'white';
-                item.style.transition = 'all 0.2s';
-                item.style.marginBottom = '0.5rem';
+                item.style.borderRadius = '12px';
+                item.style.backgroundColor = 'var(--bg-card)';
+                item.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                item.style.marginBottom = '1rem';
+
+                // Staggered Animation
+                item.style.animation = `slideInUp 0.4s ease-out forwards ${index * 0.05}s`;
+                item.style.opacity = '0';
 
                 item.onmouseover = () => { item.style.transform = 'translateY(-2px)'; item.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.1)'; };
                 item.onmouseout = () => { item.style.transform = 'none'; item.style.boxShadow = 'none'; };
 
                 item.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong style="color:var(--text-dark);">${t.name}</strong>
-                        <i class="fas fa-chevron-right" style="color:#cbd5e1; font-size:0.8rem;"></i>
+                        <strong style="color: var(--text-main); font-weight: 850; font-size: 1rem;">${t.name}</strong>
+                        <i class="fas fa-chevron-right" style="color: var(--primary); font-size:0.8rem; opacity: 0.5;"></i>
                     </div>
-                    <small style="color:var(--text-muted); display:block; margin-top:0.25rem;">${t.description || 'No description'}</small>
+                    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0; font-size: 0.85rem; line-height: 1.5; font-weight: 500;">${t.description || 'Institutional salary baseline'}</p>
                 `;
                 item.onclick = () => showTemplateDetails(t.id);
                 list.insertBefore(item, msg); // Insert before placeholder
@@ -798,9 +1422,9 @@
 
         ul.innerHTML = '';
         if (t.configs && t.configs.length > 0) {
-            t.configs.forEach(c => {
+            t.configs.forEach((c, index) => {
                 ul.innerHTML += `
-                    <li style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px dashed #f1f5f9;">
+                    <li style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0; border-bottom:1px dashed #f1f5f9; animation: slideInUp 0.3s ease-out forwards ${index * 0.03}s; opacity: 0;">
                         <span>${c.component_name} <span class="badge" style="font-size:0.7rem; margin-left:4px;">${c.component_type}</span></span>
                         <div style="display:flex; align-items:center; gap: 8px;">
                             <span style="font-family:monospace; font-weight:600;">₹${c.default_amount}</span>
@@ -832,17 +1456,13 @@
 
     async function bulkUpdateStructure() {
         const tplId = document.getElementById('bulkTemplateSelect').value;
-        if (!tplId) return alert("Please select a template first.");
+        if (!tplId) return showToast("Please select a template first.", "error");
 
-        if (!confirm("Are you sure you want to apply this template to ALL employees? This will overwrite existing salary structures.")) return;
+        if (!await customConfirm("Apply this template to ALL employees? This will overwrite existing salary structures.", "Bulk Update", true)) return;
 
         try {
-            const res = await fetch(`/api/salary-templates/${tplId}/assign-bulk/`, {
+            const res = await authFetch(`/api/salary-templates/${tplId}/assign-bulk/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
                 body: JSON.stringify({
                     apply_to_all: true
                 })
@@ -850,14 +1470,13 @@
 
             const data = await res.json();
             if (res.ok) {
-                alert(data.message);
-                // Refresh if needed
+                showToast(data.message || "Bulk update completed successfully", "success");
             } else {
-                alert("Failed: " + (data.error || "Unknown error"));
+                showToast("Failed: " + (data.error || "Unknown error"), "error");
             }
         } catch (e) {
             console.error(e);
-            alert("Error running bulk update");
+            showToast("Error running bulk update", "error");
         }
     }
 
@@ -869,10 +1488,8 @@
 
         if (!await customConfirm("This will overwrite existing salary structure. Continue?", "Assign Template")) return;
 
-        // FIXED: Correct API endpoint
-        const res = await fetch(`/api/salary-templates/${tplId}/assign-to-employee/`, {
+        const res = await authFetch(`/api/salary-templates/${tplId}/assign-to-employee/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
             body: JSON.stringify({ employee_id: empId })
         });
 
@@ -892,25 +1509,47 @@
         if (!empId) {
             document.getElementById('assignmentArea').classList.add('hidden');
             document.getElementById('assignmentPlaceholder').classList.remove('hidden');
+            document.getElementById('selectionProfile').classList.add('hidden');
             return;
         }
 
         document.getElementById('assignmentArea').classList.remove('hidden');
         document.getElementById('assignmentPlaceholder').classList.add('hidden');
 
-        // Fetch existing
-        // Fetch existing
+        // Show Profile
+        const emp = globalEmployees.find(e => e.id == empId);
+        if (emp) {
+            const profile = document.getElementById('selectionProfile');
+            const hasPhoto = emp.profile_photo && emp.profile_photo !== '';
+            const avatarHtml = hasPhoto
+                ? `<img src="${emp.profile_photo}" alt="${emp.first_name}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">`
+                : `<div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;"><i class="fas fa-user" style="color: #1e293b; font-size: 1.1rem;"></i></div>`;
+
+            profile.innerHTML = `
+                <div style="display: flex; gap: 0.85rem; align-items: center;">
+                    <div>${avatarHtml}</div>
+                    <div>
+                         <h4 style="margin:0 0 0.15rem 0; font-size: 1rem; font-weight: 700; color: #0f172a;">${emp.first_name} ${emp.last_name}</h4>
+                         <p style="margin:0; font-size: 0.85rem; color: #64748b; font-weight: 500; font-family: inherit;">
+                            ${emp.employee_code} <span style="color: #cbd5e1; margin: 0 4px;">•</span> ${emp.department_name || 'No Dept'}
+                         </p>
+                    </div>
+                </div>
+            `;
+            profile.classList.remove('hidden');
+        }
+
         try {
-            // FIXED: Correct query param 'employee' not 'employee_id'
-            const res = await fetch(`/api/salary-structures/?employee=${empId}`);
+            const res = await authFetch(`/api/salary-structures/?employee=${empId}`);
             const data = await res.json();
+            const structureItems = getData(data);
             // Convert list to map for easier lookup: component_id -> amount
             currentEmployeeStructure = {};
-            data.forEach(item => {
+            structureItems.forEach(item => {
                 currentEmployeeStructure[item.component] = item.amount; // Store amount
             });
             renderAssignmentInputs();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Structure Load Error:", e); }
     }
 
     function renderAssignmentInputs() {
@@ -919,79 +1558,106 @@
         earningsDiv.innerHTML = '';
         deductionsDiv.innerHTML = '';
 
-        globalComponents.forEach(comp => {
+        let animIndex = 0;
+        globalComponents.forEach((comp) => {
             const currentAmount = currentEmployeeStructure[comp.id] || 0;
             const isFormula = comp.calculation_type === 'FORMULA';
 
+            // Stagger animation: 0.05s per item
+            const delay = animIndex * 0.03;
+            animIndex++;
+
             const html = `
-                <div style="background: #fff; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <div style="font-weight: 500;">${comp.name}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">${isFormula ? 'Auto-calculated' : 'Flat Amount'}</div>
-                    </div>
-                    <div style="width: 140px;">
+                <div class="input-group-modern" style="animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; animation-delay: ${delay}s">
+                    <label class="input-label-modern">${comp.name}</label>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-symbol">₹</span>
                         <input type="number" 
                              id="comp_input_${comp.id}" 
                              class="form-control" 
                              value="${currentAmount}" 
-                             ${isFormula ? 'disabled style="background: #f1f5f9;"' : ''} 
-                             placeholder="Amount">
+                             oninput="updateSalaryTotals()"
+                             ${isFormula ? 'disabled style="background: var(--bg-body); border-color: var(--border-color); cursor: not-allowed; color: var(--text-muted);"' : ''} 
+                             placeholder="0.00">
+                    </div>
+                    <div class="status-pill ${isFormula ? 'auto' : ''}">
+                        <i class="fas ${isFormula ? 'fa-magic' : 'fa-pen'}" style="font-size: 0.65rem;"></i>
+                        ${isFormula ? 'Formula Based' : 'Manual Entry'}
                     </div>
                 </div>
             `;
 
-            if (comp.type === 'earning') earningsDiv.innerHTML += html;
+            if (comp.type === 'EARNING') earningsDiv.innerHTML += html;
             else deductionsDiv.innerHTML += html;
         });
+
+        // Initial Calculation
+        updateSalaryTotals();
+    }
+
+    function updateSalaryTotals() {
+        let totalEarnings = 0;
+        let totalDeductions = 0;
+
+        // Sum Earnings
+        document.querySelectorAll('#assignEarningsContainer input').forEach(input => {
+            totalEarnings += parseFloat(input.value) || 0;
+        });
+
+        // Sum Deductions
+        document.querySelectorAll('#assignDeductionsContainer input').forEach(input => {
+            totalDeductions += parseFloat(input.value) || 0;
+        });
+
+        const netSalary = totalEarnings - totalDeductions;
+
+        // Format Currency
+        const fmt = (val) => '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        document.getElementById('dispTotalEarnings').textContent = fmt(totalEarnings);
+        document.getElementById('dispTotalDeductions').textContent = fmt(totalDeductions);
+        document.getElementById('dispNetSalary').textContent = fmt(netSalary);
     }
 
     async function saveStructure() {
         const empId = document.getElementById('employeeSelect').value;
-        if (!empId) return alert('Select Employee');
+        if (!empId) return showToast('Please select an employee first', 'error');
 
-        const updates = [];
-
+        const items = [];
         globalComponents.forEach(comp => {
-            // Only process flat amounts or newly entered values. 
-            // Formula fields are read-only but if we wanted to override, we'd enable them.
-            // For now, only picking up values from inputs.
-            if (comp.calculation_type !== 'FORMULA') {
-                const input = document.getElementById(`comp_input_${comp.id}`);
-                if (input) {
-                    updates.push({
-                        employee: empId,
-                        component: comp.id,
-                        amount: parseFloat(input.value) || 0
-                    });
-                }
+            const input = document.getElementById(`comp_input_${comp.id}`);
+            if (input) {
+                const amount = parseFloat(input.value) || 0;
+                // We send both formula and flat ones? 
+                // Formula ones are disabled in UI, but if we want to save them as base amounts, we send them.
+                // Usually flat amounts are the ones edited.
+                items.push({
+                    component: comp.id,
+                    amount: amount
+                });
             }
         });
 
-        // Bulk create/update logic is complex via typical REST.
-        // For MVP, we iterate or send batch.
-        // Let's assume we delete all and recreate for simplicity or use a batch endpoint.
-        // Or simpler: iterate
+        if (items.length === 0) return showToast("No components to save", 'info');
 
-        // Actually, we should probably add a batch update endpoint. 
-        // For now, let's just loop (inefficient but works for small demo)
-        // Or better: DELETE all for user, then POST all non-zero.
+        try {
+            const res = await authFetch('/api/salary-structures/bulk_update/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    employee_id: empId,
+                    items: items
+                })
+            });
 
-        // Step 1: Delete existing (naive approach) - ideally Backend handles "Update"
-        // But we don't have a "Bulk Update" endpoint on 'salary-structures' viewset by default.
-        // Let's rely on manual iteration for the handful of components.
-
-        for (const up of updates) {
-            // We need to find ID if it exists to PUT, or POST if new.
-            // This is messy.
-            // ALTERNATIVE: Use the existing "Assign Template" logic but valid for a "Custom" update.
-            // Let's create a specific "bulk_update_structure" action in backend to be clean.
-            // But for now, since I can't edit backend mid-script easily without context switch:
-            // I'll assume we iterate.
-
-            // Check if exists in currentEmployeeStructure to decide PUT vs POST is hard without IDs.
-            // Let's just implement a 'save_all_structure' endpoint in ViewSet later?
-            // Or... honestly, for this demo, let's just say "Saved"
-            console.log("Saving", up);
+            if (res.ok) {
+                showToast("Salary structure saved successfully!", "success");
+            } else {
+                const err = await res.json();
+                alert("Failed to save: " + (err.error || JSON.stringify(err)));
+            }
+        } catch (e) {
+            console.error("Save Error:", e);
+            showToast("Error saving structure", "error");
         }
     }
 
@@ -1054,9 +1720,8 @@
         if (!tplId || !compId) return alert("Select component");
 
         try {
-            const res = await fetch('/api/salary-template-configs/', {
+            const res = await authFetch('/api/salary-template-configs/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify({
                     template: tplId,
                     component: compId,
@@ -1079,9 +1744,8 @@
     async function deleteTemplateComponent(configId) {
         if (!await customConfirm("Remove this component from template?", "Remove Component")) return;
         try {
-            const res = await fetch(`/api/salary-template-configs/${configId}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            const res = await authFetch(`/api/salary-template-configs/${configId}/`, {
+                method: 'DELETE'
             });
             if (res.ok) {
                 // We need to refresh. Currently showTemplateDetails relies on globalTemplates.
@@ -1107,9 +1771,8 @@
         if (!await customConfirm(`Permanently delete template "${tpl.name}"? This action cannot be undone.`, "Delete Template", true)) return;
 
         try {
-            const res = await fetch(`/api/salary-templates/${tpl.id}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            const res = await authFetch(`/api/salary-templates/${tpl.id}/`, {
+                method: 'DELETE'
             });
 
             if (res.ok) {

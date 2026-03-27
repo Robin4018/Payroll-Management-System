@@ -1,0 +1,175 @@
+{% extends base_template|default:'frontend/dashboard_staff_base.html' %}
+{% load static %}
+
+{% block header_title %}Institutional Announcements{% endblock %}
+
+{% block content_body %}
+<style>
+    .announcements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    /* Reuse professional compact styles */
+    .announcement-card {
+        background: white;
+        border: 1px solid #f1f5f9;
+        border-right: none;
+        border-bottom: none;
+        border-left: 5px solid #f59e0b;
+        border-radius: 18px;
+        padding: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 220px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    [data-theme="dark"] .announcement-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .announcement-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    .announcement-card.priority-URGENT {
+        border-left-color: #ef4444;
+    }
+
+    .announcement-card.priority-HIGH {
+        border-left-color: #f97316;
+    }
+
+    .announcement-card.priority-MEDIUM {
+        border-left-color: #f59e0b;
+    }
+
+    .announcement-card.priority-LOW {
+        border-left-color: #10b981;
+    }
+
+    .announcement-title {
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+    }
+
+    [data-theme="dark"] .announcement-title {
+        color: #f8fafc;
+    }
+
+    .announcement-content {
+        font-size: 0.95rem;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+    }
+
+    [data-theme="dark"] .announcement-content {
+        color: #94a3b8;
+    }
+
+    .announcement-footer {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        margin-top: auto;
+    }
+
+    [data-theme="dark"] .announcement-footer {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 24px;
+        border: 1px solid #f1f5f9;
+    }
+</style>
+
+<div class="animate-slide-up">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div>
+            <h2
+                style="margin: 0; font-size: 1.5rem; font-weight: 850; color: var(--text-primary); letter-spacing: -0.02em;">
+                Notice Board</h2>
+            <p style="margin: 0.25rem 0 0; color: #64748b; font-size: 0.95rem;">Stay updated with the latest college and
+                institutional news.</p>
+        </div>
+    </div>
+
+    <div id="announcements-grid" class="announcements-grid">
+        <!-- announcements injected here -->
+        <div class="empty-state" style="grid-column: 1/-1;">
+            <i class="fas fa-bullhorn" style="font-size: 3rem; color: #e2e8f0; margin-bottom: 1.5rem;"></i>
+            <h3 style="color: #64748b; margin: 0;">Loading announcements...</h3>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', fetchAllAnnouncements);
+
+    async function fetchAllAnnouncements() {
+        try {
+            const res = await authFetch('/api/announcements/');
+            if (!res.ok) throw new Error('Failed to fetch');
+            const data = await res.json();
+            const announcements = data.results || data;
+
+            const grid = document.getElementById('announcements-grid');
+
+            if (announcements.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <i class="fas fa-bullhorn" style="font-size: 3rem; color: #e2e8f0; margin-bottom: 1.5rem;"></i>
+                        <h3 style="color: #64748b; margin: 0;">No announcements found.</h3>
+                        <p style="color: #94a3b8; margin-top: 0.5rem;">Check back later for updates.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = announcements.map((a, idx) => `
+                <div class="announcement-card priority-${a.priority} animate-slide-up" style="animation-delay: ${idx * 0.05}s">
+                    <div class="announcement-header">
+                        <span class="announcement-title">${a.title}</span>
+                    </div>
+                    <div class="announcement-content">${a.content}</div>
+                    <div class="announcement-footer">
+                        <i class="far fa-calendar-alt"></i>
+                        <span>${new Date(a.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        <div style="margin-left:auto; display:flex; align-items:center; gap:0.4rem;">
+                            <i class="far fa-user"></i>
+                            <span>${a.created_by_name || 'Dean Office'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (e) {
+            console.error('Announcements fetch error:', e);
+            document.getElementById('announcements-grid').innerHTML = '<p style="color: red; padding: 2rem; text-align: center;">Error loading announcements. Please try again later.</p>';
+        }
+    }
+</script>
+{% endblock %}

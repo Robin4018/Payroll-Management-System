@@ -4,5 +4,5 @@ from .models import Tenant
 class TenantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tenant
-        fields = ['id', 'name', 'type', 'financial_year_start', 'salary_cycle_start_day', 'tax_slabs', 'logo', 'email', 'phone', 'address']
+        fields = ['id', 'name', 'short_name', 'type', 'financial_year_start', 'salary_cycle_start_day', 'tax_slabs', 'logo', 'email', 'phone', 'address', 'latitude', 'longitude', 'geofence_radius']
         read_only_fields = ['id', 'name', 'type'] # Identifying info read-only normally

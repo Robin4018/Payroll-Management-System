@@ -1,0 +1,410 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'frontend/css/college_modern.css' %}?v=2.0">
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+        <div class="sidebar-header">
+            <a href="/dashboard/staff/" class="brand-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                <span style="font-weight: 700; letter-spacing: 1px;">UPMS</span>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/dashboard/staff/" class="nav-item" style="animation-delay: 0.1s;">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-section-title">My Information</div>
+
+            <a href="/dashboard/staff/profile/" class="nav-item" style="animation-delay: 0.2s;">
+                <i class="fas fa-user"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="/dashboard/staff/leaves/" class="nav-item" style="animation-delay: 0.3s;">
+                <i class="fas fa-calendar-alt"></i>
+                <span>My Leaves</span>
+            </a>
+            <a href="/dashboard/staff/payslips/" class="nav-item" style="animation-delay: 0.4s;">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>My Payslips</span>
+            </a>
+            <a href="/dashboard/staff/attendance/" class="nav-item" style="animation-delay: 0.5s;">
+                <i class="fas fa-clock"></i>
+                <span>My Attendance</span>
+            </a>
+
+            <div class="nav-section-title">Services</div>
+
+
+            <a href="/dashboard/staff/reimbursements/" class="nav-item" style="animation-delay: 0.7s;">
+                <i class="fas fa-file-invoice"></i>
+                <span>Reimbursements</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/dashboard/staff/help/" class="nav-item footer-link">
+                <i class="fas fa-question-circle"></i>
+                <span>Help & Support</span>
+            </a>
+            <a href="/logout/" onclick="localStorage.clear()" class="nav-item logout-link">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <style>
+        /* Notifications */
+        .notifications-bell {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 1.25rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .notifications-bell:hover {
+            background: #f8fafc;
+            color: #2563eb;
+        }
+
+        .bell-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            min-width: 18px;
+            height: 18px;
+            background: #ef4444;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-trigger {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 120%;
+            right: 0;
+            width: 280px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s;
+            z-index: 1000;
+        }
+
+        .dropdown-trigger.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .dropdown-item:hover {
+            background: var(--primary-light);
+        }
+
+        .dropdown-item.unread {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 3px solid var(--primary);
+        }
+
+        .notif-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .notif-msg {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .notif-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .dropdown-content-empty {
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+    </style>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-title">
+                <h2 style="margin: 0; font-weight: 800; font-size: 1.25rem; color: var(--text-main);">
+                    {% block header_title %}My Dashboard{% endblock %}
+                </h2>
+            </div>
+            <div class="user-profile">
+                <!-- Theme Toggle -->
+                <div class="theme-toggle" onclick="toggleTheme()"
+                    style="margin-right: 1.5rem; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: all 0.3s ease;">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </div>
+
+                <!-- Notification Dropdown -->
+                <div class="dropdown-trigger" id="notifyDropdown" style="margin-right: 1.5rem;">
+                    <div class="notifications-bell" id="bellIcon"
+                        onclick="toggleDropdown('notifyDropdown'); markNotificationsRead();">
+                        <i class="fas fa-bell"></i>
+                        <span class="bell-dot" id="notifCount" style="display: none;">0</span>
+                    </div>
+                    <div class="dropdown-menu notify-menu">
+                        <div class="dropdown-header">Notifications</div>
+                        <div id="notificationList">
+                            <div class="dropdown-content-empty">
+                                <i class="far fa-bell-slash"></i>
+                                <p>No new alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-right: 1.25rem;">
+                    <div id="header-user-name" style="font-weight: 750; font-size: 0.95rem; color: var(--text-main);">
+                        Staff Member</div>
+                    <div id="header-user-role"
+                        style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 2px;">
+                        University Staff</div>
+                </div>
+                <div id="header-user-avatar"
+                    style="width: 44px; height: 44px; background: var(--primary-light); border-radius: 12px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary); transition: all 0.3s ease;">
+                    <span id="header-user-initials" style="font-size: 0.85rem;">SM</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-body">
+            {% block content_body %}
+            <!-- Page Specific Content -->
+            {% endblock %}
+        </div>
+    </main>
+</div>
+
+<!-- Global Toast Container -->
+<div id="toast-container"></div>
+
+<!-- Custom Confirmation Modal -->
+<div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-confirm-box">
+        <div class="confirm-title" id="confirmTitle">Confirm Action</div>
+        <p class="confirm-desc" id="confirmMessage">Are you sure you want to proceed?</p>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel" id="btnConfirmCancel">Cancel</button>
+            <button class="confirm-btn btn-confirm" id="btnConfirmYes">Confirm</button>
+        </div>
+    </div>
+</div>
+
+{% include 'frontend/support_modal.html' %}
+
+
+<script>
+    function toggleTheme() {
+        const doc = document.documentElement;
+        const currentTheme = doc.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        doc.setAttribute('data-theme', newTheme);
+        localStorage.setItem('upms_theme', newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (!icon) return;
+        if (theme === 'dark') {
+            icon.className = 'fas fa-sun';
+        } else {
+            icon.className = 'fas fa-moon';
+        }
+    }
+
+    // Init icon on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateThemeIcon(currentTheme);
+    });
+
+    // Set active link
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.nav-item').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPath || (currentPath !== '/dashboard/staff/' && href !== '/dashboard/staff/' && currentPath.startsWith(href))) {
+            link.classList.add('active');
+        }
+    });
+
+
+    function toggleDropdown(id) {
+        document.querySelectorAll('.dropdown-trigger').forEach(el => {
+            if (el.id !== id) el.classList.remove('active');
+        });
+        document.getElementById(id).classList.toggle('active');
+    }
+
+    async function fetchNotifications() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+        try {
+            const res = await fetch('/api/notifications/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            const results = data.results || data;
+            const listEl = document.getElementById('notificationList');
+            const countEl = document.getElementById('notifCount');
+            const unreadCount = results.filter(n => !n.is_read).length;
+            if (unreadCount > 0) {
+                countEl.style.display = 'flex';
+                countEl.textContent = unreadCount;
+            } else {
+                countEl.style.display = 'none';
+            }
+            if (results.length === 0) {
+                listEl.innerHTML = `<div class="dropdown-content-empty"><p>No new alerts</p></div>`;
+            } else {
+                listEl.innerHTML = '';
+                results.slice(0, 5).forEach(n => {
+                    const date = new Date(n.created_at).toLocaleString();
+                    const item = document.createElement('div');
+                    item.className = `dropdown-item ${n.is_read ? '' : 'unread'}`;
+                    item.innerHTML = `
+                        <div class="notif-item-body">
+                            <div class="notif-title">${n.title}</div>
+                            <div class="notif-msg">${n.message}</div>
+                            <div class="notif-time">${date}</div>
+                        </div>`;
+                    listEl.appendChild(item);
+                });
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function markNotificationsRead() {
+        if (!document.getElementById('notifyDropdown').classList.contains('active')) return;
+        const token = localStorage.getItem('access_token');
+        try {
+            await fetch('/api/notifications/mark_all_as_read/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            setTimeout(fetchNotifications, 1000);
+        } catch (e) { console.error(e); }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Outside click to close dropdown
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-trigger')) {
+            document.querySelectorAll('.dropdown-trigger').forEach(el => el.classList.remove('active'));
+        }
+    });
+
+    // Load user info
+    document.addEventListener('DOMContentLoaded', async () => {
+        fetchNotifications();
+        try {
+            const res = await authFetch('/api/me/');
+            if (res.ok) {
+                const user = await res.json();
+                const nameEl = document.getElementById('header-user-name');
+                const initialsEl = document.getElementById('header-user-initials');
+
+                if (nameEl) {
+                    const fullName = user.employee_name || user.username;
+                    nameEl.textContent = fullName;
+
+                    // Update Role/Designation text
+                    const roleEl = document.getElementById('header-user-role');
+                    if (roleEl && user.designation) {
+                        roleEl.textContent = user.designation;
+                    }
+
+                    // Handle Photo/Initials
+                    const avatarEl = document.getElementById('header-user-avatar');
+                    if (user.photo) {
+                        avatarEl.innerHTML = `<img src="${user.photo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">`;
+                    } else if (initialsEl) {
+                        const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                        initialsEl.textContent = initials;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error loading user info:', e);
+        }
+    });
+</script>
+{% endblock %}

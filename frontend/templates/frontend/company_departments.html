@@ -1,0 +1,192 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Business Hierarchy{% endblock %}
+
+{% block content_body %}
+<div class="departments-header animate-entry">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">Strategic Departments
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Map your organizational
+                structure and business units.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="openAddDeptModal()">
+            <i class="fas fa-plus"></i> Designate New Department
+        </button>
+    </div>
+
+    <!-- Dept Grid -->
+    <div class="dept-grid" id="dept-grid">
+        <div class="dept-card loading-card">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Scanning hierarchy...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dept-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .dept-card {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+
+    .dept-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+    }
+
+    .dept-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--primary-light);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dept-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .dept-stats {
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .loading-card {
+        text-align: center;
+        grid-column: 1 / -1;
+        padding: 4rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchDepartments();
+    });
+
+    async function fetchDepartments() {
+        try {
+            const res = await authFetch('/api/employees/departments/');
+            const data = await res.json();
+            const depts = data.results || data;
+            const grid = document.getElementById('dept-grid');
+            grid.innerHTML = '';
+
+            if (!depts || depts.length === 0) {
+                grid.innerHTML = '<div class="dept-card loading-card">No departments defined. <button class="btn btn-primary" style="margin-top:1rem;" onclick="openAddDeptModal()">Add One</button></div>';
+                return;
+            }
+
+            depts.forEach(d => {
+                const card = document.createElement('div');
+                card.className = 'dept-card';
+                card.style.cursor = 'default';
+                card.innerHTML = `
+                    <div class="dept-icon"><i class="fas fa-sitemap"></i></div>
+                    <div class="dept-name">${d.name}</div>
+                    <div class="dept-stats">
+                        <span><i class="fas fa-users"></i> ${d.employee_count || 0} Employees</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; margin-top:1.25rem;">
+                        <button class="btn btn-outline" style="flex:1; padding:0.5rem; font-size:0.8rem;" onclick="editDept(${d.id}, '${d.name}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn" style="flex:1; padding:0.5rem; font-size:0.8rem; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="deleteDept(${d.id}, '${d.name}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    let editingDeptId = null;
+
+    function openAddDeptModal() {
+        editingDeptId = null;
+        document.getElementById('dept-modal-title').textContent = 'Add New Department';
+        document.getElementById('dept-name-input').value = '';
+        document.getElementById('dept-modal').style.display = 'flex';
+    }
+
+    function editDept(id, name) {
+        editingDeptId = id;
+        document.getElementById('dept-modal-title').textContent = 'Edit Department';
+        document.getElementById('dept-name-input').value = name;
+        document.getElementById('dept-modal').style.display = 'flex';
+    }
+
+    function closeDeptModal() {
+        document.getElementById('dept-modal').style.display = 'none';
+    }
+
+    async function saveDept() {
+        const name = document.getElementById('dept-name-input').value.trim();
+        if (!name) { showToast('Department name is required', 'error'); return; }
+
+        const method = editingDeptId ? 'PUT' : 'POST';
+        const url = editingDeptId ? `/api/employees/departments/${editingDeptId}/` : '/api/employees/departments/';
+
+        try {
+            const res = await authFetch(url, { method, body: JSON.stringify({ name }) });
+            if (res.ok) {
+                showToast(editingDeptId ? 'Department updated!' : 'Department added!', 'success');
+                closeDeptModal();
+                fetchDepartments();
+            } else {
+                const err = await res.json();
+                showToast(err.name?.[0] || err.detail || 'Failed to save', 'error');
+            }
+        } catch (e) { showToast('Error saving department', 'error'); }
+    }
+
+    async function deleteDept(id, name) {
+        const confirmed = await confirm(`Delete department "${name}"? This cannot be undone.`);
+        if (!confirmed) return;
+        try {
+            const res = await authFetch(`/api/employees/departments/${id}/`, { method: 'DELETE' });
+            if (res.ok || res.status === 204) {
+                showToast('Department deleted', 'success');
+                fetchDepartments();
+            } else {
+                showToast('Cannot delete – department may have employees assigned.', 'error');
+            }
+        } catch (e) { showToast('Error deleting department', 'error'); }
+    }
+</script>
+
+<!-- Department Modal -->
+<div id="dept-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:24px; padding:2.5rem; width:90%; max-width:440px; box-shadow:0 25px 50px rgba(0,0,0,0.3);">
+        <h3 id="dept-modal-title" style="margin:0 0 1.5rem; font-size:1.35rem; font-weight:800; color:var(--text-main);">Add New Department</h3>
+        <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.5rem;">Department Name</label>
+        <input type="text" id="dept-name-input" class="form-control" placeholder="e.g. Human Resources" style="margin-bottom:1.5rem;">
+        <div style="display:flex; gap:1rem;">
+            <button class="btn btn-outline" style="flex:1;" onclick="closeDeptModal()">Cancel</button>
+            <button class="btn btn-primary" style="flex:2;" onclick="saveDept()">Save Department</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

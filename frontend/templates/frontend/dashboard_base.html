@@ -2,61 +2,295 @@
 {% load static %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'frontend/css/college_modern.css' %}?v=1.3">
+<link rel="stylesheet" href="{% static 'frontend/css/college_modern.css' %}?v=2.0">
+<script src="{% static 'frontend/js/app.js' %}"></script>
+
 
 <div class="app-container">
     <!-- Sidebar -->
-    <aside class="app-sidebar">
+    <aside class="app-sidebar" style="flex-shrink: 0;">
         <div class="sidebar-header">
             <a href="/dashboard/college/" class="brand-logo">
+                {% if current_tenant.logo %}
+                <img src="{{ current_tenant.logo.url }}" alt="Logo"
+                    style="height: 32px; min-width: 32px; object-fit: contain; border-radius: 4px;">
+                {% else %}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
-                <span style="font-weight: 700; letter-spacing: 1px;">UPMS</span>
+                {% endif %}
+                <span class="brand-name">{{ current_tenant.display_name|default:"UPMS" }}</span>
             </a>
         </div>
 
         <nav class="sidebar-nav">
             <a href="/dashboard/college/"
                 class="nav-item {% if request.path == '/dashboard/college/' %}active{% endif %}">
+                <i class="fas fa-th-large"></i>
                 <span>Dashboard</span>
             </a>
-            <div
-                style="margin: 1rem 0; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700;">
-                HR & Staff</div>
-            <a href="/dashboard/college/employees/" class="nav-item">
-                <span>Employees</span>
-            </a>
-            <a href="/dashboard/college/departments/" class="nav-item">
+
+            <div class="nav-section-label">EMPLOYEES & STAFFS</div>
+            <a href="/dashboard/college/departments/"
+                class="nav-item {% if 'departments' in request.path %}active{% endif %}">
+                <i class="fas fa-sitemap"></i>
                 <span>Departments</span>
             </a>
-            <a href="/dashboard/college/attendance/" class="nav-item">
+            <a href="/dashboard/college/employees/"
+                class="nav-item {% if 'employees' in request.path %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Employees</span>
+            </a>
+            <a href="/dashboard/college/attendance/"
+                class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
+                <i class="fas fa-calendar-check"></i>
                 <span>Attendance</span>
             </a>
 
-            <div
-                style="margin: 1rem 0; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700;">
-                Finance</div>
-            <a href="/dashboard/college/salary-structure/" class="nav-item">
+            <div class="nav-section-label">FINANCE</div>
+            <a href="/dashboard/college/salary-structure/"
+                class="nav-item {% if 'salary-structure' in request.path %}active{% endif %}">
+                <i class="fas fa-file-invoice-dollar"></i>
                 <span>Salary Structure</span>
             </a>
-            <a href="/dashboard/college/payroll-processing/" class="nav-item">
+            <a href="/dashboard/college/reimbursements/"
+                class="nav-item {% if 'reimbursements' in request.path %}active{% endif %}">
+                <i class="fas fa-receipt"></i>
+                <span>Reimbursements</span>
+            </a>
+            <a href="/dashboard/college/payroll-processing/"
+                class="nav-item {% if 'payroll-processing' in request.path %}active{% endif %}">
+                <i class="fas fa-rocket"></i>
                 <span>Run Payroll</span>
             </a>
-            <a href="/dashboard/college/reports/" class="nav-item">
+            <a href="/dashboard/college/bank-payments/"
+                class="nav-item {% if 'bank-payments' in request.path %}active{% endif %}">
+                <i class="fas fa-university"></i>
+                <span>Bank & Payments</span>
+            </a>
+            <a href="/dashboard/college/reports/" class="nav-item {% if 'reports' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
                 <span>Reports</span>
             </a>
         </nav>
 
         <div class="sidebar-footer">
-            <a href="{% url 'select-entity' %}" class="nav-item" style="color: #94a3b8;">
-                <span>Switch Organization</span>
-            </a>
-            <a href="#" onclick="logout()" class="nav-item" style="color: #ef4444;">
+            <a href="/logout/" onclick="localStorage.clear()" class="nav-item logout-item">
+                <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
         </div>
     </aside>
+
+    <style>
+        /* Specific Sidebar Overrides to match Screenshot */
+        .sidebar-header {
+            border-bottom: none;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            width: 100%;
+            padding-left: 2.25rem;
+            /* Significantly shifted right */
+        }
+
+        .brand-logo:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .brand-name {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        .nav-section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            margin: 1.5rem 1rem 0.5rem 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            color: #94a3b8;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            border-radius: 0 50px 50px 0;
+            /* Rounded right side only or full? Screenshot looks active is full rounded or button like */
+            border-radius: 8px;
+            /* Let's stick to rounded rect */
+            margin-left: 0.5rem;
+            margin-right: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+            color: white !important;
+            font-weight: 600;
+            box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.4);
+        }
+
+        .logout-item {
+            color: #ef4444 !important;
+            margin-top: auto;
+        }
+
+        .logout-item:hover {
+            background: rgba(239, 68, 68, 0.08);
+            color: #ef4444 !important;
+        }
+
+        /* --- Transitions & Animations --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Continuous Switching Animation: Subtle Fade In on every load */
+        .content_body_animate {
+            animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .page-exit-active {
+            animation: fadeOut 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+        }
+
+        /* Apply animations ONLY if .play-animations class is present */
+        .play-animations .sidebar-nav .nav-item {
+            opacity: 0;
+            animation: fadeInRight 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* If not animating, ensure they are visible immediately */
+        body:not(.play-animations) .sidebar-nav .nav-item,
+        body:not(.play-animations) .app-header,
+        body:not(.play-animations) .content_body_animate {
+            opacity: 1 !important;
+            transform: none !important;
+            animation: none !important;
+        }
+
+        /* Staggered Sidebar Animation */
+        .sidebar-nav .nav-item:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(7) {
+            animation-delay: 0.4s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(8) {
+            animation-delay: 0.45s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(9) {
+            animation-delay: 0.5s;
+        }
+
+        .sidebar-nav .nav-item:nth-child(10) {
+            animation-delay: 0.55s;
+        }
+
+        .play-animations .app-header {
+            animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* First-load fancy staggered animation for content */
+        .play-animations .content_body_animate {
+            animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        /* Smooth Interactions */
+        .nav-item,
+        .btn,
+        .card,
+        .dropdown-item,
+        .theme-toggle {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+    </style>
 
     <!-- Main Content -->
     <main class="app-main">
@@ -65,16 +299,371 @@
                 <h2>{% block header_title %}Overview{% endblock %}</h2>
             </div>
             <div class="user-profile">
-                <!-- Notifications Bell can go here -->
-                <div style="text-align: right;">
-                    <div style="font-weight: 600; font-size: 0.9rem;">College Admin</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">Admin</div>
+                <!-- Theme Toggle -->
+                <div class="theme-toggle" onclick="toggleTheme()"
+                    style="margin-right: 1.5rem; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: all 0.3s ease;">
+                    <i class="fas fa-moon" id="theme-icon"></i>
                 </div>
-                <div style="width: 36px; height: 36px; background: #e2e8f0; border-radius: 50%;"></div>
+
+                <!-- Notification Dropdown -->
+                <div class="dropdown-trigger" id="notifyDropdown">
+                    <div class="notifications-bell" id="bellIcon"
+                        onclick="toggleDropdown('notifyDropdown'); markNotificationsRead();">
+                        <i class="fas fa-bell"></i>
+                        <span class="bell-dot" id="notifCount" style="display: none;">0</span>
+                    </div>
+                    <div class="dropdown-menu notify-menu">
+                        <div class="dropdown-header">Notifications</div>
+                        <div id="notificationList">
+                            <div class="dropdown-content-empty">
+                                <i class="far fa-bell-slash"></i>
+                                <p>No new alerts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="dropdown-trigger" id="profileDropdown">
+                    <div class="profile-info" onclick="toggleDropdown('profileDropdown')">
+                        <div class="profile-text">
+                            <div class="user-name" id="header-user-name" style="color: var(--text-main);">
+                                {% if request.user.first_name %}
+                                {{ request.user.first_name }} {{ request.user.last_name }}
+                                {% else %}
+                                {{ request.user.username }}
+                                {% endif %}
+                            </div>
+                            <div class="user-role" id="header-user-role" style="color: var(--text-muted);">{{
+                                current_tenant.type|title|default:"Admin" }}
+                                View</div>
+                        </div>
+                        <div class="user-avatar" id="header-user-avatar"
+                            style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border: 1px solid rgba(255,255,255,0.1); color: white; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.2);">
+                            <span id="header-user-initials"
+                                style="font-size: 0.9rem; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                {% if request.user.first_name %}
+                                {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+                                {% else %}
+                                {{ request.user.username|slice:":2"|upper }}
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="dropdown-menu profile-menu">
+                        <a href="/dashboard/college/profile/" class="dropdown-item">
+                            <i class="fas fa-user-circle"></i> My Profile
+                        </a>
+                        <a href="/dashboard/college/settings/" class="dropdown-item">
+                            <i class="fas fa-cog"></i> Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout/" onclick="localStorage.clear()" class="dropdown-item logout-text">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
             </div>
+
+            <style>
+                .dropdown-trigger {
+                    position: relative;
+                    cursor: pointer;
+                }
+
+                .dropdown-menu {
+                    position: absolute;
+                    top: 120%;
+                    right: 0;
+                    width: 240px;
+                    background: var(--bg-card);
+                    border-radius: 12px;
+                    box-shadow: var(--shadow-md);
+                    border: 1px solid var(--border-color);
+                    padding: 0.5rem;
+                    opacity: 0;
+                    visibility: hidden;
+                    transform: translateY(10px);
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    z-index: 100;
+                }
+
+                .dropdown-trigger.active .dropdown-menu {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }
+
+                .dropdown-header {
+                    padding: 0.75rem 1rem;
+                    font-size: 0.75rem;
+                    font-weight: 850;
+                    color: #94a3b8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    border-bottom: 1px solid #f8fafc;
+                }
+
+                .dropdown-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 0.75rem 1rem;
+                    font-size: 0.9rem;
+                    color: var(--text-main);
+                    text-decoration: none;
+                    border-radius: 8px;
+                    transition: all 0.2s;
+                }
+
+                .dropdown-item:hover {
+                    background: var(--primary-light);
+                    color: var(--primary);
+                }
+
+                .dropdown-item i {
+                    width: 18px;
+                    text-align: center;
+                    font-size: 0.95rem;
+                    opacity: 0.7;
+                }
+
+                .logout-text {
+                    color: #ef4444 !important;
+                }
+
+                .logout-text:hover {
+                    background: rgba(239, 68, 68, 0.08) !important;
+                }
+
+                .dropdown-divider {
+                    height: 1px;
+                    background: var(--border-color);
+                    margin: 0.5rem 0;
+                }
+
+                .dropdown-content-empty {
+                    padding: 2rem;
+                    text-align: center;
+                    color: #94a3b8;
+                }
+
+                .dropdown-content-empty i {
+                    font-size: 1.5rem;
+                    margin-bottom: 0.5rem;
+                    opacity: 0.5;
+                }
+
+                .dropdown-content-empty p {
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                }
+
+                .bell-dot {
+                    position: absolute;
+                    top: 2px;
+                    right: 2px;
+                    min-width: 18px;
+                    height: 18px;
+                    background: #ef4444;
+                    border: 2px solid #fff;
+                    border-radius: 50%;
+                    color: white;
+                    font-size: 0.65rem;
+                    font-weight: 900;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .dropdown-item.unread {
+                    background: #f0f7ff;
+                    border-left: 3px solid #3b82f6;
+                }
+
+                .notif-item-body {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+
+                .notif-title {
+                    font-weight: 700;
+                    font-size: 0.85rem;
+                    color: #1e293b;
+                }
+
+                .notif-msg {
+                    font-size: 0.75rem;
+                    color: #64748b;
+                    line-height: 1.3;
+                }
+
+                .notif-time {
+                    font-size: 0.65rem;
+                    color: #94a3b8;
+                    margin-top: 4px;
+                }
+            </style>
+
+            <script>
+                function toggleDropdown(id) {
+                    // Close others first
+                    document.querySelectorAll('.dropdown-trigger').forEach(el => {
+                        if (el.id !== id) el.classList.remove('active');
+                    });
+                    document.getElementById(id).classList.toggle('active');
+                }
+
+                async function fetchNotifications() {
+                    const token = localStorage.getItem('access_token');
+                    if (!token) return;
+
+                    try {
+                        const res = await fetch('/api/notifications/', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const data = await res.json();
+                        const results = data.results || data; // Handle pagination if any
+
+                        const listEl = document.getElementById('notificationList');
+                        const countEl = document.getElementById('notifCount');
+
+                        const unreadCount = results.filter(n => !n.is_read).length;
+                        if (unreadCount > 0) {
+                            countEl.style.display = 'flex';
+                            countEl.textContent = unreadCount;
+                        } else {
+                            countEl.style.display = 'none';
+                        }
+
+                        if (results.length === 0) {
+                            listEl.innerHTML = `
+                                <div class="dropdown-content-empty">
+                                    <i class="far fa-bell-slash"></i>
+                                    <p>No new alerts</p>
+                                </div>`;
+                        } else {
+                            listEl.innerHTML = '';
+                            results.slice(0, 5).forEach(n => {
+                                const date = new Date(n.created_at).toLocaleString();
+                                const item = document.createElement('div');
+                                item.className = `dropdown-item ${n.is_read ? '' : 'unread'}`;
+                                item.innerHTML = `
+                                    <div class="notif-item-body">
+                                        <div class="notif-title">${n.title}</div>
+                                        <div class="notif-msg">${n.message}</div>
+                                        <div class="notif-time">${date}</div>
+                                    </div>
+                                `;
+                                listEl.appendChild(item);
+                            });
+
+                            const footer = document.createElement('div');
+                            footer.style.padding = '0.75rem';
+                            footer.style.textAlign = 'center';
+                            footer.innerHTML = `<a href="/dashboard/college/notifications/" style="color:#2563eb; font-size:0.8rem; font-weight:700; text-decoration:none;">View All Notifications</a>`;
+                            listEl.appendChild(footer);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch notifications:", e);
+                    }
+                }
+
+                async function markNotificationsRead() {
+                    if (!document.getElementById('notifyDropdown').classList.contains('active')) return;
+
+                    const token = localStorage.getItem('access_token');
+                    try {
+                        await fetch('/api/notifications/mark_all_as_read/', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        });
+                        // Update UI after a short delay
+                        setTimeout(fetchNotifications, 1000);
+                    } catch (e) { console.error(e); }
+                }
+
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                document.addEventListener('DOMContentLoaded', fetchNotifications);
+
+                // Refresh occasionally
+                setInterval(fetchNotifications, 30000);
+
+                // Close on outside click
+                document.addEventListener('click', function (event) {
+                    if (!event.target.closest('.dropdown-trigger')) {
+                        document.querySelectorAll('.dropdown-trigger').forEach(el => el.classList.remove('active'));
+                    }
+                });
+
+                // Helper to fetch user info and update header
+                async function loadUserProfile() {
+                    const token = localStorage.getItem('access_token');
+                    if (!token) return;
+                    try {
+                        const res = await authFetch('/api/me/');
+                        if (res.ok) {
+                            const user = await res.json();
+                            const nameEl = document.getElementById('header-user-name');
+                            const roleEl = document.getElementById('header-user-role');
+                            const avatarEl = document.getElementById('header-user-avatar');
+                            const initialsEl = document.getElementById('header-user-initials');
+
+                            if (nameEl) nameEl.textContent = user.employee_name || user.username;
+                            if (roleEl && user.designation) roleEl.textContent = user.designation;
+
+                            if (user.photo) {
+                                avatarEl.innerHTML = `<img src="${user.photo}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">`;
+                            }
+                        }
+                    } catch (e) { console.error("Failed to load user profile:", e); }
+                }
+                // Session-based Animation Controller & Smooth Switcher
+                document.addEventListener('DOMContentLoaded', () => {
+                    const hasAnimated = sessionStorage.getItem('dashboard_animated');
+                    if (!hasAnimated) {
+                        document.body.classList.add('play-animations');
+                        sessionStorage.setItem('dashboard_animated', 'true');
+                    }
+
+                    // Intercept sidebar navigation for smooth exit
+                    document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+                        link.addEventListener('click', function (e) {
+                            const href = this.getAttribute('href');
+                            if (href && href !== '#' && !href.startsWith('onclick')) {
+                                e.preventDefault();
+                                document.querySelector('.app-body').classList.add('page-exit-active');
+                                setTimeout(() => {
+                                    window.location.href = href;
+                                }, 250);
+                            }
+                        });
+                    });
+                });
+
+                document.addEventListener('DOMContentLoaded', loadUserProfile);
+            </script>
         </header>
 
-        <div class="app-body">
+        <div class="app-body content_body_animate">
             {% block content_body %}
             <!-- Page Specific Content -->
             {% endblock %}
@@ -88,7 +677,7 @@
         position: fixed;
         top: 20px;
         right: 20px;
-        z-index: 9999;
+        z-index: 200010;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -149,7 +738,7 @@
         height: 100%;
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(4px);
-        z-index: 9998;
+        z-index: 200000;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -164,12 +753,13 @@
     }
 
     .custom-confirm-box {
-        background: white;
+        background: var(--bg-card);
         width: 100%;
         max-width: 400px;
         padding: 2rem;
         border-radius: 16px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
         transform: scale(0.95);
         transition: transform 0.2s;
         text-align: center;
@@ -182,12 +772,12 @@
     .confirm-title {
         font-size: 1.25rem;
         font-weight: 700;
-        color: #1e293b;
+        color: var(--text-main);
         margin-bottom: 0.5rem;
     }
 
     .confirm-desc {
-        color: #64748b;
+        color: var(--text-muted);
         margin-bottom: 1.5rem;
         line-height: 1.5;
     }
@@ -208,12 +798,13 @@
     }
 
     .btn-cancel {
-        background: #f1f5f9;
-        color: #64748b;
+        background: var(--border-color);
+        color: var(--text-muted);
     }
 
     .btn-cancel:hover {
-        background: #e2e8f0;
+        background: var(--primary-light);
+        color: var(--primary);
     }
 
     .btn-confirm {
@@ -249,7 +840,49 @@
     </div>
 </div>
 
+<!-- Custom Prompt Modal -->
+<div id="customPromptModal" class="custom-modal-overlay">
+    <div class="custom-confirm-box" style="max-width: 440px;">
+        <div class="confirm-title" id="promptTitle">Input Required</div>
+        <p class="confirm-desc" id="promptMessage">Please enter the details below.</p>
+        <div style="margin: 1.5rem 0;">
+            <input type="text" id="promptInput" class="premium-input"
+                style="width: 100%; text-align: center; font-size: 1.1rem; font-weight: 700; border-color: #e2e8f0; height: 54px; letter-spacing: 1px;">
+        </div>
+        <div class="confirm-actions">
+            <button class="confirm-btn btn-cancel" id="btnPromptCancel" style="min-width: 120px;">Cancel</button>
+            <button class="confirm-btn btn-confirm" id="btnPromptOk" style="min-width: 150px;">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    function toggleTheme() {
+        const doc = document.documentElement;
+        const currentTheme = doc.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        doc.setAttribute('data-theme', newTheme);
+        localStorage.setItem('upms_theme', newTheme);
+        updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (!icon) return;
+        if (theme === 'dark') {
+            icon.className = 'fas fa-sun';
+        } else {
+            icon.className = 'fas fa-moon';
+        }
+    }
+
+    // Init theme icon
+    document.addEventListener('DOMContentLoaded', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateThemeIcon(currentTheme);
+    });
+
     // Simple helper to mark active link
     const path = window.location.pathname;
     document.querySelectorAll('.nav-item').forEach(link => {
@@ -258,10 +891,6 @@
         }
     });
 
-    function logout() {
-        localStorage.removeItem('access_token');
-        window.location.href = '/';
-    }
 
     // --- Toast Logic ---
     window.showToast = function (message, type = 'info') {
@@ -322,6 +951,25 @@
         });
     };
 
+    let promptResolve = null;
+    window.customPrompt = function (message, title = "Input Required", defaultValue = "") {
+        const modal = document.getElementById('customPromptModal');
+        const titleEl = document.getElementById('promptTitle');
+        const msgEl = document.getElementById('promptMessage');
+        const inputEl = document.getElementById('promptInput');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        inputEl.value = defaultValue;
+
+        modal.classList.add('active');
+        setTimeout(() => inputEl.focus(), 100);
+
+        return new Promise((resolve) => {
+            promptResolve = resolve;
+        });
+    };
+
     // Setup Confirm Listeners
     document.getElementById('btnConfirmCancel').addEventListener('click', () => {
         document.getElementById('customConfirmModal').classList.remove('active');
@@ -331,6 +979,29 @@
     document.getElementById('btnConfirmYes').addEventListener('click', () => {
         document.getElementById('customConfirmModal').classList.remove('active');
         if (confirmResolve) confirmResolve(true);
+    });
+
+    // Setup Prompt Listeners
+    document.getElementById('btnPromptCancel').addEventListener('click', () => {
+        document.getElementById('customPromptModal').classList.remove('active');
+        if (promptResolve) promptResolve(null);
+    });
+
+    document.getElementById('btnPromptOk').addEventListener('click', () => {
+        const val = document.getElementById('promptInput').value;
+        document.getElementById('customPromptModal').classList.remove('active');
+        if (promptResolve) promptResolve(val);
+    });
+
+    document.getElementById('promptInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const val = e.target.value;
+            document.getElementById('customPromptModal').classList.remove('active');
+            if (promptResolve) promptResolve(val);
+        } else if (e.key === 'Escape') {
+            document.getElementById('customPromptModal').classList.remove('active');
+            if (promptResolve) promptResolve(null);
+        }
     });
 
 </script>

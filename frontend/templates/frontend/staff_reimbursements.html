@@ -1,0 +1,520 @@
+{% extends base_template|default:'frontend/dashboard_staff_base.html' %}
+{% load static %}
+
+{% block header_title %}Reimbursements{% endblock %}
+
+{% block content_body %}
+<style>
+    /* Premium Claims Management Styles */
+    :root {
+        --pending: #f59e0b;
+        --approved: var(--primary, #10b981);
+        --rejected: #ef4444;
+        --paid: #3b82f6;
+    }
+
+    .claims-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Animation Utilities */
+    .animate-slide-up {
+        animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    .delay-3 {
+        animation-delay: 0.3s;
+    }
+
+    .delay-4 {
+        animation-delay: 0.4s;
+    }
+
+    .delay-5 {
+        animation-delay: 0.5s;
+    }
+
+    @keyframes slideUpFade {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Restored & Enhanced Styles */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.75rem;
+        border-radius: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    [data-theme='dark'] .stat-card {
+        background: #0c0e12;
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    [data-theme='dark'] .stat-card:hover {
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-info h4 {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+    }
+
+    .stat-info p {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 850;
+        color: var(--text-main);
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 28px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    [data-theme='dark'] .content-card {
+        background: #0c0e12;
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+        padding: 2rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    [data-theme='dark'] .card-header {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-create {
+        background: var(--sidebar-bg, #0f172a);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 14px;
+        font-weight: 700;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-create:hover {
+        background: var(--primary-dark, #1e293b);
+        transform: translateY(-2px);
+    }
+
+    .claims-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .claims-table th {
+        text-align: left;
+        padding: 1.25rem 2rem;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+
+    [data-theme='dark'] .claims-table th {
+        background: #0f172a;
+        color: #94a3b8;
+    }
+
+    .claims-table td {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--text-main);
+        font-size: 0.95rem;
+    }
+
+    [data-theme='dark'] .claims-table td {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-PENDING {
+        background: #fffbeb;
+        color: #f59e0b;
+    }
+
+    .status-APPROVED {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+    .status-REJECTED {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+    .status-PAID {
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    .status-LOCKED {
+        background: #f5f3ff;
+        color: #8b5cf6;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 550px;
+        border-radius: 28px;
+        padding: 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme='dark'] .modal-content {
+        background: #0c0e12;
+        color: #f8fafc;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        background: transparent;
+        color: var(--text-main);
+    }
+
+    [data-theme='dark'] .form-input {
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary, #3b82f6);
+        box-shadow: 0 0 0 4px var(--primary-glow, rgba(59, 130, 246, 0.1));
+    }
+</style>
+
+<div class="claims-container">
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card animate-slide-up delay-1">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;"><i
+                    class="fas fa-file-invoice"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Total Claims</h4>
+                <p id="stat-total-count">0</p>
+            </div>
+        </div>
+        <div class="stat-card animate-slide-up delay-2">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;"><i
+                    class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Pending</h4>
+                <p id="stat-pending-count">0</p>
+            </div>
+        </div>
+        <div class="stat-card animate-slide-up delay-3">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;"><i
+                    class="fas fa-wallet"></i></div>
+            <div class="stat-info">
+                <h4>Total Reimbursed</h4>
+                <p id="stat-total-amount">₹0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="content-card animate-slide-up delay-4">
+        <div class="card-header">
+            <div>
+                <h2 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Reimbursement
+                    History</h2>
+                <p style="margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.9rem;">View and track your expense
+                    claims.
+                </p>
+            </div>
+            <button class="btn-create" onclick="openModal()">
+                <i class="fas fa-plus"></i> New Claim Request
+            </button>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table class="claims-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title / Purpose</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="claims-tbody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 4rem;">Loading claims
+                            history...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- New Claim Modal -->
+<div class="modal-overlay" id="claimModal">
+    <div class="modal-content animate-scale-in">
+        <h2 style="margin: 0 0 1.5rem; font-weight: 850;">New Expense Claim</h2>
+        <form id="claimForm">
+            <div class="form-group">
+                <label class="form-label">Expense Title</label>
+                <input type="text" name="title" class="form-input" placeholder="e.g., Travel to Conference" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Amount (₹)</label>
+                    <input type="number" name="amount" class="form-input" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date of Expense</label>
+                    <input type="date" name="date_of_expense" class="form-input" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description (Optional)</label>
+                <textarea name="description" class="form-input" style="height: 100px; resize: none;"
+                    placeholder="Briefly describe the expense..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Receipt / Attachment (Optional)</label>
+                <input type="file" name="attachment" class="form-input" accept="image/*,application/pdf">
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn-create" style="background: #f1f5f9; color: #64748b; flex: 1;"
+                    onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-create"
+                    style="background: var(--primary, #2563eb); flex: 1; justify-content: center;">Submit Claim</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', fetchClaims);
+
+    async function fetchClaims() {
+        try {
+            const res = await authFetch('/api/reimbursements/');
+            const data = await res.json();
+            const results = data.results || data;
+
+            updateStats(results);
+            renderTable(results);
+        } catch (e) {
+            console.error('Fetch error:', e);
+        }
+    }
+
+    function updateStats(claims) {
+        document.getElementById('stat-total-count').innerText = claims.length;
+        document.getElementById('stat-pending-count').innerText = claims.filter(c => c.status === 'PENDING').length;
+
+        const totalPaid = claims.filter(c => c.status === 'PAID' || c.status === 'APPROVED').reduce((sum, c) => sum + parseFloat(c.amount), 0);
+        document.getElementById('stat-total-amount').innerText = '₹' + totalPaid.toLocaleString('en-IN');
+    }
+
+    function renderTable(claims) {
+        const tbody = document.getElementById('claims-tbody');
+        if (claims.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 4rem;">No claims found. Submit your first request!</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = claims.map((c, index) => `
+            <tr class="animate-slide-up" style="animation-delay: ${0.2 + (index * 0.05)}s;">
+                <td style="font-weight: 500;">${new Date(c.date_of_expense).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                <td>
+                    <div style="font-weight: 700; color: var(--text-main);">${c.title}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">ID: REIMB-${c.id}</div>
+                </td>
+                <td><div style="font-weight: 800; color: var(--primary, #2563eb);">₹${parseFloat(c.amount).toLocaleString('en-IN')}</div></td>
+                <td><span class="status-badge status-${c.status}">${c.status === 'LOCKED' ? 'VERIFYING' : c.status.replace('_', ' ')}</span></td>
+                <td>
+                    ${c.attachment ? `<a href="${c.attachment}" target="_blank" class="btn-create" style="background: #f8fafc; color: #64748b; padding: 0.4rem 0.75rem; font-size: 0.8rem;"><i class="fas fa-paperclip"></i> View</a>` : '<span style="color: #94a3b8; font-size: 0.8rem; font-style: italic;">No attachment</span>'}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function openModal() {
+        document.getElementById('claimModal').style.display = 'flex';
+        document.querySelector('input[name="date_of_expense"]').valueAsDate = new Date();
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('claimModal');
+        const content = modal.querySelector('.modal-content');
+        content.style.animation = 'scaleIn 0.3s reverse both';
+        setTimeout(() => {
+            modal.style.display = 'none';
+            content.style.animation = '';
+        }, 300);
+    }
+
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('claimModal')) closeModal();
+    }
+
+    document.getElementById('claimForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+            const userRes = await authFetch('/api/me/');
+            const user = await userRes.json();
+            formData.append('employee', user.employee_id);
+
+            const res = await authFetch('/api/reimbursements/', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                closeModal();
+                e.target.reset();
+                fetchClaims();
+                alert('Claim submitted successfully!');
+            } else {
+                const err = await res.json();
+                alert('Error: ' + JSON.stringify(err));
+            }
+        } catch (e) {
+            console.error('Submit error:', e);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,448 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+
+{% block header_title %}Corporate Workforce Directory{% endblock %}
+
+{% block content_body %}
+<style>
+    /* Premium Look & Feel Overrides */
+    .employees-header-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .filter-grid-employees {
+        display: grid;
+        grid-template-columns: 1fr 220px 220px 180px;
+        gap: 1.25rem;
+        align-items: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .setup-card:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px var(--primary-light);
+    }
+
+    .setup-card-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Table Enhancements */
+    .employees-table-container {
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: var(--primary-light);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        text-align: left;
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background-color: var(--primary-light) !important;
+        cursor: pointer;
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .btn-icon-label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 700;
+        padding: 0.7rem 1.5rem;
+        border-radius: 12px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-outline {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+        background: var(--bg-card);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* Modal Animation */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(8, 9, 11, 0.85);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+</style>
+
+<div class="employees-header-card animate-entry">
+    <div
+        style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 850; color: var(--text-main);"> Workforce Repository
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;"> Comprehensive management of
+                corporate identity and placement. </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-outline btn-icon-label" onclick="exportEmployees()">
+                <i class="fas fa-file-export"></i> Cloud Export
+            </button>
+            <button class="btn btn-primary btn-icon-label" onclick="openAddModal()">
+                <i class="fas fa-plus"></i> Onboard Personnel
+            </button>
+        </div>
+    </div>
+
+    <!-- Multi-tier Filters -->
+    <div class="filter-grid-employees">
+        <div class="setup-card">
+            <span class="setup-card-label">Search Personnel</span>
+            <div style="position: relative;">
+                <i class="fas fa-search"
+                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary);"></i>
+                <input type="text" id="search-input" class="form-control"
+                    placeholder="Identify by name, email or code..." style="padding-left: 2.75rem; width: 100%;"
+                    onkeyup="filterEmployees()">
+            </div>
+        </div>
+
+        <div class="setup-card">
+            <span class="setup-card-label">Business Unit</span>
+            <select id="filter-dept" class="form-control" onchange="filterEmployees()" style="width: 100%;">
+                <option value="">All Units</option>
+            </select>
+        </div>
+
+        <div class="setup-card">
+            <span class="setup-card-label">Engagement Model</span>
+            <select id="filter-type" class="form-control" onchange="filterEmployees()" style="width: 100%;">
+                <option value="">All Models</option>
+                <option value="PERMANENT">Permanent Full-Time</option>
+                <option value="CONTRACT">Contractual Basis</option>
+                <option value="INTERN">Apprentice / Intern</option>
+            </select>
+        </div>
+
+        <div class="setup-card">
+            <span class="setup-card-label">Operational Status</span>
+            <select id="filter-status" class="form-control" onchange="filterEmployees()" style="width: 100%;">
+                <option value="">All Statuses</option>
+                <option value="Active">Active Only</option>
+                <option value="Inactive">Terminated / Former</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="employees-table-container">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 12%">Identifier</th>
+                <th style="width: 28%">Personnel</th>
+                <th style="width: 18%">Unit / Dept</th>
+                <th style="width: 18%">Position</th>
+                <th style="width: 12%">Status</th>
+                <th style="width: 12%; text-align: right;">View Profile</th>
+            </tr>
+        </thead>
+        <tbody id="employee-table-body">
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 5rem; color: var(--text-muted);">
+                    <i class="fas fa-sync fa-spin" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    Synchronizing Records...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Onboarding Modal -->
+<div id="emp-modal" class="modal-overlay">
+    <div class="modal-box"
+        style="width: 700px; padding: 0; overflow: hidden; border-radius: 24px; border: 1px solid var(--border-color); background: var(--bg-card);">
+        <div
+            style="background: var(--bg-card); padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: var(--text-main);"> Onboard New Personnel </h3>
+            <button onclick="document.getElementById('emp-modal').style.display='none'"
+                style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
+        </div>
+        <form id="emp-form" onsubmit="event.preventDefault(); submitEmployeeForm();">
+            <div style="padding: 2.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">Legal First Name</label>
+                    <input type="text" id="emp-first-name" class="form-control" placeholder="e.g. Alexander" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Legal Last Name</label>
+                    <input type="text" id="emp-last-name" class="form-control" placeholder="e.g. Graham" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Corporate Email</label>
+                    <input type="email" id="emp-email" class="form-control" placeholder="e.g. alexander@company.com"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Primary Mobile</label>
+                    <input type="text" id="emp-phone" class="form-control" placeholder="+91 0000 0000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Business Unit</label>
+                    <select id="emp-dept" class="form-control" required>
+                        <option value="">Select Department</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Official Designation</label>
+                    <select id="emp-desig" class="form-control" required>
+                        <option value="">Select Position</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Model of Engagement</label>
+                    <select id="emp-type" class="form-control">
+                        <option value="PERMANENT">Permanent Full-Time</option>
+                        <option value="CONTRACT">Contract Basis</option>
+                        <option value="INTERN">Seasonal Apprentice</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Joining Date</label>
+                    <input type="date" id="emp-doj" class="form-control" required>
+                </div>
+            </div>
+            <div
+                style="padding: 1.5rem 2.5rem; background: var(--primary-light); display: flex; justify-content: flex-end; gap: 1rem; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-outline"
+                    onclick="document.getElementById('emp-modal').style.display='none'"> Abort </button>
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2.5rem; font-weight: 800;"> Commit
+                    Onboarding </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allEmployees = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchEmployees();
+        loadMetadata();
+    });
+
+    async function fetchEmployees() {
+        try {
+            const res = await authFetch('/api/employees/');
+            const data = await res.json();
+            allEmployees = data.results || data;
+            renderTable(allEmployees);
+        } catch (e) {
+            console.error(e);
+            document.getElementById('employee-table-body').innerHTML = `<tr><td colspan="6" class="text-center">System synchronization failed. Please refresh.</td></tr>`;
+        }
+    }
+
+    async function loadMetadata() {
+        try {
+            const [dRes, desRes] = await Promise.all([
+                authFetch('/api/employees/departments/'),
+                authFetch('/api/employees/designations/')
+            ]);
+
+            const dData = await dRes.json();
+            const deptsList = dData.results || dData;
+
+            const desData = await desRes.json();
+            const desigsList = desData.results || desData;
+
+            const filterDept = document.getElementById('filter-dept');
+            const empDept = document.getElementById('emp-dept');
+            const empDesig = document.getElementById('emp-desig');
+
+            deptsList.forEach(d => {
+                const opt = new Option(d.name, d.id);
+                empDept.add(opt);
+                const opt2 = new Option(d.name, d.name);
+                filterDept.add(opt2);
+            });
+
+            desigsList.forEach(d => {
+                empDesig.add(new Option(d.name, d.id));
+            });
+        } catch (e) { console.error("Metadata load failed", e); }
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('employee-table-body');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center">No matching personnel records found.</td></tr>`;
+            return;
+        }
+
+        data.forEach(emp => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => window.location.href = `/dashboard/company/employees/${emp.id}/`;
+
+            const badgeClass = emp.is_active ? 'badge-active' : 'badge-inactive';
+            const statusIcon = emp.is_active ? 'fa-check' : 'fa-times';
+
+            const name = `<div style="font-weight: 800; color: var(--text-main);">${emp.first_name} ${emp.last_name}</div>
+                          <div style="font-size: 0.8rem; color: var(--text-muted);">${emp.email}</div>`;
+
+            tr.innerHTML = `
+                <td style="font-family: monospace; font-weight: 700; color: var(--primary);">${emp.employee_code || '--'}</td>
+                <td>${name}</td>
+                <td style="font-weight: 600;">${emp.department_name || '--'}</td>
+                <td style="color: var(--text-muted);">${emp.designation_name || emp.designation || '--'}</td>
+                <td><span class="status-badge ${badgeClass}"><i class="fas ${statusIcon}"></i> ${emp.is_active ? 'Active' : 'Terminated'}</span></td>
+                <td style="text-align: right;"><i class="fas fa-chevron-right" style="opacity: 0.3;"></i></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterEmployees() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const dept = document.getElementById('filter-dept').value;
+        const type = document.getElementById('filter-type').value;
+        const status = document.getElementById('filter-status').value;
+
+        const filtered = allEmployees.filter(emp => {
+            const matchesQuery = (emp.first_name + ' ' + emp.last_name).toLowerCase().includes(query) ||
+                (emp.employee_code || '').toLowerCase().includes(query);
+            const matchesDept = dept ? (emp.department_name === dept) : true;
+            const matchesType = type ? (emp.employment_type === type) : true;
+            const matchesStatus = status ? (status === 'Active' ? emp.is_active : !emp.is_active) : true;
+            return matchesQuery && matchesDept && matchesType && matchesStatus;
+        });
+        renderTable(filtered);
+    }
+
+    function openAddModal() {
+        document.getElementById('emp-modal').style.display = 'flex';
+    }
+
+    async function submitEmployeeForm() {
+        const payload = {
+            first_name: document.getElementById('emp-first-name').value,
+            last_name: document.getElementById('emp-last-name').value,
+            email: document.getElementById('emp-email').value,
+            phone: document.getElementById('emp-phone').value,
+            department: document.getElementById('emp-dept').value || null,
+            designation_fk: document.getElementById('emp-desig').value || null, // Fixed field name
+            employment_type: document.getElementById('emp-type').value,
+            date_of_joining: document.getElementById('emp-doj').value,
+            is_active: true
+        };
+
+        try {
+            const res = await authFetch('/api/employees/', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast("Personnel successfully onboarded", "success");
+                document.getElementById('emp-modal').style.display = 'none';
+                fetchEmployees();
+            } else {
+                let errorMsg = "Onboarding failed";
+                try {
+                    const err = await res.json();
+                    if (typeof err === 'object') {
+                        // Extract first error message from values
+                        const firstErr = Object.values(err)[0];
+                        errorMsg = Array.isArray(firstErr) ? firstErr[0] : (err.detail || err.error || errorMsg);
+                    }
+                } catch (e) {
+                    errorMsg = `Server error (${res.status})`;
+                }
+                showToast(errorMsg, "error");
+            }
+        } catch (e) { 
+            console.error(e);
+            showToast("Network error or connection lost", "error"); 
+        }
+    }
+
+    function exportEmployees() {
+        const token = localStorage.getItem('access_token');
+        window.location.href = `/api/employees/export_csv/?token=${token}`;
+    }
+</script>
+{% endblock %}

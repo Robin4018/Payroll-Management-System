@@ -1,91 +1,407 @@
 {% extends 'frontend/base.html' %}
+{% load static %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
+<style>
+    /* Full Page Layout - Premium Motion Portal */
+    body,
+    html {
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #020617;
+        font-family: 'Inter', sans-serif;
+    }
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPMS | Create Account</title>
-    <link rel="stylesheet" href="/static/frontend/css/style.css?v=3">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    .auth-container {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+    }
 
-<body>
-    <div class="auth-container">
-        <div class="auth-card glass-panel">
-            <div class="logo-area">
-                <div class="auth-title">Join UPMS</div>
-                <div class="auth-subtitle">Create your account to get started</div>
+    /* Left Side: Dynamic Visual Engine */
+    .auth-visual {
+        flex: 1.25;
+        background: #0f172a;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 5rem;
+        color: white;
+        overflow: hidden;
+    }
+
+    /* Moving Cosmic Mesh */
+    .bg-mesh {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background:
+            radial-gradient(circle at 10% 20%, rgba(67, 56, 202, 0.4) 0%, transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(109, 40, 217, 0.4) 0%, transparent 40%),
+            radial-gradient(circle at 50% 50%, #1e1b4b 0%, transparent 100%);
+        filter: blur(60px);
+        opacity: 0.8;
+        animation: pulseMesh 25s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseMesh {
+        0% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1.2) rotate(3deg);
+            opacity: 0.9;
+        }
+    }
+
+    /* Orbital Glass Circles */
+    .visual-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        z-index: 2;
+    }
+
+    .c1 {
+        width: 450px;
+        height: 450px;
+        top: -100px;
+        right: -100px;
+        animation: orbit1 30s linear infinite;
+    }
+
+    .c2 {
+        width: 300px;
+        height: 300px;
+        bottom: -50px;
+        left: -50px;
+        animation: orbit2 35s linear infinite;
+    }
+
+    .c3 {
+        width: 180px;
+        height: 180px;
+        top: 30%;
+        left: 35%;
+        animation: orbit3 25s linear infinite;
+    }
+
+    @keyframes orbit1 {
+        0% {
+            transform: rotate(0deg) translate(20px) rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg) translate(20px) rotate(-360deg);
+        }
+    }
+
+    @keyframes orbit2 {
+        0% {
+            transform: rotate(360deg) translate(40px) rotate(-360deg);
+        }
+
+        100% {
+            transform: rotate(0deg) translate(40px) rotate(0deg);
+        }
+    }
+
+    @keyframes orbit3 {
+        0% {
+            transform: scale(1) translate(0, 0);
+        }
+
+        50% {
+            transform: scale(1.1) translate(30px, 20px);
+        }
+
+        100% {
+            transform: scale(1) translate(0, 0);
+        }
+    }
+
+    .brand-content {
+        position: relative;
+        z-index: 3;
+        max-width: 550px;
+    }
+
+    .brand-logo {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background: linear-gradient(to right, #ffffff, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .brand-desc {
+        font-size: 1.4rem;
+        line-height: 1.6;
+        color: #94a3b8;
+        font-weight: 300;
+    }
+
+    /* Right Side: High-Performance Form */
+    .auth-form-wrapper {
+        flex: 0.75;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+    }
+
+    .form-card {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        letter-spacing: -1px;
+    }
+
+    .auth-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    /* Premium Inputs */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-input-wrapper {
+        position: relative;
+    }
+
+    .form-input {
+        width: 100% !important;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 1rem 1rem 3.25rem;
+        font-size: 1rem;
+        color: #1e293b;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+    }
+
+    .form-input:focus {
+        background: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.1rem;
+        z-index: 2;
+    }
+
+    .toggle-pass {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        cursor: pointer;
+        background: none;
+        border: none;
+        font-size: 1.1rem;
+        z-index: 2;
+    }
+
+    /* Submit Engine */
+    .btn-submit {
+        width: 100% !important;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white !important;
+        border: none;
+        border-radius: 12px;
+        padding: 1.1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 2rem;
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-submit:active {
+        transform: scale(0.98);
+    }
+
+    .footer-links {
+        margin-top: 2.5rem;
+        text-align: center;
+        font-size: 0.95rem;
+        color: #64748b;
+    }
+
+    .footer-links a {
+        color: #2563eb;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .error-msg {
+        color: #ef4444;
+        border: 1px solid #fee2e2;
+        background: #fef2f2;
+        padding: 0.75rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 1.5rem;
+        display: none;
+    }
+
+    @media (max-width: 1024px) {
+        .auth-visual {
+            display: none;
+        }
+
+        .auth-form-wrapper {
+            flex: 1;
+        }
+    }
+</style>
+
+<div class="auth-container">
+    <!-- Left: Branding -->
+    <div class="auth-visual">
+        <div class="bg-mesh"></div>
+        <div class="visual-circle c1"></div>
+        <div class="visual-circle c2"></div>
+        <div class="visual-circle c3"></div>
+
+        <div class="brand-content">
+            <div class="brand-logo">
+                <i class="fas fa-layer-group"></i> UPMS
+            </div>
+            <p class="brand-desc">
+                Join the next generation of payroll management.
+                Simple, secure, and designed for your growth.
+            </p>
+        </div>
+    </div>
+
+    <!-- Right: Form -->
+    <div class="auth-form-wrapper">
+        <div class="form-card">
+            <div class="auth-header">
+                <div class="auth-title">Create Account</div>
+                <div class="auth-subtitle">Fill in the details to get started</div>
             </div>
 
-            <!-- Register Form -->
             <form id="registerForm">
                 <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" id="reg-username" placeholder="Choose a username" required>
+                    <label class="form-label">Full Name</label>
+                    <div class="form-input-wrapper">
+                        <i class="fas fa-user-tag input-icon"></i>
+                        <input type="text" id="reg-name" class="form-input" placeholder="Enter your full name" required>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="reg-email" placeholder="name@company.com" required>
+                    <label class="form-label">Work Email</label>
+                    <div class="form-input-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="reg-email" class="form-input" placeholder="name@company.com" required>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label>Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="reg-password" placeholder="Create a password" required>
-                        <button type="button" class="toggle-password" onclick="togglePassword('reg-password')">
-                            <svg class="eye-show" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <svg class="eye-hide" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" style="display: none;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
+                    <label class="form-label">Password</label>
+                    <div class="form-input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="reg-password" class="form-input" placeholder="Create a password"
+                            required>
+                        <button type="button" class="toggle-pass" onclick="togglePassword('reg-password')">
+                            <i class="far fa-eye" id="eye-icon"></i>
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary">Create Account</button>
-                <div id="regError" class="error-msg hidden"></div>
 
-                <div style="margin-top: 1.5rem; color: var(--text-dim); font-size: 0.9rem;">
-                    Already have an account? <a href="/"
-                        style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign In</a>
-                </div>
-                <div style="margin-top: 0.5rem; font-size: 0.8rem;">
-                    <a href="/admin/" style="color: var(--text-dim); text-decoration: none; opacity: 0.7;">Admin
-                        Login</a>
+                <button type="submit" class="btn-submit">
+                    <span>Create Account</span> <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div id="regError" class="error-msg"></div>
+
+                <div class="footer-links">
+                    Already have an account? <a href="/">Sign In</a>
                 </div>
             </form>
         </div>
     </div>
-    <script src="/static/frontend/js/app.js?v=4"></script>
-    <script>
-        // Password Toggle
-        function togglePassword(fieldId) {
-            const input = document.getElementById(fieldId);
-            const button = input.nextElementSibling;
-            const eyeShow = button.querySelector('.eye-show');
-            const eyeHide = button.querySelector('.eye-hide');
+</div>
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeShow.style.display = 'none';
-                eyeHide.style.display = 'block';
-            } else {
-                input.type = 'password';
-                eyeShow.style.display = 'block';
-                eyeHide.style.display = 'none';
-            }
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const icon = document.getElementById('eye-icon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
         }
-    </script>
-</body>
-
-</html>
+    }
+</script>
 {% endblock %}

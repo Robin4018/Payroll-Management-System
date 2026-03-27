@@ -12,36 +12,37 @@ python manage.py runserver
 celery:
 celery -A backend worker -l info -P eventlet
 
-Add employees here:
 
-http://127.0.0.1:8000/api/employees/
-Click POST and add
-Once created → employee is saved in DB
-
-Create Salary Structure here:
-http://127.0.0.1:8000/api/salary-structures/
-
-You will see:
-The new employee name appears in dropdown
-
-Then you can assign:
-Basic
-HRA
-Allowances
-PF
-Tax
-
-View payroll list here:
-http://127.0.0.1:8000/api/payroll/
-
-Salary Calculation Logic:
-Gross Salary = basic + hra + allowances
-
-Deductions = pf + tax
-
-Net Salary = gross - deductions
-
+Credintials
 admin:
-username - robin
+Edu
+username - admin_ed
+password - robin 2003
+Corp
+username - admin
 password - robin 2003
 
+staff:
+dr-aedwin-rajesh@example.com 
+Welcome@123
+
+capt-d-sudhakar@example.com
+Welcome@123
+
+mrschristina-bai-annapoorani@example.com
+Welcome@123
+
+Employee:
+john@corporate.com
+pass123
+
+jane@corporate.com 
+pass123
+
+darshan@gmail.com
+Welcome@123
+
+Geofencing
+Clg:
+Latitude - 11.004353
+Longitude - 76.977034

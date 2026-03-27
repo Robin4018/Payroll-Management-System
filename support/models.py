@@ -18,6 +18,7 @@ class SupportTicket(models.Model):
         PAYROLL = 'PAYROLL', 'Payroll Issue'
         IT = 'IT', 'IT Support'
         HR = 'HR', 'HR Query'
+        PROFILE_UPDATE = 'PROFILE_UPDATE', 'Profile Update Request'
         OTHER = 'OTHER', 'Other'
 
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='tickets')

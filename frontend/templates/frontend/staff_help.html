@@ -1,0 +1,384 @@
+{% extends base_template|default:'frontend/dashboard_staff_base.html' %}
+{% load static %}
+
+{% block header_title %}Help & Support{% endblock %}
+
+{% block content_body %}
+<style>
+    /* Premium Support Hub */
+    .support-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 3rem;
+    }
+
+    /* Motion Graphics */
+    .support-banner {
+        background: linear-gradient(135deg, var(--sidebar-bg, #4f46e5) 0%, var(--primary-dark, #3730a3) 100%);
+        border-radius: 28px;
+        padding: 5rem 3rem;
+        color: white;
+        text-align: center;
+        margin-bottom: 3rem;
+        box-shadow: 0 25px 50px -12px var(--primary-glow, rgba(79, 70, 229, 0.2));
+        position: relative;
+        overflow: hidden;
+        animation: fadeInDown 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .floating-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        z-index: 1;
+        opacity: 0.6;
+        animation: floatOrb 20s infinite alternate-reverse ease-in-out;
+    }
+
+    .orb-1 {
+        width: 400px;
+        height: 400px;
+        top: -150px;
+        left: -100px;
+        background: radial-gradient(circle, var(--primary-glow, rgba(99, 102, 241, 0.4)) 0%, transparent 70%);
+        animation-duration: 25s;
+    }
+
+    .orb-2 {
+        width: 300px;
+        height: 300px;
+        bottom: -100px;
+        right: 15%;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+        animation-duration: 18s;
+        animation-delay: -5s;
+    }
+
+    .orb-3 {
+        width: 200px;
+        height: 200px;
+        top: 25%;
+        right: -50px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%);
+        animation-duration: 22s;
+        animation-delay: -10s;
+    }
+
+    @keyframes floatOrb {
+        0% {
+            transform: translate(0, 0) scale(1) rotate(0deg);
+        }
+
+        33% {
+            transform: translate(50px, 80px) scale(1.1) rotate(10deg);
+        }
+
+        66% {
+            transform: translate(-40px, 40px) scale(0.9) rotate(-10deg);
+        }
+
+        100% {
+            transform: translate(0, 0) scale(1) rotate(0deg);
+        }
+    }
+
+    .hero-title,
+    .hero-subtitle {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+        letter-spacing: -0.04em;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+        font-weight: 500;
+    }
+
+    /* Category Grid */
+    .support-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+        animation: fadeInUp 1.2s 0.2s both cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .help-card {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .help-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.05);
+        border-color: var(--primary, #6366f1);
+    }
+
+    [data-theme='dark'] .help-card {
+        background: #0c0e12;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    [data-theme='dark'] .help-card:hover {
+        box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-light, #f5f3ff);
+        color: var(--primary, #6366f1);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    [data-theme='dark'] .card-icon {
+        background: rgba(99, 102, 241, 0.15);
+        color: #818cf8;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    /* FAQ Section */
+    .faq-section {
+        background: white;
+        border-radius: 32px;
+        border: 1px solid #e2e8f0;
+        padding: 3rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+        animation: fadeInUp 1.2s 0.4s both cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    [data-theme='dark'] .faq-section {
+        background: #0c0e12;
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    .faq-header {
+        margin-bottom: 2.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .faq-item {
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        border-radius: 20px;
+        border: 1px solid #f1f5f9;
+        transition: all 0.2s;
+    }
+
+    [data-theme='dark'] .faq-item {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .faq-item:hover {
+        border-color: #e2e8f0;
+        background: #f8fafc;
+    }
+
+    [data-theme='dark'] .faq-item:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .faq-question {
+        font-size: 1.1rem;
+        font-weight: 750;
+        color: var(--text-main);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .faq-answer {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        padding-left: 1.75rem;
+    }
+
+    /* Contact Actions */
+    .contact-box {
+        margin-top: 3.5rem;
+        background: var(--sidebar-bg, #0f172a);
+        border-radius: 28px;
+        padding: 3rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: fadeInUp 1.2s 0.6s both cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    [data-theme='dark'] .contact-box {
+        background: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-support {
+        background: white;
+        color: var(--sidebar-bg, #0f172a);
+        padding: 1rem 2.5rem;
+        border-radius: 16px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-support:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-40px);
+            filter: blur(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+            filter: blur(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+</style>
+
+<div class="support-container">
+    <!-- Hero Banner -->
+    <div class="support-banner">
+        <div class="floating-orb orb-1"></div>
+        <div class="floating-orb orb-2"></div>
+        <div class="floating-orb orb-3"></div>
+        <h1 class="hero-title">How can we help?</h1>
+        <p class="hero-subtitle">Find answers to your questions about payroll, leaves, attendance, and technical
+            support.</p>
+    </div>
+
+    <!-- Quick Links Grid -->
+    <div class="support-grid">
+        <div class="help-card" onclick="openSupportModal('Payroll Query', 'PAYROLL')">
+            <div class="card-icon"><i class="fas fa-coins"></i></div>
+            <h3 class="card-title">Payroll Help</h3>
+            <p class="card-desc">Queries regarding payslips, tax declarations, and salary structure.</p>
+        </div>
+        <div class="help-card" onclick="openSupportModal('Attendance/Leave Query', 'OTHER')">
+            <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+            <h3 class="card-title">Time & Leaves</h3>
+            <p class="card-desc">Understanding leave policies, attendance tracking, and holidays.</p>
+        </div>
+        <div class="help-card" onclick="openSupportModal('IT/Access Support', 'IT')">
+            <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+            <h3 class="card-title">IT & Access</h3>
+            <p class="card-desc">Login issues, profile updates, and digital security concerns.</p>
+        </div>
+        <div class="help-card" onclick="openSupportModal('Policy Query', 'HR')">
+            <div class="card-icon"><i class="fas fa-book-open"></i></div>
+            <h3 class="card-title">Policy Center</h3>
+            <p class="card-desc">Download and view organization policies and staff handbooks.</p>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="faq-section">
+        <div class="faq-header">
+            <h2 style="font-weight: 850; color: var(--text-main); font-size: 1.75rem; margin: 0;">Frequently Asked
+                Questions</h2>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="fas fa-chevron-right" style="font-size: 0.8rem; color: #6366f1;"></i>
+                When will my payslip be generated?
+            </div>
+            <div class="faq-answer">
+                Payslips are typically generated within the first 3-5 working days of the following month after payroll
+                processing is finalized by the administration.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="fas fa-chevron-right" style="font-size: 0.8rem; color: #6366f1;"></i>
+                How do I claim a reimbursement?
+            </div>
+            <div class="faq-answer">
+                You can submit a new expense claim along with the supporting receipts through the "Reimbursements"
+                module from your dashboard.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="fas fa-chevron-right" style="font-size: 0.8rem; color: #6366f1;"></i>
+                What should I do if my attendance is incorrect?
+            </div>
+            <div class="faq-answer">
+                Please raise an attendance regularisation request or contact your department admin with your biometric
+                logs for manual verification.
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact CTA -->
+    <div class="contact-box">
+        <div>
+            <h2 style="font-weight: 850; margin-bottom: 0.5rem;">Still need assistance?</h2>
+            <p style="opacity: 0.7; margin: 0; font-weight: 500;">Our administrative team is ready to help you with
+                personalized support.</p>
+        </div>
+        <a href="javascript:void(0)" onclick="openSupportModal()" class="btn-support">Raise a Ticket</a>
+    </div>
+</div>
+{% endblock %}

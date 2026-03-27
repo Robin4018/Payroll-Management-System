@@ -1,242 +1,392 @@
-{% extends 'frontend/base.html' %}
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
 
-{% block content %}
-<!-- Overlay to allow scrolling on this specific page -->
-<style>
-    body {
-        overflow-y: auto !important;
-        /* Force scroll */
-        height: auto !important;
-    }
+{% block header_title %}Academic Hub & Payroll{% endblock %}
 
-    .auth-container {
-        min-height: 100vh;
-        height: auto;
-        padding: 2rem 1rem;
-        align-items: flex-start;
-        /* Align to top to allow scroll */
-        background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15) 0%, transparent 40%), radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
-    }
-</style>
-
-<div class="auth-container">
-    <div class="dashboard-hub" style="max-width: 900px; width: 95%; margin: 0 auto;">
-
-        <!-- Header Section -->
-        <div class="header-section glass-panel"
-            style="padding: 2rem; text-align: center; margin-bottom: 2rem; border-radius: 16px; position: relative; overflow: hidden;">
-            <div class="glow-effect"
-                style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%); pointer-events: none;">
+{% block content_body %}
+<div class="dashboard-stats-grid">
+    <!-- 1. Total Teaching Staff -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.1s;">
+        <div class="stat-icon-box school-teal">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">Teaching & Admin Staff</div>
+                <span class="stat-badge academic">School Staff</span>
             </div>
-
-            <div style="position: relative; z-index: 1;">
-                <h1
-                    style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    School Payroll Management</h1>
-                <p style="color: var(--text-dim); font-size: 1rem; max-width: 500px; margin: 0 auto;">Centralized
-                    control for all your educational institution's payroll and HR needs.</p>
+            <div class="stat-value" id="stat-total-emp">64</div>
+            <div class="stat-footer">
+                <span class="trend-text positive"><i class="fas fa-check-circle"></i> 58 Present Today</span>
             </div>
         </div>
+    </div>
 
-        <!-- Modules Grid -->
-        <div class="modules-grid"
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
-
-            <!-- Employee Management -->
-            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/employees/'">
-                <div class="card-content">
-                    <div class="icon-box" style="background: rgba(96, 165, 250, 0.1); color: #60a5fa;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        </svg>
-                    </div>
-                    <div class="text-content">
-                        <h3>Employees</h3>
-                        <p>Manage staff profiles & contracts.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payroll Processing -->
-            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/payroll/'">
-                <div class="card-content">
-                    <div class="icon-box" style="background: rgba(52, 211, 153, 0.1); color: #34d399;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="1" x2="12" y2="23"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                    </div>
-                    <div class="text-content">
-                        <h3>Payroll</h3>
-                        <p>Process salaries & payslips.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Salary Structures -->
-            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/structure/'">
-                <div class="card-content">
-                    <div class="icon-box" style="background: rgba(167, 139, 250, 0.1); color: #a78bfa;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                        </svg>
-                    </div>
-                    <div class="text-content">
-                        <h3>Structures</h3>
-                        <p>Allowances & deductions.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports -->
-            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/reports/'">
-                <div class="card-content">
-                    <div class="icon-box" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <div class="text-content">
-                        <h3>Reports</h3>
-                        <p>Financial analytics & data.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Settings -->
-            <div class="module-card glass-panel" onclick="window.location.href='/dashboard/school/settings/'">
-                <div class="card-content">
-                    <div class="icon-box" style="background: rgba(248, 113, 113, 0.1); color: #f87171;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path
-                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                            </path>
-                        </svg>
-                    </div>
-                    <div class="text-content">
-                        <h3>Settings</h3>
-                        <p>System configuration.</p>
-                    </div>
-                </div>
-            </div>
-
+    <!-- 2. Monthly Disbursement -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.2s;">
+        <div class="stat-icon-box school-gold">
+            <i class="fas fa-calendar-alt"></i>
         </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">Monthly Payroll</div>
+                <span class="stat-badge school-gold">Active Session</span>
+            </div>
+            <div class="stat-value" id="stat-last-pay">₹ 1.2M</div>
+            <div class="stat-footer">
+                <span class="stat-subtext">Session 2026-27</span>
+            </div>
+        </div>
+    </div>
 
-        <!-- Back Link -->
-        <div style="margin-top: 3rem; text-align: center;">
-            <a href="/select-entity/" class="back-link">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                <span>Switch Organization</span>
+    <!-- 3. School Expenditure -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.3s;">
+        <div class="stat-icon-box school-crimson">
+            <i class="fas fa-school"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">Operational Spend</div>
+                <span class="stat-badge school-crimson">Utility & HR</span>
+            </div>
+            <div class="stat-value" id="stat-ytd">₹ 8.4M</div>
+            <div class="stat-footer">
+                <span class="stat-subtext">Institutional Budget</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Principal Approvals -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.4s;">
+        <div class="stat-icon-box school-navy">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <div class="stat-label">Principal Approvals</div>
+                <span class="stat-badge school-navy">Awaiting</span>
+            </div>
+            <div class="stat-value" id="stat-approvals">12</div>
+            <div class="stat-footer">
+                <span class="trend-text warning"><i class="fas fa-clock"></i> 3 Overdue</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-charts-grid">
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.5s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Staff Attendance Trends</h3>
+                <p class="chart-subtitle">Monthly teaching staff presence ratio</p>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="attendanceTrendChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.6s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Departmental Allocation</h3>
+                <p class="chart-subtitle">Staff distribution by subject units</p>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="deptDistChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-bottom-grid">
+    <div class="activity-card-premium animate-in" style="animation-delay: 0.7s;">
+        <h3 class="card-title-premium">School Activity Ledger</h3>
+        <div class="table-container-minimal">
+            <table class="activity-table-modern">
+                <tbody id="school-activity-body">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="actions-card-premium animate-in" style="animation-delay: 0.8s;">
+        <h3 class="card-title-premium">Institutional Portal Actions</h3>
+        <div class="actions-grid-modern">
+            <a href="/dashboard/school/employees/" class="action-card-item">
+                <div class="action-icon school-teal"><i class="fas fa-users-cog"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Manage Teachers</span>
+                    <span class="action-desc">Faculty profiles & roles</span>
+                </div>
+            </a>
+            <a href="/dashboard/school/payroll/" class="action-card-item">
+                <div class="action-icon school-gold"><i class="fas fa-money-check-alt"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Run Payroll</span>
+                    <span class="action-desc">Disburse salaries</span>
+                </div>
+            </a>
+            <a href="/dashboard/school/attendance/" class="action-card-item">
+                <div class="action-icon school-crimson"><i class="fas fa-calendar-check"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Attendance Port</span>
+                    <span class="action-desc">Daily presence monitor</span>
+                </div>
+            </a>
+            <a href="/dashboard/school/reports/" class="action-card-item">
+                <div class="action-icon school-navy"><i class="fas fa-file-invoice"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">School Reports</span>
+                    <span class="action-desc">Analytics & exports</span>
+                </div>
             </a>
         </div>
     </div>
 </div>
 
 <style>
-    .glass-panel {
-        background: rgba(17, 24, 39, 0.7);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    /* School Specific Premium Styling */
+    .school-teal {
+        background: rgba(20, 184, 166, 0.1);
+        color: #14b8a6;
     }
 
-    .module-card {
-        padding: 1.5rem;
-        border-radius: 16px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
+    .school-gold {
+        background: rgba(234, 179, 8, 0.1);
+        color: #eab308;
+    }
+
+    .school-crimson {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    .school-navy {
+        background: rgba(30, 58, 138, 0.1);
+        color: #1e3a8a;
+    }
+
+    .stat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.85rem;
+        font-weight: 850;
+        color: var(--text-main);
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+    }
+
+    .stat-footer {
+        margin-top: 0.75rem;
+    }
+
+    .trend-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .trend-text.positive {
+        color: #10b981;
+    }
+
+    .trend-text.warning {
+        color: #f59e0b;
+    }
+
+    .stat-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .stat-badge.academic {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .chart-body {
+        height: 350px;
         position: relative;
-        overflow: hidden;
     }
 
-    .module-card:hover {
-        transform: translateY(-4px);
-        background: rgba(30, 41, 59, 0.8);
-        border-color: rgba(99, 102, 241, 0.5);
-        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+    .title-group {
+        display: flex;
+        flex-direction: column;
     }
 
-    .module-card:hover .icon-box {
-        transform: scale(1.05);
-        background: rgba(99, 102, 241, 0.2);
+    .chart-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 4px;
     }
 
-    .card-content {
+    .actions-grid-modern {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .action-card-item {
         display: flex;
         align-items: center;
         gap: 1rem;
-        height: 100%;
-    }
-
-    .icon-box {
-        width: 48px;
-        height: 48px;
+        padding: 1rem;
         border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+        background: var(--bg-body);
+        border: 1px solid var(--border-color);
+        text-decoration: none;
         transition: all 0.3s ease;
     }
 
-    .text-content h3 {
-        color: #f8fafc;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        margin-top: 0;
+    .action-card-item:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary);
+        background: var(--bg-card);
     }
 
-    .text-content p {
-        color: #94a3b8;
-        font-size: 0.85rem;
-        line-height: 1.4;
-        margin: 0;
-    }
-
-    .back-link {
-        display: inline-flex;
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        color: #94a3b8;
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.2s;
-        font-size: 0.9rem;
+        justify-content: center;
+        font-size: 1.1rem;
     }
 
-    .back-link:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #f8fafc;
-        transform: translateY(-1px);
+    .action-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .action-name {
+        font-size: 0.9rem;
+        font-weight: 750;
+        color: var(--text-main);
+    }
+
+    .action-desc {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+
+    .activity-card-premium {
+        padding: 2rem;
+    }
+
+    .table-container-minimal {
+        margin-top: 1rem;
+    }
+
+    .activity-table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .activity-table-modern td {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
     }
 </style>
 
-<script src="/static/frontend/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    if (!localStorage.getItem('access_token')) {
-        window.location.href = '/';
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSchoolActivity();
+        initSchoolCharts();
+    });
+
+    function loadSchoolActivity() {
+        const activities = [
+            { op: 'Attendance Finalized', time: '1 hour ago', user: 'Principal Office', color: '#14b8a6' },
+            { op: 'Mid-term Stipends', time: '3 hours ago', user: 'Finance', color: '#eab308' },
+            { op: 'New Teacher Portal', time: 'Yesterday', user: 'Admin', color: '#1e3a8a' }
+        ];
+        const tbody = document.getElementById('school-activity-body');
+        tbody.innerHTML = activities.map(a => `
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: ${a.color}"></div>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 700; font-size: 0.9rem;">${a.op}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${a.time}</span>
+                        </div>
+                    </div>
+                </td>
+                <td style="text-align: right;">
+                    <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">${a.user}</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function initSchoolCharts() {
+        // Attendance Trend
+        const ctxAtt = document.getElementById('attendanceTrendChart').getContext('2d');
+        new Chart(ctxAtt, {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                datasets: [{
+                    label: 'Attendance %',
+                    data: [95, 92, 98, 94, 91, 88],
+                    backgroundColor: '#14b8a6',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { min: 80, max: 100, ticks: { color: '#64748b' } }, x: { ticks: { color: '#64748b' } } }
+            }
+        });
+
+        // Dept Dist
+        const ctxDept = document.getElementById('deptDistChart').getContext('2d');
+        new Chart(ctxDept, {
+            type: 'doughnut',
+            data: {
+                labels: ['Science', 'Arts', 'Admin', 'Primary'],
+                datasets: [{
+                    data: [35, 25, 20, 20],
+                    backgroundColor: ['#14b8a6', '#eab308', '#dc2626', '#1e3a8a'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 15, font: { size: 11 }, color: '#64748b' }
+                    }
+                }
+            }
+        });
     }
 </script>
 {% endblock %}

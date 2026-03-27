@@ -1,193 +1,397 @@
 {% extends 'frontend/dashboard_base.html' %}
-{% load static %}
 
 {% block header_title %}Payslip Management{% endblock %}
 
-{% block content %}
-<div class="dashboard-layout">
-    <main class="main-content">
-        <header class="glass-header">
-            <h3>Payslip Management</h3>
-            <div class="header-actions">
-                <div class="form-group" style="margin-bottom:0; display:flex; gap:10px; align-items:center;">
-                    <label style="color:#cbd5e1;">Filter Month:</label>
-                    <input type="month" id="filterMonth" class="form-control" style="width: auto;">
-                </div>
-            </div>
-        </header>
+{% block content_body %}
+<style>
+    /* Professional Design System */
+    .header-card-premium {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+    }
 
-        <section class="content-section">
-            <div class="table-container glass-panel">
-                <div style="margin-bottom: 1rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
-                    <button class="btn-sm" onclick="downloadAll()">⬇ Download All</button>
-                    <button class="btn-sm" onclick="emailAll()">📧 Email All</button>
-                    <button class="btn-sm" style="background: var(--danger-color);" onclick="finalizeAll()">🔒 Finalize
-                        & Lock</button>
-                </div>
-                <table id="payslipTable">
-                    <thead>
-                        <tr>
-                            <th><input type="checkbox" onchange="toggleAll(this)"></th>
-                            <th>Employee Code</th>
-                            <th>Name</th>
-                            <th>Month</th>
-                            <th>Net Pay</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="payslipList"></tbody>
-                </table>
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .table th {
+        background: var(--primary-light);
+        padding: 1.25rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 850;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-bottom: 2px solid var(--border-color);
+        vertical-align: middle;
+    }
+
+    .table td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    /* Glassmorphic Status Badges */
+    .status-badge {
+        padding: 0.45rem 1rem;
+        border-radius: 10px;
+        font-size: 0.72rem;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-paid {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-held {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .status-locked {
+        background: var(--primary-light);
+        color: var(--primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .status-draft {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        background: var(--bg-input);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: var(--shadow-md);
+        background: var(--bg-card);
+    }
+
+    .btn-pdf {
+        color: #e11d48;
+    }
+
+    .btn-pdf:hover {
+        border-color: #fda4af;
+        color: #be123c;
+    }
+
+    .btn-email {
+        color: #2563eb;
+    }
+
+    .btn-email:hover {
+        border-color: #93c5fd;
+        color: #1d4ed8;
+    }
+
+    /* Professional Animations */
+    @keyframes slideUpFade {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideRightFade {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-up {
+        opacity: 0;
+        animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-slide-right {
+        opacity: 0;
+        animation: slideRightFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-fade-in {
+        opacity: 0;
+        animation: fadeIn 0.8s ease forwards;
+    }
+
+    tr.row-animate {
+        opacity: 0;
+        animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
+<div class="header-card-premium animate-slide-up">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="animate-slide-right" style="animation-delay: 0.1s;">
+            <h3 style="margin: 0; font-size: 1.75rem; font-weight: 900; color: var(--text-main);">Employee Payslips</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem; font-weight: 500;">View,
+                download, and send payslips to your staff.</p>
+        </div>
+        <div class="animate-slide-right" style="margin-bottom: 0; animation-delay: 0.2s;">
+            <div style="position: relative;">
+                <i class="far fa-calendar-alt"
+                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary);"></i>
+                <input type="month" id="filterMonth" class="form-control"
+                    style="padding-left: 2.5rem; font-weight: 800; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-main); height: 46px; border-radius: 12px; cursor: pointer;">
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
+</div>
+
+<div class="table-card animate-fade-in" style="animation-delay: 0.3s;">
+    <div
+        style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-card);">
+        <h4 style="margin: 0; font-size: 1.1rem; font-weight: 850; color: var(--text-main);">Salary Records</h4>
+        <div style="display: flex; gap: 0.75rem;">
+            <button class="btn" onclick="emailAll()"
+                style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-input); border: 1.5px solid var(--border-color); color: var(--text-main); font-weight: 850; border-radius: 12px; padding: 10px 18px; transition: all 0.2s;">
+                <i class="fas fa-paper-plane" style="color: var(--primary);"></i> Send Slips
+            </button>
+            <button class="btn" onclick="downloadAll()"
+                style="display: flex; align-items: center; gap: 0.5rem; background: var(--primary); color: white; font-weight: 850; border-radius: 12px; padding: 10px 18px; border: none; transition: all 0.2s; box-shadow: 0 4px 10px var(--primary-light);">
+                <i class="fas fa-file-excel"></i> Download Report
+            </button>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;"><input type="checkbox" onchange="toggleAll(this)"
+                            style="width: 17px; height: 17px; cursor: pointer;"></th>
+                    <th style="min-width: 200px;">Employee</th>
+                    <th style="min-width: 160px;">Month</th>
+                    <th style="text-align: right; min-width: 130px;">Earnings</th>
+                    <th style="text-align: right; min-width: 130px;">Deductions</th>
+                    <th style="text-align: right; min-width: 130px;">Net Pay</th>
+                    <th style="text-align: center !important; min-width: 120px;">Status</th>
+                    <th style="text-align: center !important; min-width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="payslipList">
+                <tr>
+                    <td colspan="8" class="text-center"
+                        style="padding: 6rem; color: var(--text-muted); font-weight: 750;">Loading records...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const today = new Date();
         const monthStr = today.toISOString().slice(0, 7); // YYYY-MM
-        document.getElementById('filterMonth').value = monthStr;
-
+        const filterEl = document.getElementById('filterMonth');
+        if (filterEl) {
+            filterEl.value = monthStr;
+            filterEl.addEventListener('change', loadPayslips);
+        }
         loadPayslips();
-
-        document.getElementById('filterMonth').addEventListener('change', loadPayslips);
     });
 
     async function loadPayslips() {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch('/api/payroll/', { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
+        const tbody = document.getElementById('payslipList');
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 6rem; color: var(--text-muted); font-weight: 750;"><i class="fas fa-circle-notch fa-spin" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i> Loading...</td></tr>';
 
+        try {
+            const res = await authFetch('/api/payroll/');
+            if (res.ok) {
+                const data = await res.json();
+                renderTable(data);
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 4rem; color: #ef4444; font-weight: 750;">Could not load records</td></tr>';
+            }
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 4rem; color: #ef4444; font-weight: 750;">Connection error</td></tr>';
+        }
+    }
+
+    function renderTable(data) {
         const filterVal = document.getElementById('filterMonth').value;
         const tbody = document.getElementById('payslipList');
         tbody.innerHTML = '';
 
-        data.forEach(p => {
-            if (!p.month.startsWith(filterVal)) return;
+        // Filter client-side for demo simplicity or if API doesn't support query params yet
+        // Ideally should pass month query param to API
+        const filtered = data.filter(p => p.month.startsWith(filterVal));
 
-            let badgeClass = 'badge-neutral';
-            if (p.status === 'PAID') badgeClass = 'badge-success';
-            if (p.status === 'LOCKED') badgeClass = 'badge-warning';
-            if (p.status === 'HELD') badgeClass = 'badge-danger';
-
-            tbody.innerHTML += `<tr>
-                <td><input type="checkbox" class="slip-check" value="${p.id}"></td>
-                <td>${p.employee_code || '-'}</td>
-                <td>${p.employee_name || 'Employee ' + p.employee}</td> 
-                <td>${p.month}</td>
-                <td style="font-weight:bold; color: #10b981;">₹${p.net_pay}</td>
-                <td><span class="badge ${badgeClass}">${p.status}</span></td>
-                <td>
-                    <button onclick="downloadPayslip(${p.id})" class="btn-icon" title="Download PDF">⬇️</button>
-                    <button onclick="emailPayslip(${p.id})" class="btn-icon" title="Email Payslip">📧</button>
-                </td>
-            </tr>`;
-        });
-
-        if (tbody.innerHTML === '') {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1rem;">No records found for this month</td></tr>';
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 6rem; color: var(--text-muted); font-weight: 750;">No records found for this month.</td></tr>';
+            return;
         }
+
+        let tableHtml = '';
+        filtered.forEach((p, index) => {
+            let statusClass = 'status-draft';
+            if (p.status === 'PAID') statusClass = 'status-paid';
+            if (p.status === 'LOCKED') statusClass = 'status-locked';
+            if (p.status === 'HELD') statusClass = 'status-held';
+
+            const fmt = (v) => '₹' + parseFloat(v).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            const monthDate = new Date(p.month);
+            const formattedMonth = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const delay = Math.min(index * 0.05, 1.2);
+            tableHtml += `
+                <tr class="row-animate" style="animation-delay: ${delay}s;">
+                    <td style="text-align: center;"><input type="checkbox" class="slip-check" value="${p.id}" style="width: 18px; height: 18px; cursor: pointer; border-radius: 6px;"></td>
+                    <td>
+                        <div style="font-weight: 900; color: var(--text-main); font-size: 1.05rem; letter-spacing: -0.01em;">${p.employee_name || 'Unknown Staff'}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 850; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;">Employee ID: ${p.employee_code || '-'}</div>
+                    </td>
+                    <td style="color: var(--text-main); font-weight: 800; font-size: 0.85rem; opacity: 0.9;">${formattedMonth}</td>
+                    <td style="text-align: right; color: var(--text-main); font-weight: 800; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace;">${fmt(p.total_earnings)}</td>
+                    <td style="text-align: right; color: #ef4444; font-weight: 800; font-size: 0.9rem; font-family: 'JetBrains Mono', monospace;">${fmt(p.total_deductions)}</td>
+                    <td style="text-align: right; font-weight: 950; color: var(--primary); font-size: 1.1rem; font-family: 'JetBrains Mono', monospace;">${fmt(p.net_pay)}</td>
+                    <td style="text-align: center !important;"><span class="status-badge ${statusClass}">${p.status}</span></td>
+                    <td style="text-align: center !important; white-space: nowrap;">
+                        <button onclick="emailPayslip(${p.id})" class="action-btn btn-email" title="Send Email">
+                            <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = tableHtml;
     }
 
     function toggleAll(source) {
         document.querySelectorAll('.slip-check').forEach(c => c.checked = source.checked);
     }
 
-    function downloadAll() {
-        alert("Batch download implementation pending (requires zip generation backend)");
-    }
-
-    function emailAll() {
-        if (!confirm("Send payslips to ALL selected employees?")) return;
-        alert("Batch email queued.");
-    }
-
-    function finalizeAll() {
-        if (!confirm("Lock these payroll records? This is irreversible.")) return;
-        alert("Records locked.");
-    }
-
     async function downloadPayslip(id) {
-        const token = localStorage.getItem('access_token');
-        const response = await fetch(`/api/payroll/${id}/payslip/`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
-        if (data.payslip) {
-            window.open(data.payslip, '_blank');
-        } else {
-            alert('Error generating payslip');
-        }
+        try {
+            const res = await authFetch(`/api/payroll/${id}/payslip/`);
+            const data = await res.json();
+            if (data.payslip) {
+                window.open(data.payslip, '_blank');
+            } else {
+                showToast('Error generating payslip', 'error');
+            }
+        } catch (e) { showToast('Error downloading', 'error'); }
     }
 
     async function emailPayslip(id) {
-        if (!confirm("Are you sure you want to email this payslip?")) return;
+        if (!await customConfirm("Send payslip via email to this employee?", "Send Email")) return;
 
-        const token = localStorage.getItem('access_token');
-        alert("Sending email...");
-
-        const response = await fetch(`/api/payroll/${id}/email_payslip/`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-            alert("Email sent successfully!");
-        } else {
-            const err = await response.json();
-            alert("Failed: " + (err.error || 'Unknown error'));
+        showToast("Sending email...", "info");
+        try {
+            const res = await authFetch(`/api/payroll/${id}/email-payslip/`, { method: 'POST' });
+            if (res.ok) {
+                showToast("Email sent successfully!", "success");
+            } else {
+                const err = await res.json();
+                showToast("Failed: " + (err.error || 'Unknown error'), "error");
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("Network error", "error");
         }
     }
 
+    async function emailAll() {
+        const ids = Array.from(document.querySelectorAll('.slip-check:checked')).map(c => c.value);
+        if (ids.length === 0) return showToast("Select at least one record", "warning");
+
+        if (!await customConfirm(`Send email notifications to ${ids.length} selected employees?`, "Bulk Email Dispatch", false)) return;
+
+        showToast("Sending emails...", "info");
+        try {
+            const res = await authFetch('/api/payroll/bulk-email/', {
+                method: 'POST',
+                body: JSON.stringify({ ledger_ids: ids })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || "Bulk dispatch completed.", "success");
+            } else {
+                showToast(data.error || "Bulk dispatch failed.", "error");
+            }
+        } catch (e) {
+            showToast("Something went wrong.", "error");
+        }
+    }
+
+    async function downloadAll() {
+        const ids = Array.from(document.querySelectorAll('.slip-check:checked')).map(c => c.value);
+        const month = document.getElementById('filterMonth').value;
+
+        showToast("Preparing report...", "info");
+        try {
+            const res = await authFetch('/api/payroll/export-excel/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    month: month + "-01",
+                    ledger_ids: ids.length > 0 ? ids : []
+                })
+            });
+            const data = await res.json();
+            if (data.file_url) {
+                window.open(data.file_url, '_blank');
+                showToast("Report generated successfully.", "success");
+            } else {
+                showToast("Failed to synthesize report.", "error");
+            }
+        } catch (e) {
+            showToast("Error generating report.", "error");
+        }
+    }
 </script>
-
-<style>
-    .badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85em;
-    }
-
-    .badge-neutral {
-        background: #e2e8f0;
-        color: #475569;
-    }
-
-    .badge-success {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .badge-warning {
-        background: #fef9c3;
-        color: #854d0e;
-    }
-
-    .badge-danger {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .btn-icon {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 1.2rem;
-        margin-right: 0.5rem;
-        transition: transform 0.2s;
-    }
-
-    .btn-icon:hover {
-        transform: scale(1.2);
-    }
-
-    .btn-sm {
-        padding: 0.4rem 0.8rem;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-</style>
 {% endblock %}

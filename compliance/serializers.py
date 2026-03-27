@@ -17,4 +17,4 @@ class TaxDeclarationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaxDeclaration
         fields = '__all__'
-        read_only_fields = ['status', 'approved_by', 'verified_amount']
+        read_only_fields = ['employee', 'financial_year', 'status', 'approved_by', 'verified_amount', 'total_declared_amount']

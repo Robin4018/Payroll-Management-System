@@ -30,7 +30,7 @@ class Employee(models.Model):
         related_name="employees"
     )
 
-    employee_code = models.CharField(max_length=50, unique=True, null=True)
+    employee_code = models.CharField(max_length=50, null=True, blank=True)
     
     # -- Employment Details --
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
@@ -87,8 +87,7 @@ class Employee(models.Model):
     def save(self, *args, **kwargs):
         if not self.employee_code:
             # Generate ID: EMP + 0000 + ID
-            # Since ID isn't available until save, we might need a two-step save or use count.
-            # Robust way: Use count + 1, or UUID, or last ID.
+            # Robust way: Use tenant-specific sequence
             last_emp = Employee.objects.filter(tenant=self.tenant).order_by('id').last()
             if last_emp and last_emp.employee_code and last_emp.employee_code.startswith('EMP'):
                 try:
@@ -103,12 +102,15 @@ class Employee(models.Model):
             
             self.employee_code = f"EMP{new_num:04d}"
             
-            # Ensure uniqueness loop (simple check)
+            # Ensure uniqueness loop within tenant
             while Employee.objects.filter(employee_code=self.employee_code, tenant=self.tenant).exists():
                 new_num += 1
                 self.employee_code = f"EMP{new_num:04d}"
 
         super().save(*args, **kwargs)
+
+    class Meta:
+        unique_together = ('tenant', 'employee_code')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.employee_code})"

@@ -4,90 +4,341 @@
 {% block header_title %}Designations{% endblock %}
 
 {% block content_body %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<style>
+    /* Professional Form Controls */
+    .form-control {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background-color: var(--bg-input);
+        color: var(--text-main);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+        background-color: var(--bg-card);
+        outline: none;
+    }
+
+    /* --- Animations --- */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-entry {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    /* Improved Cards */
+    .designations-header-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 0.75rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .designations-header-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .filter-grid-desig {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .setup-card:focus-within {
+        background: var(--bg-card);
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px var(--primary-light);
+    }
+
+    .setup-card-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Table Adjustments */
+    .designations-table-container {
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        opacity: 0;
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: var(--primary-light);
+        padding: 1.25rem 1.75rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+    }
+
+    td {
+        padding: 1.25rem 1.75rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background-color: var(--primary-light);
+    }
+
+    .btn-icon-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .btn-outline {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+    }
+
+    .badge-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-blue {
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .badge-slate {
+        background: var(--bg-input);
+        color: var(--text-muted);
+    }
+
+    /* Modal Styling Content */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(8, 9, 11, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 50;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .modal-box {
+        background: var(--bg-card);
+        border-radius: 20px;
+        width: 500px;
+        overflow: hidden;
+        transform: scale(0.95) translateY(10px);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-overlay.active .modal-box {
+        transform: scale(1) translateY(0);
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
+    }
+</style>
+
+<div class="designations-header-card animate-entry">
+    <div
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
         <div>
-            <h3 style="margin-bottom: 0.25rem;">Designation Management</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Define roles and hierarchy ranks across departments.
-            </p>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border: none;">
+                Designations</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Manage job titles and roles
+                for your staff.</p>
         </div>
+
         <div style="display: flex; gap: 0.75rem;">
-            <a href="/dashboard/college/departments/" class="btn btn-secondary"
-                style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🏢</span> Manage Departments
+            <a href="/dashboard/college/departments/" class="btn btn-outline btn-icon-label">
+                <i class="fas fa-building"></i> Departments
             </a>
-            <button class="btn btn-primary" onclick="openDesignationModal()">
-                <span>+</span> Add Designation
+            <button class="btn btn-primary btn-icon-label" onclick="openDesignationModal()"
+                style="background: var(--primary); border: none; box-shadow: 0 4px 12px var(--primary-light);">
+                <i class="fas fa-plus-circle"></i> New Title
             </button>
         </div>
     </div>
 
-    <!-- Filter Bar -->
-    <div
-        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-        <div style="flex: 1;">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search designations..."
-                onkeyup="filterDesignations()">
+    <!-- Filters -->
+    <div class="filter-grid-desig">
+        <div class="setup-card">
+            <span class="setup-card-label">Search</span>
+            <div style="position: relative;">
+                <i class="fas fa-search"
+                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search job title..."
+                    style="padding-left: 2.75rem; width: 100%;" onkeyup="filterDesignations()">
+            </div>
         </div>
-        <select id="filterDept" class="form-control" style="width: 250px;" onchange="filterDesignations()">
-            <option value="">All Departments</option>
-        </select>
+        <div class="setup-card">
+            <span class="setup-card-label">By Department</span>
+            <select id="filterDept" class="form-control" onchange="filterDesignations()">
+                <option value="">All Departments</option>
+            </select>
+        </div>
     </div>
+</div>
 
-    <div class="table-container">
-        <table id="designationsTable">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">Title</th>
-                    <th style="width: 50%;">Department</th>
-                    <th style="width: 20%; text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="designationList">
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading
-                        designations...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<div class="designations-table-container">
+    <table>
+        <thead>
+            <th style="width: 40%;">Job Title</th>
+            <th style="width: 40%;">Department</th>
+            <th style="width: 20%; text-align: right;">Options</th>
+        </thead>
+        <tbody id="designationList">
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading...
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- Add/Edit Modal -->
-<div id="designationModal" class="modal-overlay hidden">
-    <div class="modal-box" style="width: 500px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-            <h3 id="modalTitle">Add Designation</h3>
+<div id="designationModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header"
+            style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 id="modalTitle" style="margin: 0; color: var(--text-main);">Add Designation</h3>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Enter job title details.
+                </p>
+            </div>
             <button onclick="closeDesignationModal()"
-                style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+                style="background:none; border:none; font-size: 1.5rem; cursor:pointer; color: var(--text-muted);">&times;</button>
         </div>
-        <div class="modal-body">
-            <form id="designationForm" onsubmit="saveDesignation(event)">
+        <form id="designationForm" onsubmit="saveDesignation(event)">
+            <div class="modal-body" style="padding: 2.5rem; background: var(--bg-card);">
                 <input type="hidden" id="desigId">
                 <div class="form-group">
-                    <label class="form-label">Designation Title</label>
+                    <label class="form-label" style="color: var(--text-main);">Title</label>
                     <input type="text" id="desigName" class="form-control" required
                         placeholder="e.g. Associate Professor">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Department</label>
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label class="form-label" style="color: var(--text-main);">Department</label>
                     <select id="desigDept" class="form-control">
-                        <option value="">Global (All Departments)</option>
+                        <option value="">Everyone</option>
                     </select>
-                    <small style="color: var(--text-muted); font-size: 0.8rem;">Leave empty for organization-wide
-                        roles.</small>
+                    <small
+                        style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 0.5rem;">Leave
+                        empty if this role is for everyone.</small>
                 </div>
-
-                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                    <button type="button" onclick="closeDesignationModal()" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" onclick="closeDesignationModal()" class="btn btn-secondary"
+                    style="border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-input); color: var(--text-muted); font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 0.7rem 2.5rem; border-radius: 10px; font-weight: 700; background: var(--primary); border: none; color: white;">Save
+                    Now</button>
+            </div>
+        </form>
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
+    // Helper to handle both array and paginated results
+    function getData(res) {
+        if (Array.isArray(res)) return res;
+        if (res && res.results && Array.isArray(res.results)) return res.results;
+        return [];
+    }
+
     let allDesignations = [];
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -96,29 +347,26 @@
     });
 
     async function loadDesignations() {
-        const token = localStorage.getItem('access_token');
         try {
-            const response = await fetch('/api/employees/designations/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            allDesignations = await response.json();
+            const response = await authFetch('/api/employees/designations/');
+            const data = await response.json();
+            allDesignations = getData(data);
             renderTable(allDesignations);
         } catch (e) {
-            document.getElementById('designationList').innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">Error loading data</td></tr>`;
+            console.error("Failed to load designations", e);
+            document.getElementById('designationList').innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 4rem;">Error loading data</td></tr>`;
         }
     }
 
     async function loadDepartmentsForSelect() {
-        const token = localStorage.getItem('access_token');
         try {
-            const response = await fetch('/api/employees/departments/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
+            const response = await authFetch('/api/employees/departments/');
+            const rawData = await response.json();
+            const data = getData(rawData);
 
             // Modal Select
             const select = document.getElementById('desigDept');
-            select.innerHTML = '<option value="">Global (All Departments)</option>';
+            select.innerHTML = '<option value="">Everyone</option>';
 
             // Filter Select
             const filter = document.getElementById('filterDept');
@@ -131,7 +379,7 @@
                 select.appendChild(opt1);
 
                 const opt2 = document.createElement('option');
-                opt2.value = dept.name; // Filter by name typically for frontend filter
+                opt2.value = dept.name;
                 opt2.textContent = dept.name;
                 filter.appendChild(opt2);
             });
@@ -143,23 +391,30 @@
         tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-muted);">No designations found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 4rem; color: var(--text-muted);">No designations found.</td></tr>`;
             return;
         }
 
-        data.forEach(d => {
+        data.forEach((d, index) => {
             const tr = document.createElement('tr');
+            tr.style.animation = `slideInUp 0.4s ease-out forwards ${index * 0.05}s`;
+            tr.style.opacity = '0'; // Start hidden
             tr.innerHTML = `
-                <td style="font-weight: 500;">${d.name}</td>
+                <td style="font-weight: 700; color: var(--text-main);">${d.name}</td>
                 <td>
-                    <span class="badge ${d.department_name ? 'badge-primary' : 'badge-neutral'}" style="white-space: nowrap;">
-                        ${d.department_name || 'Global'}
+                    <span class="badge-status ${d.department_name ? 'badge-blue' : 'badge-slate'}">
+                        ${d.department_name || 'Everyone'}
                     </span>
                 </td>
-
                 <td style="text-align: right;">
-                    <button onclick='editDesignation(${JSON.stringify(d)})' class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Edit</button>
-                    <button onclick="deleteDesignation(${d.id})" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; color: #ef4444; border-color: #ef4444;">Delete</button>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                        <button onclick='editDesignation(${JSON.stringify(d).replace(/'/g, "&apos;")})' class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 8px;">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button onclick="deleteDesignation(${d.id})" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 8px; color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -172,9 +427,6 @@
 
         const filtered = allDesignations.filter(d => {
             const matchesSearch = d.name.toLowerCase().includes(search);
-            // If dept is Global (null) in local data, we check if dept filter is empty or matches 'Global'? 
-            // Usually filtering by specific dept name. 
-            // d.department_name can be null.
             const matchesDept = dept ? (d.department_name === dept) : true;
             return matchesSearch && matchesDept;
         });
@@ -185,11 +437,11 @@
         document.getElementById('modalTitle').innerText = 'Add Designation';
         document.getElementById('designationForm').reset();
         document.getElementById('desigId').value = '';
-        document.getElementById('designationModal').classList.remove('hidden');
+        document.getElementById('designationModal').classList.add('active');
     }
 
     function closeDesignationModal() {
-        document.getElementById('designationModal').classList.add('hidden');
+        document.getElementById('designationModal').classList.remove('active');
     }
 
     window.editDesignation = (item) => {
@@ -197,8 +449,7 @@
         document.getElementById('desigId').value = item.id;
         document.getElementById('desigName').value = item.name;
         document.getElementById('desigDept').value = item.department || '';
-
-        document.getElementById('designationModal').classList.remove('hidden');
+        document.getElementById('designationModal').classList.add('active');
     };
 
     async function saveDesignation(e) {
@@ -206,40 +457,38 @@
         const id = document.getElementById('desigId').value;
         const name = document.getElementById('desigName').value;
         const department = document.getElementById('desigDept').value || null;
-        const rank = document.getElementById('desigRank').value;
-        const token = localStorage.getItem('access_token');
-
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `/api/employees/designations/${id}/` : '/api/employees/designations/';
-
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+            const response = await authFetch(id ? `/api/employees/designations/${id}/` : '/api/employees/designations/', {
+                method: id ? 'PUT' : 'POST',
                 body: JSON.stringify({ name, department })
             });
 
             if (response.ok) {
+                showToast(id ? "Designation updated successfully" : "Designation created successfully", "success");
                 closeDesignationModal();
                 loadDesignations();
             } else {
-                const errorData = await response.json();
-                alert('Error saving designation');
+                showToast("Failed to save designation", "error");
             }
-        } catch (e) { console.error(e); }
+        } catch (err) {
+            console.error(err);
+            showToast("Network error occurred", "error");
+        }
     }
 
     window.deleteDesignation = async (id) => {
-        if (!confirm('Are you sure you want to delete this designation?')) return;
-        const token = localStorage.getItem('access_token');
-        await fetch(`/api/employees/designations/${id}/`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        loadDesignations();
+        if (!await customConfirm('Are you sure you want to delete this designation?', "Delete Designation", true)) return;
+        try {
+            const res = await authFetch(`/api/employees/designations/${id}/`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                showToast("Designation removed successfully", "success");
+                loadDesignations();
+            } else {
+                showToast("Cannot delete designation with active staff", "error");
+            }
+        } catch (e) { console.error(e); }
     };
 </script>
 {% endblock %}

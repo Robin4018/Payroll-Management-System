@@ -6,6 +6,7 @@ class Tenant(models.Model):
         CORPORATE = 'CORPORATE', 'Corporate'
 
     name = models.CharField(max_length=255, unique=True)
+    short_name = models.CharField(max_length=50, blank=True, help_text="Abbreviation for sidebar/mobile")
     type = models.CharField(
         max_length=20, 
         choices=TenantType.choices, 
@@ -21,6 +22,11 @@ class Tenant(models.Model):
     # Configuration
     salary_cycle_start_day = models.PositiveIntegerField(default=1, help_text="Day of month when cycle starts")
     tax_slabs = models.JSONField(default=dict, blank=True, help_text="JSON structure for tax slabs")
+    
+    # Geofencing Configuration
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="College center latitude")
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="College center longitude")
+    geofence_radius = models.PositiveIntegerField(default=200, help_text="Allowed radius in meters")
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,113 +1,151 @@
 {% extends 'frontend/dashboard_base.html' %}
 
-{% block header_title %}Employee Profile{% endblock %}
+{% block header_title %}Staff Profile{% endblock %}
 
 {% block content_body %}
-<div class="card" style="margin-bottom: 2rem;">
-    <div style="display: flex; gap: 2rem; align-items: center;">
+<div class="card animate-entry"
+    style="margin-bottom: 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 28px; padding: 2.5rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; gap: 2.5rem; align-items: center;">
         <div style="position: relative;">
             <div
-                style="width: 100px; height: 100px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: #64748b; overflow: hidden; position: relative;">
+                style="width: 120px; height: 120px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 32px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary); overflow: hidden; position: relative;">
                 <img id="profile-photo" src="" alt=""
                     style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                <span id="profile-initials">--</span>
+                <span id="profile-initials" style="font-weight: 800;">--</span>
             </div>
 
             <!-- Upload Button -->
             <button onclick="document.getElementById('photo-input').click()" title="Upload Photo"
-                style="position: absolute; bottom: 0; right: 0; background: #ffffff; color: #334155; border: 1px solid #e2e8f0; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); z-index: 10; transition: all 0.2s;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                </svg>
+                style="position: absolute; bottom: -8px; right: -8px; background: var(--primary); color: white; border: 4px solid var(--bg-card); border-radius: 14px; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--primary-light); z-index: 10; transition: all 0.2s;">
+                <i class="fas fa-camera" style="font-size: 1.1rem;"></i>
             </button>
             <input type="file" id="photo-input" hidden accept="image/*" onchange="uploadProfilePhoto(this)">
 
             <!-- Remove Button -->
             <button id="btn-remove-photo" onclick="removeProfilePhoto()" title="Remove Photo"
-                style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 11;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: 3px solid var(--bg-card) !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 11;">
+                <i class="fas fa-times" style="font-size: 0.8rem;"></i>
             </button>
         </div>
         <div>
-            <h2 id="emp-name" style="margin-bottom: 0.5rem;">Loading...</h2>
-            <div style="display: flex; gap: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
-                <span id="emp-designation">--</span> • <span id="emp-dept">--</span>
+            <h1 id="emp-name"
+                style="margin: 0; font-size: 2.25rem; font-weight: 850; color: var(--text-main); letter-spacing: -0.02em;">
+                Loading...</h1>
+            <div
+                style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; font-weight: 500;">
+                <span id="emp-designation">--</span> <span style="opacity: 0.5;">•</span> <span id="emp-dept">--</span>
             </div>
-            <div style="margin-top: 0.75rem;">
-                <span id="emp-status" class="badge badge-neutral">--</span>
-                <span id="emp-code" class="badge badge-neutral" style="margin-left: 0.5rem;">--</span>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+                <span id="emp-status" class="status-badge"
+                    style="padding: 0.4rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">--</span>
+                <span id="emp-code" class="status-badge"
+                    style="background: var(--bg-input); color: var(--primary); padding: 0.4rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; font-family: monospace;">--</span>
             </div>
         </div>
-        <div style="margin-left: auto;">
-            <button class="btn btn-primary" onclick="openEditModal()">Edit
-                Profile</button>
+        <div style="margin-left: auto; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="openEditModal()"
+                style="display: flex; align-items: center; gap: 0.75rem; border-radius: 14px; font-weight: 700; padding: 0.8rem 1.75rem; background: var(--primary); border: none; box-shadow: 0 10px 20px var(--primary-light);">
+                <i class="fas fa-user-edit"></i> Edit
+            </button>
+            <button class="btn" onclick="deleteEmployee()"
+                style="display: flex; align-items: center; gap: 0.75rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 14px; font-weight: 700; padding: 0.8rem 1.75rem; transition: all 0.3s;">
+                <i class="fas fa-user-minus"></i> Remove Staff
+            </button>
         </div>
     </div>
 </div>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('personal')">Personal Details</button>
-    <button class="tab-btn" onclick="switchTab('employment')">Employment & Salary</button>
-    <button class="tab-btn" onclick="switchTab('documents')">Documents</button>
-    <button class="tab-btn" onclick="switchTab('salary')">Salary Structure</button>
+<div class="tabs"
+    style="background: var(--bg-input); padding: 0.4rem; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 2.5rem; display: inline-flex; gap: 0.25rem;">
+    <button class="tab-btn active" onclick="switchTab('personal')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Personal</button>
+    <button class="tab-btn" onclick="switchTab('employment')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Work & Bank</button>
+    <button class="tab-btn" onclick="switchTab('documents')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Files</button>
+    <button class="tab-btn" onclick="switchTab('salary')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Salary</button>
 </div>
 
 <!-- Personal Tab -->
 <div id="personal-section" class="tab-content">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3>Basic Information</h3>
-            <button class="btn btn-sm btn-outline-primary" onclick="openEditModal()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    style="margin-right: 4px;">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Edit Details
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Basic Info</h3>
+            <button class="btn btn-outline" onclick="openEditModal()"
+                style="padding: 0.6rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main);">
+                <i class="fas fa-edit"></i> Edit
             </button>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
             <div>
-                <label class="form-label">Email Address</label>
-                <div id="field-email" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Email
+                    Address</label>
+                <div id="field-email" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Phone Number</label>
-                <div id="field-phone" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Phone
+                    Number</label>
+                <div id="field-phone" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Date of Birth</label>
-                <div id="field-dob" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Date
+                    of Birth</label>
+                <div id="field-dob" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Gender</label>
-                <div id="field-gender" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Gender</label>
+                <div id="field-gender" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Blood Group</label>
-                <div id="field-blood" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Blood
+                    Group</label>
+                <div id="field-blood" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
         </div>
 
-        <h3>Address</h3>
-        <div class="form-control" style="background: #f8fafc; min-height: 80px;" id="field-address">--</div>
+        <h3 style="margin-bottom: 1.25rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">Home Address
+        </h3>
+        <div class="form-control"
+            style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); min-height: 80px; padding: 1.25rem; line-height: 1.6;"
+            id="field-address">--</div>
 
-        <h3 class="mt-4">Emergency Contact</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <h3
+            style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">
+            Emergency Contact Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
             <div>
-                <label class="form-label">Contact Name</label>
-                <div id="field-emg-name" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Contact
+                    Person Name</label>
+                <div id="field-emg-name" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Contact Phone</label>
-                <div id="field-emg-phone" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Emergency
+                    Phone Number</label>
+                <div id="field-emg-phone" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
         </div>
     </div>
@@ -115,44 +153,80 @@
 
 <!-- Employment Tab -->
 <div id="employment-section" class="tab-content hidden">
-    <div class="card">
-        <h3>Employment Details</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <h3 style="margin-bottom: 2.5rem; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Employment
+            Profile</h3>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3.5rem;">
             <div>
-                <label class="form-label">Date of Joining</label>
-                <div id="field-doj" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Joining
+                    Date</label>
+                <div id="field-doj" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Work Location</label>
-                <div id="field-location" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Work
+                    Location</label>
+                <div id="field-location" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Employment Type</label>
-                <div id="field-type" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Job
+                    Type</label>
+                <div id="field-type" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Reporting Manager</label>
-                <div id="field-manager" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Reporting
+                    Manager</label>
+                <div id="field-manager" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
         </div>
 
-        <h3>Bank & Statutory Details</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">Financial &
+            Statutory Records</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
             <div>
-                <label class="form-label">Bank Name</label>
-                <div id="field-bank" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Bank
+                    Name</label>
+                <div id="field-bank" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">Account Number</label>
-                <div id="field-account" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Account
+                    Number</label>
+                <div id="field-account" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">PAN Number</label>
-                <div id="field-pan" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">PAN
+                    Card ID</label>
+                <div id="field-pan" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
             <div>
-                <label class="form-label">PF Account</label>
-                <div id="field-pf" class="form-control" style="background: #f8fafc;">--</div>
+                <label class="form-label"
+                    style="color: var(--primary); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">PF /
+                    UAN Number</label>
+                <div id="field-pf" class="form-control"
+                    style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; padding: 0.9rem 1.25rem;">
+                    --</div>
             </div>
         </div>
     </div>
@@ -160,12 +234,16 @@
 
 <!-- Documents Tab -->
 <div id="documents-section" class="tab-content hidden">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h3>Employee Documents</h3>
-            <button class="btn btn-secondary"
-                onclick="document.getElementById('upload-document-modal').classList.remove('hidden')">Upload
-                Document</button>
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Stored Files
+            </h3>
+            <button class="btn btn-primary"
+                onclick="document.getElementById('upload-document-modal').classList.remove('hidden')"
+                style="border-radius: 12px; font-weight: 700; padding: 0.7rem 1.5rem;">
+                <i class="fas fa-file-upload"></i> Upload New
+            </button>
         </div>
 
         <div class="table-container">
@@ -190,28 +268,38 @@
 
 <!-- Salary Tab -->
 <div id="salary-section" class="tab-content hidden">
-    <div class="card">
-        <div style="display: flex; align-items: center; gap: 2rem; margin-bottom: 2rem;">
-            <h3 style="margin: 0; min-width: 150px;">Salary Structure</h3>
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Salary Breakdown
+            </h3>
             <button onclick="openSalaryModal()"
-                style="flex: 1; background: var(--primary); color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; text-transform: uppercase; cursor: pointer; text-align: center; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s;">
-                UPDATE STRUCTURE
+                style="background: var(--primary); color: white; border: none; padding: 0.8rem 2rem; border-radius: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; box-shadow: 0 10px 20px var(--primary-light); transition: all 0.3s; font-size: 0.85rem;">
+                <i class="fas fa-sync-alt" style="margin-right: 8px;"></i> Update Salary
             </button>
         </div>
 
         <div
-            style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <label style="color: var(--text-muted); font-size: 0.9rem;">Annual CTC</label>
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-main);">
-                    ₹ <span id="display-ctc">0.00</span>
+            style="background: var(--bg-input); padding: 2rem; border-radius: 20px; margin-bottom: 3rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+                    <i class="fas fa-hand-holding-usd"></i>
                 </div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Base for component
-                    calculations</p>
+                <div>
+                    <label
+                        style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Annual
+                        Salary (CTC)</label>
+                    <div style="font-size: 2rem; font-weight: 850; color: var(--text-main); line-height: 1;">
+                        ₹ <span id="display-ctc">0.00</span>
+                    </div>
+                </div>
             </div>
-            <div>
-                <label style="color: var(--text-muted); font-size: 0.9rem;">Current Template</label>
-                <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-main);" id="display-template-name">
+            <div style="text-align: right;">
+                <label
+                    style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Salary
+                    Template</label>
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary);" id="display-template-name">
                     --
                 </div>
             </div>
@@ -232,10 +320,11 @@
                     </tr>
                 </tbody>
                 <tfoot>
-                    <tr style="font-weight: 700; background: #f1f5f9;">
-                        <td>Total</td>
-                        <td style="text-align: right;" id="total-monthly">--</td>
-                        <td style="text-align: right;" id="total-annual">--</td>
+                    <tr style="font-weight: 850; background: var(--primary-light); font-size: 1rem;">
+                        <td style="color: var(--primary); padding: 1.5rem;">Total Salary</td>
+                        <td style="text-align: right; color: var(--primary); padding: 1.5rem;" id="total-monthly">--
+                        </td>
+                        <td style="text-align: right; color: var(--primary); padding: 1.5rem;" id="total-annual">--</td>
                     </tr>
                 </tfoot>
             </table>
@@ -248,7 +337,7 @@
 <div id="salary-modal" class="modal-overlay hidden">
     <div class="modal-box" style="max-width: 500px;">
         <div class="modal-header">
-            <h3 class="modal-title">Update Salary Structure</h3>
+            <h3 class="modal-title">Update Salary</h3>
             <button onclick="document.getElementById('salary-modal').classList.add('hidden')" class="btn-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -259,11 +348,15 @@
         </div>
 
         <form onsubmit="handleSalaryUpdate(event)" class="modal-body">
-            <div class="tabs" style="margin-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0;">
+            <div class="tabs"
+                style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); background: transparent; padding: 0; display: flex; gap: 2rem; width: 100%; border-radius: 0;">
                 <button type="button" class="tab-btn active" onclick="switchSalaryMode('template')"
-                    id="btn-mode-template">Use Template</button>
-                <button type="button" class="tab-btn" onclick="switchSalaryMode('manual')" id="btn-mode-manual">Manual /
-                    CTC</button>
+                    id="btn-mode-template"
+                    style="background: transparent !important; box-shadow: none !important; border-bottom: 3px solid var(--primary) !important; border-radius: 0; padding: 0.75rem 0;">Use
+                    Template</button>
+                <button type="button" class="tab-btn" onclick="switchSalaryMode('manual')" id="btn-mode-manual"
+                    style="background: transparent !important; box-shadow: none !important; border-radius: 0; padding: 0.75rem 0;">Manual
+                    / CTC</button>
             </div>
 
             <!-- Template Mode -->
@@ -332,10 +425,19 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">File</label>
-                <input type="file" name="file" class="form-control" required
-                    style="padding: 0.5rem; border: 1px dashed var(--border-color); background: #f8fafc;">
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label class="form-label" style="margin-bottom: 0.75rem;">Select Personnel Document</label>
+                <div class="upload-drop-zone" id="document-drop-zone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p style="margin: 0.5rem 0; font-weight: 600; font-size: 0.95rem; color: var(--text-main);">Click or
+                        Drag to Upload</p>
+                    <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">PDF, JPG, PNG (Max 5MB)</p>
+                    <input type="file" name="file" id="document-file-input" required onchange="updateFileName(this)">
+                </div>
+                <div id="file-name-display"
+                    style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--primary); font-weight: 700; display: none;">
+                    <i class="fas fa-file-alt"></i> <span id="selected-file-name"></span>
+                </div>
             </div>
 
             <div class="modal-footer">
@@ -488,10 +590,14 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: flex-end; gap: 1rem;">
                 <button type="button" class="btn btn-secondary"
-                    onclick="document.getElementById('edit-profile-modal').classList.add('hidden')">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Changes</button>
+                    onclick="document.getElementById('edit-profile-modal').classList.add('hidden')"
+                    style="border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-muted); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary"
+                    style="background: var(--primary); border: none; font-weight: 800; border-radius: 12px; padding: 0.75rem 2rem;">Save
+                    Now</button>
             </div>
         </form>
     </div>
@@ -518,8 +624,8 @@
             document.getElementById('emp-designation').innerText = data.designation_name || data.designation || 'No Designation';
             document.getElementById('emp-dept').innerText = data.department_name || 'No Dept';
             document.getElementById('emp-code').innerText = data.employee_code;
-            document.getElementById('emp-status').innerText = data.is_active ? 'Active' : 'Inactive';
-            document.getElementById('emp-status').className = `badge ${data.is_active ? 'badge-success' : 'badge-danger'}`;
+            document.getElementById('emp-status').innerText = data.is_active ? 'Active Status' : 'Inactive Status';
+            document.getElementById('emp-status').className = `status-badge ${data.is_active ? 'badge-active' : 'badge-inactive'}`;
             const fInitial = data.first_name ? data.first_name.charAt(0) : '';
             const lInitial = data.last_name ? data.last_name.charAt(0) : '';
             document.getElementById('profile-initials').innerText = (fInitial + lInitial).toUpperCase() || '--';
@@ -708,7 +814,7 @@
             let totalYear = 0;
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center">No structure defined. Click Update.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 4rem; color: var(--text-muted); font-weight: 500;">No remuneration components defined. <br><span style="font-size: 0.85rem; opacity: 0.7;">Assign a template or enter CTC to initialize.</span></td></tr>`;
                 return;
             }
 
@@ -721,12 +827,12 @@
                     totalYear += annual;
 
                     tbody.innerHTML += `
-                       <tr>
-                           <td>${name}</td>
-                           <td style="text-align: right;">${amt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                           <td style="text-align: right;">${annual.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                       </tr>
-                   `;
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1.25rem; font-weight: 600; color: var(--text-main);">${name}</td>
+                            <td style="text-align: right; padding: 1.25rem; font-family: monospace; font-weight: 700; color: var(--text-main); font-size: 1rem;">₹ ${amt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            <td style="text-align: right; padding: 1.25rem; font-family: monospace; font-weight: 700; color: var(--primary); font-size: 1rem;">₹ ${annual.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                    `;
                 }
             });
 
@@ -839,17 +945,19 @@
         const tbody = document.getElementById('docs-table-body');
         tbody.innerHTML = '';
         if (!docs || docs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center">No documents uploaded</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted); font-weight: 500;">No institutional documents found on record.</td></tr>`;
             return;
         }
         docs.forEach(doc => {
             const row = `
-                <tr>
-                    <td>${doc.title}</td>
-                    <td><span class="badge badge-neutral">${doc.document_type}</span></td>
-                    <td>${new Date(doc.uploaded_at).toLocaleDateString()}</td>
-                    <td>
-                        <a href="${doc.file}" target="_blank" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">View</a>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1.25rem; font-weight: 700; color: var(--text-main);">${doc.title}</td>
+                    <td style="padding: 1.25rem;"><span class="status-badge badge-neutral" style="background: var(--bg-input); color: var(--text-muted); padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 700; font-size: 0.75rem;">${doc.document_type}</span></td>
+                    <td style="padding: 1.25rem; color: var(--text-muted); font-weight: 500;">${new Date(doc.uploaded_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                    <td style="padding: 1.25rem; text-align: right;">
+                        <a href="${doc.file}" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-external-link-alt"></i> View Securely
+                        </a>
                     </td>
                 </tr>
             `;
@@ -932,6 +1040,39 @@
         }
     }
 
+    async function deleteEmployee() {
+        const confirmed = await window.customConfirm(
+            "Are you sure you want to permanently delete this employee? This action cannot be undone and will remove all associated payroll history, documents, and records.",
+            "Delete Employee Profile",
+            true // isDanger
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`/api/employees/${empId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (res.ok) {
+                showToast("Employee profile deleted successfully", "success");
+                // Redirect back to employee directory after a short delay
+                setTimeout(() => {
+                    window.location.href = '/dashboard/college/employees/';
+                }, 1500);
+            } else {
+                const data = await res.json();
+                alert("Failed to delete employee: " + (data.error || "Internal Server Error"));
+            }
+        } catch (e) {
+            console.error(e);
+            alert("An error occurred while attempting to delete the profile.");
+        }
+    }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -945,6 +1086,16 @@
             }
         }
         return cookieValue;
+    }
+    function updateFileName(input) {
+        const display = document.getElementById('file-name-display');
+        const nameSpan = document.getElementById('selected-file-name');
+        if (input.files && input.files[0]) {
+            display.style.display = 'block';
+            nameSpan.textContent = input.files[0].name;
+        } else {
+            display.style.display = 'none';
+        }
     }
 </script>
 {% endblock %}

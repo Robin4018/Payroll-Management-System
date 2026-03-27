@@ -74,5 +74,9 @@ class TaxDeclaration(models.Model):
     class Meta:
         unique_together = ('employee', 'financial_year')
 
+    def save(self, *args, **kwargs):
+        self.total_declared_amount = (self.section_80c or 0) + (self.section_80d or 0) + (self.hra_rent_paid or 0) + (self.other_deductions or 0)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.employee} - {self.financial_year} ({self.regime})"

@@ -1,11 +1,811 @@
-{% extends 'frontend/dashboard_base.html' %}
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
 
-{% block brand %}
-<h2 style="display: flex; align-items: center; gap: 10px;">
-    <span>🏢</span> UPMS | Company
-</h2>
+{% block header_title %}Corporate Command Center{% endblock %}
+
+{% block content_body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="dashboard-stats-grid">
+    <!-- 1. Total Workforce -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.1s;">
+        <div class="stat-icon-wrapper workforce">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <span class="stat-label">Total Workforce</span>
+                <span class="stat-badge success">+12%</span>
+            </div>
+            <div class="stat-value" id="stat-total-emp">92</div>
+            <div class="stat-footer">
+                <span class="trend-text positive"><i class="fas fa-arrow-up"></i> 5 new this month</span>
+            </div>
+        </div>
+        <div class="card-glass-glow"></div>
+    </div>
+
+    <!-- 2. Salary Disbursement -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.2s;">
+        <div class="stat-icon-wrapper payroll">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <span class="stat-label">Salary Disbursement</span>
+            </div>
+            <div class="stat-value" id="stat-last-pay">₹ 4.2M</div>
+            <div class="stat-footer">
+                <span class="stat-subtext">Next Cycle: March 31, 2026</span>
+            </div>
+        </div>
+        <div class="card-glass-glow"></div>
+    </div>
+
+    <!-- 3. Operational Spend -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.3s;">
+        <div class="stat-icon-wrapper spend">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <span class="stat-label">Operational Spend</span>
+            </div>
+            <div class="stat-value" id="stat-ytd">₹ 12.8M</div>
+            <div class="stat-footer">
+                <span class="stat-subtext">15% below budget</span>
+            </div>
+        </div>
+        <div class="card-glass-glow"></div>
+    </div>
+
+    <!-- 4. Pending Tasks -->
+    <div class="stat-card-premium animate-in" style="animation-delay: 0.4s;">
+        <div class="stat-icon-wrapper tasks">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-main">
+            <div class="stat-header">
+                <span class="stat-label">Compliance Tasks</span>
+            </div>
+            <div class="stat-value" id="stat-approvals">14</div>
+            <div class="stat-footer">
+                <span class="trend-text warning"><i class="fas fa-clock"></i> 3 high priority</span>
+            </div>
+        </div>
+        <div class="card-glass-glow"></div>
+    </div>
+</div>
+
+<div class="dashboard-charts-grid">
+    <!-- Trend Analytics -->
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.5s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Financial Performance</h3>
+                <p class="chart-subtitle">Revenue vs Disbursement analytics</p>
+            </div>
+            <div class="header-actions">
+                <select class="chart-select">
+                    <option>Last 6 Months</option>
+                    <option>Year to Date</option>
+                </select>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="salaryTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Composition -->
+    <div class="chart-card-premium animate-in" style="animation-delay: 0.6s;">
+        <div class="chart-header">
+            <div class="title-group">
+                <h3 class="chart-title">Department Distribution</h3>
+                <p class="chart-subtitle">Headcount by strategic unit</p>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="deptDistChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-bottom-grid">
+    <!-- Operations Gateway -->
+    <div class="activity-card-premium animate-in" style="animation-delay: 0.7s;">
+        <div class="card-header-flex">
+            <div class="title-group">
+                <h3 class="card-title-premium">Master Security Logs</h3>
+                <p class="card-subtitle">Real-time audit trail across the enterprise</p>
+            </div>
+            <a href="/dashboard/company/reports/" class="view-all-btn" style="text-decoration:none;">Audit Vault <i
+                    class="fas fa-shield-alt"></i></a>
+        </div>
+        <div class="table-container-minimal">
+            <table class="activity-table-modern">
+                <thead>
+                    <tr>
+                        <th>Activity Detail</th>
+                        <th>Initiator</th>
+                        <th>Safety Status</th>
+                    </tr>
+                </thead>
+                <tbody id="activity-table-body">
+                    <!-- Loaded via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sentry Actions Port -->
+    <div class="actions-card-premium animate-in" style="animation-delay: 0.8s;">
+        <h3 class="card-title-premium">Sentry Hub Portal</h3>
+        <p class="card-subtitle" style="margin-bottom: 1.5rem;">One-tap entry to core enterprise operations</p>
+        <div class="actions-grid-modern">
+            <a href="/dashboard/company/payroll-processing/" class="action-card-item premium">
+                <div class="action-icon-wrapper" style="background: linear-gradient(135deg, #34d399, #10b981);"><i
+                        class="fas fa-rocket"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Process Payroll</span>
+                    <span class="action-desc">Run monthly disbursal cycle</span>
+                </div>
+            </a>
+            <a href="/dashboard/company/employees/" class="action-card-item premium">
+                <div class="action-icon-wrapper" style="background: linear-gradient(135deg, #10b981, #059669);"><i
+                        class="fas fa-user-plus"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Add New Talent</span>
+                    <span class="action-desc">Extend your workforce ecosystem</span>
+                </div>
+            </a>
+            <a href="/dashboard/company/salary-structure/" class="action-card-item premium">
+                <div class="action-icon-wrapper" style="background: linear-gradient(135deg, #fcd34d, #f59e0b);"><i
+                        class="fas fa-cog"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Configure Benefit</span>
+                    <span class="action-desc">Adjust earnings & deductions</span>
+                </div>
+            </a>
+            <a href="/dashboard/company/reports/" class="action-card-item premium">
+                <div class="action-icon-wrapper" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i
+                        class="fas fa-file-chart-pie"></i></div>
+                <div class="action-meta">
+                    <span class="action-name">Corporate Reports</span>
+                    <span class="action-desc">Export financial & HR intelligence</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Premium Dashboard Aesthetic Overrides */
+    .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card-premium {
+        background: var(--bg-card);
+        padding: 1.5rem;
+        border-radius: 24px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        gap: 1.25rem;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary);
+    }
+
+    .stat-icon-wrapper {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .stat-icon-wrapper.workforce {
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+
+    .stat-icon-wrapper.payroll {
+        background: rgba(52, 211, 153, 0.1);
+        color: #34d399;
+    }
+
+    .stat-icon-wrapper.spend {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .stat-icon-wrapper.tasks {
+        background: rgba(217, 119, 6, 0.1);
+        color: #d97706;
+    }
+
+    .stat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .stat-badge.success {
+        background: var(--success-light);
+        color: var(--success);
+    }
+
+    .stat-value {
+        font-size: 1.85rem;
+        font-weight: 850;
+        color: var(--text-main);
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+    }
+
+    .stat-footer {
+        margin-top: 0.75rem;
+    }
+
+    .trend-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .trend-text.positive {
+        color: var(--success);
+    }
+
+    .trend-text.warning {
+        color: var(--warning);
+    }
+
+    .stat-subtext {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .card-glass-glow {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 120px;
+        height: 120px;
+        background: radial-gradient(circle at center, var(--primary-light), transparent);
+        opacity: 0.3;
+        filter: blur(40px);
+        pointer-events: none;
+    }
+
+    .dashboard-charts-grid {
+        display: grid;
+        grid-template-columns: 1.8fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-bottom-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .actions-grid-modern {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .chart-card-premium {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 28px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+        position: relative;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2.5rem;
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 850;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+
+    .chart-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .chart-select {
+        padding: 6px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-input);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-main);
+        cursor: pointer;
+    }
+
+    .chart-body {
+        height: 350px;
+        position: relative;
+    }
+
+    .view-all-btn {
+        background: var(--primary-light);
+        color: var(--primary);
+        border: none;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .view-all-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .activity-card-premium {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 28px;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .card-title-premium {
+        font-size: 1.15rem;
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .table-container-minimal {
+        overflow-x: auto;
+    }
+
+    .activity-table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .activity-table-modern th {
+        text-align: left;
+        padding: 12px 16px;
+        font-size: 0.75rem;
+        font-weight: 750;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-table-modern td {
+        padding: 16px;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .activity-table-modern tr:last-child td {
+        border: none;
+    }
+
+    .operation-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .op-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    .op-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .op-name {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .op-time {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .user-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-body);
+        padding: 4px 12px;
+        border-radius: 99px;
+        width: fit-content;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .user-initials {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 800;
+    }
+
+    .status-badge-modern {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        font-weight: 750;
+        text-transform: uppercase;
+    }
+
+    .status-badge-modern.success {
+        color: var(--success);
+    }
+
+    .status-badge-modern::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .action-card-item.premium {
+        background: var(--bg-body);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+    }
+
+    .action-card-item.premium:hover {
+        background: var(--bg-card);
+        transform: translateY(-4px) scale(1.02);
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+    }
+
+    .action-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .action-name {
+        font-size: 0.95rem;
+        font-weight: 750;
+        color: var(--text-main);
+    }
+
+    .action-desc {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchDashboardData();
+        loadRecentActivity();
+    });
+
+    async function loadRecentActivity() {
+        try {
+            const res = await authFetch('/api/audit-logs/?limit=5');
+            const tbody = document.getElementById('activity-table-body');
+            if (!res.ok) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">Failed to load activity logs</td></tr>';
+                return;
+            }
+            const data = await res.json();
+            const logs = data.results || data;
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No recent activity found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => {
+                const initials = (log.actor_name || log.username || 'U')[0].toUpperCase();
+                const status = log.action === 'DELETE' ? '<span class="status-badge-modern danger">Warning</span>' : '<span class="status-badge-modern success">Verified</span>';
+                const color = log.action.includes('PAYROLL') ? '#10b981' : (log.action.includes('DELETE') ? '#ef4444' : '#6366f1');
+                const timeStr = getTimeAgo(new Date(log.timestamp));
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="operation-info">
+                                <div class="op-icon" style="background: ${color}20; color: ${color}">
+                                    <i class="fas ${getActionIcon(log.action)}"></i>
+                                </div>
+                                <div class="op-meta">
+                                    <span class="op-name">${log.action}</span>
+                                    <span class="op-time">${timeStr}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-pill">
+                                <div class="user-initials">${initials}</div>
+                                ${log.actor_name || log.username || 'System'}
+                            </div>
+                        </td>
+                        <td>
+                            ${status}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) { console.error(e); }
+    }
+
+    function getActionIcon(action) {
+        if (action.includes('PAYROLL')) return 'fa-rocket';
+        if (action.includes('EMPLOYEE')) return 'fa-user-tie';
+        if (action.includes('LOGIN')) return 'fa-sign-in-alt';
+        if (action.includes('CREATE')) return 'fa-plus-circle';
+        return 'fa-cog';
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        return "Just now";
+    }
+
+    async function fetchDashboardData() {
+        try {
+            const res = await authFetch('/api/payroll/dashboard/stats/');
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            const data = await res.json();
+
+            // 1. Update Overview Stats
+            const stats = data.stats;
+            if (stats) {
+                animateValue("stat-total-emp", 0, stats.total_employees || 0, 1000);
+
+                // Format Monthly
+                const lastPay = stats.total_monthly_salary || 0;
+                const formattedLast = formatCurrencyLarge(lastPay);
+                document.getElementById('stat-last-pay').textContent = `₹ ${formattedLast.val}${formattedLast.suffix}`;
+
+                // Format YTD
+                const ytdVal = stats.total_year_spend || 0;
+                const formattedYtd = formatCurrencyLarge(ytdVal);
+                document.getElementById('stat-ytd').textContent = `₹ ${formattedYtd.val}${formattedYtd.suffix}`;
+
+                document.getElementById('stat-approvals').textContent = stats.pending_approvals || 0;
+            }
+
+            // 2. Initialize Charts
+            if (data.charts) {
+                initCharts(data.charts);
+            }
+        } catch (e) {
+            console.error("[Dashboard] Error:", e);
+        }
+    }
+
+    function formatCurrencyLarge(num) {
+        const absNum = Math.abs(num);
+        if (absNum >= 10000000) return { val: (num / 10000000).toFixed(1), suffix: 'Cr' };
+        if (absNum >= 100000) return { val: (num / 100000).toFixed(1), suffix: 'L' };
+        if (absNum >= 1000) return { val: (num / 1000).toFixed(1), suffix: 'K' };
+        return { val: num.toLocaleString(), suffix: '' };
+    }
+
+    function animateValue(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        if (start === end) {
+            obj.innerHTML = end;
+            return;
+        }
+        let range = end - start;
+        let current = start;
+        let increment = end > start ? 1 : -1;
+        let stepTime = Math.abs(Math.floor(duration / range));
+        let timer = setInterval(function () {
+            current += increment;
+            obj.innerHTML = current;
+            if (current == end) {
+                clearInterval(timer);
+            }
+        }, stepTime || 1);
+    }
+
+    let salaryTrendChart = null;
+    let deptDistChart = null;
+
+    function initCharts(chartData) {
+        if (salaryTrendChart) salaryTrendChart.destroy();
+        if (deptDistChart) deptDistChart.destroy();
+
+        const ctxTrend = document.getElementById('salaryTrendChart').getContext('2d');
+        const ctxDept = document.getElementById('deptDistChart').getContext('2d');
+
+        // Salary Trend Chart (Dynamic)
+        salaryTrendChart = new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: chartData.salary_trend.labels || [],
+                datasets: [{
+                    label: 'Disbursement',
+                    data: chartData.salary_trend.data || [],
+                    borderColor: '#10b981',
+                    borderWidth: 4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointHoverRadius: 6,
+                    fill: true,
+                    backgroundColor: (context) => {
+                        const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+                        gradient.addColorStop(1, 'transparent');
+                        return gradient;
+                    },
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: '#0f172a',
+                        padding: 12,
+                        borderRadius: 10,
+                        callbacks: {
+                            label: (context) => ' ₹' + context.parsed.y.toLocaleString()
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } },
+                    y: {
+                        grid: { color: 'rgba(226, 232, 240, 0.1)', drawBorder: false },
+                        ticks: { color: '#64748b', callback: value => '₹' + formatCurrencyLarge(value).val + formatCurrencyLarge(value).suffix }
+                    }
+                }
+            }
+        });
+
+        // Department Distribution Chart (Dynamic)
+        deptDistChart = new Chart(ctxDept, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.dept_distribution.labels || [],
+                datasets: [{
+                    data: chartData.dept_distribution.data || [],
+                    backgroundColor: [
+                        '#10b981', '#059669', '#34d399', '#f59e0b', '#d97706', '#6366f1', '#8b5cf6'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 12, weight: '600' },
+                            color: '#64748b'
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
 {% endblock %}
-
-{% block header_title %}Dashboard{% endblock %}
-
-{% block org_type %}Company{% endblock %}

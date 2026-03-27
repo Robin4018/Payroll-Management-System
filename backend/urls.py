@@ -2,39 +2,43 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from payroll.views import PayrollLedgerViewSet, SalaryComponentViewSet, EmployeeSalaryStructureViewSet, PayrollAdjustmentViewSet, ReportViewSet
+from payroll.views import PayrollLedgerViewSet, SalaryComponentViewSet, EmployeeSalaryStructureViewSet, PayrollAdjustmentViewSet
 from employees.views import EmployeeViewSet, DepartmentViewSet, DesignationViewSet, EmployeeBankDetailsViewSet, EmployeeDocumentViewSet, RoleViewSet
 
-from attendance.views import AttendanceViewSet, LeaveTypeViewSet, LeaveRequestViewSet
+from attendance.views import AttendanceViewSet, LeaveTypeViewSet, LeaveRequestViewSet, LeaveBalanceViewSet
 
 router = DefaultRouter()
 router.register(r'employees/departments', DepartmentViewSet, basename='department')
 router.register(r'employees/designations', DesignationViewSet, basename='designation')
 router.register(r'bank-details', EmployeeBankDetailsViewSet, basename='employee-bank-details')
 router.register(r'employee-documents', EmployeeDocumentViewSet, basename='employee-documents')
-router.register(r'employees', EmployeeViewSet)
+router.register(r'employees', EmployeeViewSet, basename='employees')
 router.register(r'roles', RoleViewSet, basename='roles')
 from payroll.views import SalaryTemplateViewSet, LoanViewSet, ReimbursementViewSet, SalaryTemplateConfigViewSet
 router.register(r'salary-templates', SalaryTemplateViewSet, basename='salary-templates')
 router.register(r'salary-template-configs', SalaryTemplateConfigViewSet, basename='salary-template-configs')
-router.register(r'payroll', PayrollLedgerViewSet)
-router.register(r'components', SalaryComponentViewSet)
-router.register(r'salary-structures', EmployeeSalaryStructureViewSet)
-router.register(r'adjustments', PayrollAdjustmentViewSet)
+router.register(r'payroll', PayrollLedgerViewSet, basename='payroll')
+router.register(r'components', SalaryComponentViewSet, basename='components')
+router.register(r'salary-structures', EmployeeSalaryStructureViewSet, basename='salary-structures')
+router.register(r'adjustments', PayrollAdjustmentViewSet, basename='adjustments')
 router.register(r'loans', LoanViewSet, basename='loans')
 router.register(r'reimbursements', ReimbursementViewSet, basename='reimbursements')
-router.register(r'report-analytics', ReportViewSet, basename='report-analytics')
-router.register(r'attendance', AttendanceViewSet)
-router.register(r'leave-types', LeaveTypeViewSet)
-router.register(r'leave-requests', LeaveRequestViewSet)
+from payroll.views import BankPaymentViewSet
+router.register(r'bank-payments', BankPaymentViewSet, basename='bank-payments')
+# router.register(r'report-analytics', ReportViewSet, basename='report-analytics') # Removed ViewSet
+router.register(r'attendance', AttendanceViewSet, basename='attendance')
+router.register(r'leave-types', LeaveTypeViewSet, basename='leave-types')
+router.register(r'leave-requests', LeaveRequestViewSet, basename='leave-requests')
+router.register(r'leaves/balances', LeaveBalanceViewSet, basename='leave-balances')
 
-from notifications.views import NotificationViewSet
+from notifications.views import NotificationViewSet, AnnouncementViewSet
 router.register(r'notifications', NotificationViewSet, basename='notifications')
+router.register(r'announcements', AnnouncementViewSet, basename='announcements')
 from notifications.views import ApprovalsViewSet
 router.register(r'approvals', ApprovalsViewSet, basename='approvals')
 
 from audit_logs.views import AuditLogViewSet
-router.register(r'audit-logs', AuditLogViewSet)
+router.register(r'audit-logs', AuditLogViewSet, basename='audit-logs')
 
 from compliance.views import StatutoryRateViewSet, TaxSlabViewSet, TaxDeclarationViewSet
 router.register(r'compliance/rates', StatutoryRateViewSet, basename='compliance-rates')

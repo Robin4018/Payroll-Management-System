@@ -1,0 +1,570 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+
+{% block header_title %}Personnel Profile{% endblock %}
+
+{% block content_body %}
+<div class="card animate-entry"
+    style="margin-bottom: 2.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 28px; padding: 2.5rem; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; gap: 2.5rem; align-items: center;">
+        <div style="position: relative;">
+            <div
+                style="width: 120px; height: 120px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 32px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary); overflow: hidden; position: relative;">
+                <img id="profile-photo" src="" alt=""
+                    style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                <span id="profile-initials" style="font-weight: 800;">--</span>
+            </div>
+
+            <!-- Upload Button -->
+            <button onclick="document.getElementById('photo-input').click()" title="Upload Photo"
+                style="position: absolute; bottom: -8px; right: -8px; background: var(--primary); color: white; border: 4px solid var(--bg-card); border-radius: 14px; width: 42px; height: 42px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px var(--primary-light); z-index: 10; transition: all 0.2s;">
+                <i class="fas fa-camera" style="font-size: 1.1rem;"></i>
+            </button>
+            <input type="file" id="photo-input" hidden accept="image/*" onchange="uploadProfilePhoto(this)">
+
+            <!-- Remove Button -->
+            <button id="btn-remove-photo" onclick="removeProfilePhoto()" title="Remove Photo"
+                style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border: 4px solid var(--bg-card) !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 11;">
+                <i class="fas fa-times" style="font-size: 0.8rem;"></i>
+            </button>
+        </div>
+        <div>
+            <h1 id="emp-name"
+                style="margin: 0; font-size: 2.25rem; font-weight: 850; color: var(--text-main); letter-spacing: -0.02em;">
+                Synchronizing...</h1>
+            <div
+                style="display: flex; gap: 1rem; color: var(--text-muted); font-size: 1rem; margin-top: 0.5rem; font-weight: 500;">
+                <span id="emp-designation">--</span> <span style="opacity: 0.5;">•</span> <span id="emp-dept">--</span>
+            </div>
+            <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+                <span id="emp-status" class="status-badge"
+                    style="padding: 0.4rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">--</span>
+                <span id="emp-code" class="status-badge"
+                    style="background: var(--bg-input); color: var(--primary); padding: 0.4rem 1rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; font-family: monospace;">--</span>
+            </div>
+        </div>
+        <div style="margin-left: auto; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="openEditModal()"
+                style="display: flex; align-items: center; gap: 0.75rem; border-radius: 14px; font-weight: 700; padding: 0.8rem 1.75rem; background: var(--primary); border: none; box-shadow: 0 10px 20px var(--primary-light);">
+                <i class="fas fa-user-edit"></i> Edit Records
+            </button>
+            <button class="btn" onclick="deleteEmployee()"
+                style="display: flex; align-items: center; gap: 0.75rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 14px; font-weight: 700; padding: 0.8rem 1.75rem; transition: all 0.3s;">
+                <i class="fas fa-trash-alt"></i> Delete Personnel
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="tabs"
+    style="background: var(--bg-input); padding: 0.4rem; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 2.5rem; display: inline-flex; gap: 0.25rem;">
+    <button class="tab-btn active" onclick="switchTab('personal')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Personal
+        Identity</button>
+    <button class="tab-btn" onclick="switchTab('employment')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Work &
+        Financials</button>
+    <button class="tab-btn" onclick="switchTab('documents')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Archives</button>
+    <button class="tab-btn" onclick="switchTab('salary')"
+        style="padding: 0.7rem 1.75rem; border-radius: 12px; font-weight: 700; font-size: 0.9rem;">Compensation</button>
+</div>
+
+<!-- Personal Tab -->
+<div id="personal-section" class="tab-content">
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Basic Information</h3>
+        </div>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div class="info-field">
+                <label class="info-label">Email Address</label>
+                <div id="field-email" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Phone Number</label>
+                <div id="field-phone" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Date of Birth</label>
+                <div id="field-dob" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Gender</label>
+                <div id="field-gender" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Blood Group</label>
+                <div id="field-blood" class="info-value">--</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 1.25rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">Residential
+            Address</h3>
+        <div class="info-value" style="min-height: 80px; padding: 1.25rem; line-height: 1.6;" id="field-address">--
+        </div>
+
+        <h3
+            style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">
+            Emergency Contact Information</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div class="info-field">
+                <label class="info-label">Contact Person</label>
+                <div id="field-emg-name" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Emergency Phone</label>
+                <div id="field-emg-phone" class="info-value">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="employment-section" class="tab-content hidden">
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <h3 style="margin-bottom: 2.5rem; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Corporate
+            Profile</h3>
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3.5rem;">
+            <div class="info-field">
+                <label class="info-label">Joining Date</label>
+                <div id="field-doj" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Work Location</label>
+                <div id="field-location" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Employment Type</label>
+                <div id="field-type" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Direct Supervisor</label>
+                <div id="field-manager" class="info-value">--</div>
+            </div>
+        </div>
+
+        <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-size: 1.1rem; font-weight: 700;">Financial &
+            Statutory Records</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            <div class="info-field">
+                <label class="info-label">Bank Institution</label>
+                <div id="field-bank" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Account Identification</label>
+                <div id="field-account" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Tax ID (PAN)</label>
+                <div id="field-pan" class="info-value">--</div>
+            </div>
+            <div class="info-field">
+                <label class="info-label">Social Welfare (PF)</label>
+                <div id="field-pf" class="info-value">--</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="documents-section" class="tab-content hidden">
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Digital Archives</h3>
+            <button class="btn btn-primary"
+                onclick="document.getElementById('upload-document-modal').classList.remove('hidden')">
+                <i class="fas fa-file-upload"></i> Upload Archive
+            </button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Classification</th>
+                    <th>Timestamp</th>
+                    <th style="text-align: right;">Access</th>
+                </tr>
+            </thead>
+            <tbody id="docs-table-body">
+                <tr>
+                    <td colspan="4" class="text-center">Loading archives...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="salary-section" class="tab-content hidden">
+    <div class="card"
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem;">
+            <h3 style="margin: 0; color: var(--text-main); font-size: 1.25rem; font-weight: 800;">Compensation Package
+            </h3>
+            <button onclick="openSalaryModal()" class="btn btn-primary">
+                <i class="fas fa-calculator"></i> Adjust Package
+            </button>
+        </div>
+
+        <div
+            style="background: var(--bg-input); padding: 2rem; border-radius: 20px; margin-bottom: 3rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <div
+                    style="width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                    <label class="info-label">Annual Gross Compensation</label>
+                    <div style="font-size: 2rem; font-weight: 850; color: var(--text-main); line-height: 1;">
+                        ₹ <span id="display-ctc">0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <label class="info-label">Structure Policy</label>
+                <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary);" id="display-template-name">--
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Component Label</th>
+                    <th style="text-align: right;">Monthly Yield</th>
+                    <th style="text-align: right;">Annual Yield</th>
+                </tr>
+            </thead>
+            <tbody id="salary-breakdown-body">
+                <tr>
+                    <td colspan="3" class="text-center">No compensation policy linked.</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: 850; background: var(--primary-light);">
+                    <td style="color: var(--primary); padding: 1.5rem;">Net Annual Realization</td>
+                    <td style="text-align: right; color: var(--primary); padding: 1.5rem;" id="total-monthly">--</td>
+                    <td style="text-align: right; color: var(--primary); padding: 1.5rem;" id="total-annual">--</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+    .info-field {
+        margin-bottom: 1.5rem;
+    }
+
+    .info-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--primary);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.05em;
+    }
+
+    .info-value {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        color: var(--text-main);
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0.7rem 1.75rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .tab-btn.active {
+        background: var(--bg-card) !important;
+        color: var(--primary) !important;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 1rem;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+</style>
+
+{% include 'frontend/modals/company_employee_modals.html' %}
+
+<script>
+    const empId = window.location.pathname.split('/').filter(Boolean).pop();
+    let currentEmployeeData = {};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadEmployeeDetails();
+        loadTemplates();
+    });
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`${tab}-section`).classList.remove('hidden');
+        // Find button by text
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach(btn => {
+            if (btn.getAttribute('onclick').includes(tab)) btn.classList.add('active');
+        });
+    }
+
+    async function loadEmployeeDetails() {
+        try {
+            const res = await authFetch(`/api/employees/${empId}/`);
+            const data = await res.json();
+            currentEmployeeData = data;
+
+            document.getElementById('emp-name').innerText = `${data.first_name} ${data.last_name}`;
+            document.getElementById('emp-designation').innerText = data.designation_name || data.designation || 'Personnel';
+            document.getElementById('emp-dept').innerText = data.department_name || 'Global Operations';
+            document.getElementById('emp-code').innerText = data.employee_code || '--';
+            document.getElementById('emp-status').innerText = data.is_active ? 'Active Status' : 'Inactive';
+            document.getElementById('emp-status').className = `status-badge ${data.is_active ? 'badge-active' : 'badge-inactive'}`;
+
+            if (data.profile_photo) {
+                const img = document.getElementById('profile-photo');
+                img.src = data.profile_photo;
+                img.style.display = 'block';
+                document.getElementById('profile-initials').style.display = 'none';
+            } else {
+                document.getElementById('profile-initials').innerText = (data.first_name[0] + (data.last_name[0] || '')).toUpperCase();
+            }
+
+            document.getElementById('field-email').innerText = data.email;
+            document.getElementById('field-phone').innerText = data.phone;
+            document.getElementById('field-dob').innerText = data.date_of_birth || '--';
+            document.getElementById('field-gender').innerText = data.gender || '--';
+            document.getElementById('field-blood').innerText = data.blood_group || '--';
+            document.getElementById('field-address').innerText = data.address || '--';
+            document.getElementById('field-doj').innerText = data.date_of_joining || '--';
+            document.getElementById('field-location').innerText = data.work_location || '--';
+            document.getElementById('field-type').innerText = data.employment_type || '--';
+            document.getElementById('field-manager').innerText = data.reporting_manager_name || 'None';
+
+            if (data.bank_details) {
+                document.getElementById('field-bank').innerText = data.bank_details.bank_name || '--';
+                document.getElementById('field-account').innerText = data.bank_details.account_number || '--';
+                document.getElementById('field-pan').innerText = data.bank_details.pan_number || '--';
+                document.getElementById('field-pf').innerText = data.bank_details.pf_account_number || '--';
+            }
+
+            if (data.ctc) document.getElementById('display-ctc').innerText = parseFloat(data.ctc).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            renderDocs(data.documents || []);
+            loadSalaryStructure();
+        } catch (e) { console.error(e); }
+    }
+
+    async function loadSalaryStructure() {
+        try {
+            const res = await authFetch(`/api/salary-structures/?employee=${empId}`);
+            const data = await res.json();
+            const structure = data.results || data;
+            const tbody = document.getElementById('salary-breakdown-body');
+            tbody.innerHTML = '';
+
+            let totalM = 0, totalA = 0;
+            structure.forEach(item => {
+                const m = parseFloat(item.monthly_amount);
+                const a = parseFloat(item.annual_amount);
+                totalM += m; totalA += a;
+                tbody.innerHTML += `<tr><td>${item.component_name}</td><td style="text-align:right;">₹ ${m.toLocaleString('en-IN')}</td><td style="text-align:right;">₹ ${a.toLocaleString('en-IN')}</td></tr>`;
+                if (item.template_name) document.getElementById('display-template-name').innerText = item.template_name;
+            });
+
+            document.getElementById('total-monthly').innerText = '₹ ' + totalM.toLocaleString('en-IN');
+            document.getElementById('total-annual').innerText = '₹ ' + totalA.toLocaleString('en-IN');
+        } catch (e) { }
+    }
+
+    function renderDocs(docs) {
+        const tbody = document.getElementById('docs-table-body');
+        tbody.innerHTML = docs.length ? '' : '<tr><td colspan="4" class="text-center">No digital records found.</td></tr>';
+        docs.forEach(doc => {
+            tbody.innerHTML += `<tr><td>${doc.title}</td><td>${doc.document_type}</td><td>${new Date(doc.uploaded_at).toLocaleDateString()}</td><td style="text-align:right;"><a href="${doc.file}" target="_blank" class="btn btn-outline" style="padding:4px 10px;"><i class="fas fa-external-link-alt"></i></a></td></tr>`;
+        });
+    }
+
+    function openEditModal() {
+        const d = currentEmployeeData;
+        document.getElementById('edit-first-name').value = d.first_name;
+        document.getElementById('edit-last-name').value = d.last_name;
+        document.getElementById('edit-email').value = d.email;
+        document.getElementById('edit-phone').value = d.phone;
+        document.getElementById('edit-designation').value = d.designation || '';
+        document.getElementById('edit-type').value = d.employment_type;
+        document.getElementById('edit-location').value = d.work_location || '';
+        document.getElementById('edit-status').value = d.is_active ? 'true' : 'false';
+
+        if (d.bank_details) {
+            document.getElementById('edit-bank-id').value = d.bank_details.id;
+            document.getElementById('edit-bank-name').value = d.bank_details.bank_name || '';
+            document.getElementById('edit-account-number').value = d.bank_details.account_number || '';
+            document.getElementById('edit-ifsc').value = d.bank_details.ifsc_code || '';
+            document.getElementById('edit-pan').value = d.bank_details.pan_number || '';
+        }
+
+        document.getElementById('edit-profile-modal').classList.remove('hidden');
+    }
+
+    async function updatePersonnel(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        data.is_active = data.is_active === 'true';
+
+        try {
+            const res = await authFetch(`/api/employees/${empId}/`, {
+                method: 'PATCH',
+                body: JSON.stringify(data)
+            });
+
+            // Also update bank details if changed
+            const bankData = {
+                bank_name: document.getElementById('edit-bank-name').value,
+                account_number: document.getElementById('edit-account-number').value,
+                ifsc_code: document.getElementById('edit-ifsc').value,
+                pan_number: document.getElementById('edit-pan').value,
+                employee: empId
+            };
+            const bankId = document.getElementById('edit-bank-id').value;
+            if (bankId) {
+                await authFetch(`/api/bank-details/${bankId}/`, { method: 'PATCH', body: JSON.stringify(bankData) });
+            } else {
+                await authFetch(`/api/bank-details/`, { method: 'POST', body: JSON.stringify(bankData) });
+            }
+
+            if (res.ok) {
+                showToast("Dossier updated successfully", "success");
+                document.getElementById('edit-profile-modal').classList.add('hidden');
+                loadEmployeeDetails();
+            }
+        } catch (e) { showToast("System error during update", "error"); }
+    }
+
+    async function loadTemplates() {
+        try {
+            const res = await authFetch('/api/salary-templates/');
+            const data = await res.json();
+            const list = data.results || data;
+            const select = document.getElementById('input-template');
+            list.forEach(t => select.add(new Option(t.name, t.id)));
+        } catch (e) { }
+    }
+
+    function openSalaryModal() {
+        document.getElementById('salary-modal').classList.remove('hidden');
+    }
+
+    async function handleSalaryUpdate(e) {
+        e.preventDefault();
+        const tid = document.getElementById('input-template').value;
+        try {
+            const res = await authFetch(`/api/employees/${empId}/assign_salary_template/`, {
+                method: 'POST',
+                body: JSON.stringify({ template_id: tid })
+            });
+            if (res.ok) {
+                showToast("Compensation policy applied", "success");
+                document.getElementById('salary-modal').classList.add('hidden');
+                loadSalaryStructure();
+            }
+        } catch (e) { showToast("Policy application failed", "error"); }
+    }
+
+    async function deleteEmployee() {
+        const confirm = await customConfirm("Are you sure you want to permanently delete this personnel record? This action cannot be undone.", "Critical: Identity Deletion", { isDanger: true });
+        if (!confirm) return;
+
+        try {
+            const res = await authFetch(`/api/employees/${empId}/`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast("Personnel identity purged", "success");
+                window.location.href = '/dashboard/company/employees/';
+            }
+        } catch (e) { showToast("Purge failed", "error"); }
+    }
+
+    async function uploadProfilePhoto(input) {
+        if (!input.files || !input.files[0]) return;
+        const formData = new FormData();
+        formData.append('profile_photo', input.files[0]);
+        try {
+            const res = await authFetch(`/api/me/`, { // UserInfoView handles photo sync
+                method: 'PATCH',
+                body: formData
+            });
+            if (res.ok) {
+                showToast("Profile image updated", "success");
+                loadEmployeeDetails();
+            }
+        } catch (e) { showToast("Image upload failed", "error"); }
+    }
+
+    async function removeProfilePhoto() {
+        const confirm = await customConfirm("Remove profile photograph?", "Confirm Action");
+        if (!confirm) return;
+        try {
+            const res = await authFetch(`/api/me/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ remove_photo: true })
+            });
+            if (res.ok) {
+                showToast("Profile image removed", "success");
+                loadEmployeeDetails();
+            }
+        } catch (e) { showToast("Operation failed", "error"); }
+    }
+</script>
+{% endblock %}

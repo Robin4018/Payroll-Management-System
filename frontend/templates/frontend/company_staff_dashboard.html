@@ -1,0 +1,1258 @@
+{% extends 'frontend/dashboard_company_staff_base.html' %}
+{% load static %}
+
+{% block header_title %}Dashboard{% endblock %}
+
+{% block content_body %}
+<style>
+    /* Premium Modern Dashboard Styles - Elite Business Theme */
+    :root {
+        --primary-accent: #10b981;
+        --secondary-accent: #064e3b;
+        --success-accent: #10b981;
+        --card-bg: var(--bg-card);
+        --page-bg: #f8fafc;
+        --text-primary: #0f172a;
+        --text-secondary: #64748b;
+        --border-color: rgba(16, 185, 129, 0.1);
+        --obsidian: #030d0a;
+    }
+
+    [data-theme='dark'] {
+        --page-bg: #020617;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+    }
+
+    /* Welcome Section - Obsidian Glass Theme */
+    .welcome-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        background: linear-gradient(135deg, #061913 0%, #030d0a 100%);
+        padding: 3.5rem;
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.2);
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        color: white;
+        min-height: 350px;
+        border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    /* Abstract shapes in background */
+    .welcome-container::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .welcome-left {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        z-index: 2;
+        padding-right: 2rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(16, 185, 129, 0.15);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #10b981;
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 1.75rem;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background-color: #10b981;
+        border-radius: 50%;
+        box-shadow: 0 0 12px #10b981;
+    }
+
+    .dashboard-label {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .welcome-title {
+        font-size: 2.75rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .welcome-desc {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        max-width: 500px;
+        line-height: 1.6;
+    }
+
+    .btn-apply-leave {
+        background: linear-gradient(135deg, var(--contrast), var(--contrast-dark));
+        color: white;
+        padding: 1.1rem 2.2rem;
+        border-radius: 16px;
+        font-weight: 800;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        width: fit-content;
+        box-shadow: 0 10px 20px -5px var(--contrast-glow);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-apply-leave:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 15px 30px -5px var(--contrast-glow);
+        color: white;
+    }
+
+    /* Right Side Visuals */
+    .welcome-right {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        z-index: 2;
+    }
+
+    .profile-card-img {
+        width: 170px;
+        height: 220px;
+        border-radius: 24px;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        background: var(--bg-body);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .attendance-glass-card {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        padding: 1.75rem;
+        width: 240px;
+        height: 220px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .glass-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.5rem;
+        opacity: 0.6;
+        font-weight: 700;
+    }
+
+    .glass-status-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .glass-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: 0.5px;
+        width: 100%;
+    }
+
+    .glass-sub-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .glass-unit {
+        font-size: 0.9rem;
+        font-weight: 500;
+        opacity: 0.7;
+    }
+
+    /* Minimal Leave Cards */
+    .leave-row {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .leave-stat-card {
+        background: var(--card-bg);
+        border-radius: 20px;
+        padding: 2rem;
+        flex: 1;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s;
+        min-width: 200px;
+    }
+
+    .leave-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+
+    .leave-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #10b981;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .leave-type-label {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Content Layout */
+    .content-split {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Tables */
+    .table-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .modern-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .modern-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+
+    .modern-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .modern-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Quick Links */
+    .quick-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .quick-link-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .quick-link-item:hover {
+        border-color: var(--primary-accent);
+        background: var(--primary-light);
+        transform: translateX(4px);
+    }
+
+    .link-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--bg-body);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+    }
+
+    .quick-link-item:hover .link-icon {
+        transform: scale(1.05);
+    }
+
+    /* Icon Theme Colors */
+    .icon-profile {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+    [data-theme="dark"] .icon-profile {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+
+    .icon-leave {
+        background: #fff7ed;
+        color: #f97316;
+    }
+
+    [data-theme="dark"] .icon-leave {
+        background: rgba(249, 115, 22, 0.15);
+        color: #fb923c;
+    }
+
+    .icon-reimb {
+        background: #fffbeb;
+        color: #d97706;
+    }
+
+    [data-theme="dark"] .icon-reimb {
+        background: rgba(217, 119, 6, 0.15);
+        color: #fbbf24;
+    }
+
+    .icon-help {
+        background: #f8fafc;
+        color: #64748b;
+    }
+
+    [data-theme="dark"] .icon-help {
+        background: rgba(148, 163, 184, 0.15);
+        color: #94a3b8;
+    }
+
+    /* Professional Compact Scrollable Cards */
+    .announcement-card {
+        background: white;
+        border: 1px solid #f1f5f9;
+        border-right: none;
+        border-bottom: none;
+        border-left: 5px solid #f59e0b;
+        border-radius: 18px;
+        padding: 1.25rem;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-width: 320px;
+        max-width: 320px;
+        height: 200px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .announcement-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+        border-left-width: 6px;
+    }
+
+    .announcement-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: rgba(var(--primary-rgb), 0.1);
+    }
+
+    .announcement-card.priority-URGENT {
+        border-left-color: #ef4444;
+    }
+
+    .announcement-card.priority-HIGH {
+        border-left-color: #f97316;
+    }
+
+    .announcement-card.priority-MEDIUM {
+        border-left-color: #f59e0b;
+    }
+
+    .announcement-card.priority-LOW {
+        border-left-color: #10b981;
+    }
+
+    .announcement-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .announcement-title {
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    [data-theme="dark"] .announcement-title {
+        color: #f8fafc;
+    }
+
+
+
+    .announcement-content {
+        font-size: 0.85rem;
+        color: #475569;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    [data-theme="dark"] .announcement-content {
+        color: #94a3b8;
+    }
+
+    .announcement-footer {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        margin-top: auto;
+    }
+
+    [data-theme="dark"] .announcement-footer {
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+
+    /* --- Animations --- */
+    @keyframes slideUpFade {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideLeftFade {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes wave {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        10% {
+            transform: rotate(14deg);
+        }
+
+        20% {
+            transform: rotate(-8deg);
+        }
+
+        30% {
+            transform: rotate(14deg);
+        }
+
+        40% {
+            transform: rotate(-4deg);
+        }
+
+        50% {
+            transform: rotate(10deg);
+        }
+
+        60% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+    .wave-emoji {
+        display: inline-flex;
+        transform-origin: 70% 70%;
+        animation: wave 2.5s infinite;
+        vertical-align: middle;
+        position: relative;
+        top: -2px;
+    }
+
+    @keyframes shine {
+        0% {
+            left: -100%;
+        }
+
+        20% {
+            left: 100%;
+        }
+
+        100% {
+            left: 100%;
+        }
+    }
+
+    .animate-slide-up {
+        animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .animate-slide-left {
+        animation: slideLeftFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .animate-scale-in {
+        animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .delay-1 {
+        animation-delay: 0.1s;
+    }
+
+    .delay-2 {
+        animation-delay: 0.2s;
+    }
+
+    .delay-3 {
+        animation-delay: 0.3s;
+    }
+
+    .delay-4 {
+        animation-delay: 0.4s;
+    }
+
+    .delay-5 {
+        animation-delay: 0.5s;
+    }
+
+    /* Special effect for Welcome Card */
+    .welcome-container {
+        position: relative;
+    }
+
+    .welcome-container::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: skewX(-25deg);
+        animation: shine 4s infinite;
+        pointer-events: none;
+    }
+
+    @media (max-width: 1100px) {
+        .welcome-container {
+            flex-direction: column;
+            padding: 2rem;
+            text-align: center;
+            height: auto;
+        }
+
+        .welcome-left {
+            margin-bottom: 2rem;
+            padding-right: 0;
+            align-items: center;
+        }
+
+        .welcome-right {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .leave-row {
+            flex-wrap: wrap;
+        }
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
+    }
+</style>
+
+<!-- Blue Welcome Card -->
+<div class="welcome-container animate-slide-up">
+    <div class="welcome-left">
+        <div class="status-badge animate-scale-in delay-2">
+            <div class="status-dot"></div>
+            Personnel Status: Active
+        </div>
+
+        <div class="dashboard-label animate-slide-up delay-1">Personnel Dashboard</div>
+        <h1 class="welcome-title animate-slide-up delay-2">Welcome, <span id="staff-first-name">Staff</span>! <span
+                class="wave-emoji">👋</span></h1>
+        <p class="welcome-desc animate-slide-up delay-3">
+            Everything is running smoothly with your profile. You can check your attendance, apply for leaves, or
+            download payslips below.
+        </p>
+
+        <a href="/dashboard/company/staff/leaves/" class="btn-apply-leave animate-slide-up delay-4">
+            <i class="fas fa-calendar-plus"></i> Apply for Leave
+        </a>
+    </div>
+
+    <div class="welcome-right">
+        <!-- Profile Image -->
+        <img id="staff-photo-main" src="/media/default-avatar.png" class="profile-card-img animate-scale-in delay-3"
+            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23cbd5e1%22%3E%3Cpath d=%22M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z%22/%3E%3C/svg%3E'">
+
+        <!-- Attendance Geo-fencing Card -->
+        <div class="attendance-glass-card animate-slide-left delay-4" id="geo-attendance-card"
+            style="height: auto; min-height: 240px; width: 280px; padding: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 1.25rem; height: 100%;">
+                <div class="glass-status-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="glass-label">Campus Presence</div>
+                        <div id="distance-indicator"
+                            style="font-size: 0.65rem; font-weight: 800; padding: 0.2rem 0.6rem; border-radius: 50px; background: rgba(0,0,0,0.2); display: none;">
+                            --</div>
+                    </div>
+                    <div class="glass-value" id="today-status-text" style="font-size: 1.1rem; margin-top: 0.25rem;">
+                        Checking...</div>
+                    <div id="check-times" style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.4rem; display: none;">
+                        <i class="far fa-clock" style="margin-right: 2px;"></i> <span id="val-time-in">--</span> <span
+                            style="margin: 0 0.4rem">→</span> <span id="val-time-out">--</span>
+                    </div>
+                </div>
+
+                <div id="geo-action-area" style="margin-top: 0.5rem;">
+                    <button id="btn-geo-action" onclick="handleGeoAction()" class="btn"
+                        style="width: 100%; background: white; color: #10b981; border: none; border-radius: 12px; padding: 0.85rem; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <i class="fas fa-location-arrow"></i> <span>Check Location</span>
+                    </button>
+                    <p id="geo-msg"
+                        style="font-size: 0.7rem; text-align: center; margin-top: 0.75rem; font-weight: 600; opacity: 0.9; line-height: 1.4; min-height: 14px; margin-bottom: 0;">
+                    </p>
+                </div>
+
+                <div class="glass-status-container"
+                    style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 0.5rem;">
+                    <div class="glass-label">Month Presence</div>
+                    <div class="glass-sub-value" style="font-size: 1.5rem;">
+                        <span id="days-count">--</span>
+                        <span class="glass-unit">Days</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcements Section -->
+<div id="announcements-section" class="animate-slide-up delay-1" style="display: none; margin-bottom: 3.5rem;">
+    <div
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding: 0 0.5rem;">
+        <h3
+            style="color: var(--text-primary); margin: 0; display:flex; align-items:center; gap:0.75rem; font-size: 1.35rem; font-weight: 850; letter-spacing: -0.02em;">
+            <div style="width: 12px; height: 32px; background: #f59e0b; border-radius: 4px;"></div> Announcements
+        </h3>
+        <a href="/dashboard/company/staff/announcements/"
+            style="color: #10b981; font-weight: 700; font-size: 0.95rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; transition: opacity 0.2s;"
+            onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+            View All <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
+        </a>
+    </div>
+    <div id="announcements-container"
+        style="display: flex; overflow-x: auto; gap: 1.5rem; padding: 0.5rem 0.5rem 1.5rem; scroll-snap-type: x mandatory; -ms-overflow-style: none; scrollbar-width: none;">
+        <!-- Announcements will be injected here -->
+    </div>
+    <style>
+        #announcements-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .announcement-card {
+            scroll-snap-align: start;
+        }
+    </style>
+</div>
+
+<!-- Simple Leave Balance Row -->
+<div class="card animate-slide-up delay-2"
+    style="border:none; box-shadow:none; background:transparent; padding:0; margin-bottom: 3.5rem;">
+    <h3
+        style="color: var(--text-primary); margin-bottom: 1.25rem; display:flex; align-items:center; gap:0.75rem; font-size: 1.35rem; font-weight: 850; letter-spacing: -0.02em; padding: 0 0.5rem;">
+        <div style="width: 12px; height: 32px; background: #10b981; border-radius: 4px;"></div> Leave Balances
+    </h3>
+    <div class="leave-row" id="simple-leaves-grid" style="gap: 1.5rem;">
+        <div class="leave-stat-card">
+            <div class="leave-number">--</div>
+            <div class="leave-type-label">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Split for Payslips -->
+<div class="content-split">
+    <!-- Left: Payslips -->
+    <div class="table-card animate-slide-up delay-3">
+        <div class="card-header">
+            <h4 class="card-title">Recent Payslips</h4>
+            <a href="/dashboard/company/staff/payslips/"
+                style="color: var(--primary-accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;">View
+                All</a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Net Pay</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="payslip-table">
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right: Quick Links -->
+    <div class="animate-slide-up delay-4">
+        <h4
+            style="margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 850; color: var(--text-primary); letter-spacing: -0.01em;">
+            Quick Actions</h4>
+        <div class="quick-links" style="gap: 1.25rem;">
+            <a href="/dashboard/company/staff/profile/" class="quick-link-item"
+                style="animation: slideLeftFade 0.5s both; animation-delay: 0.5s; padding: 1.25rem; border-radius: 18px;">
+                <div class="link-icon icon-profile" style="width: 48px; height: 48px; border-radius: 14px;"><i
+                        class="fas fa-user-circle"></i></div>
+                <div style="font-weight: 700; font-size: 1rem;">View Profile</div>
+            </a>
+            <a href="/dashboard/company/staff/leaves/" class="quick-link-item"
+                style="animation: slideLeftFade 0.5s both; animation-delay: 0.6s; padding: 1.25rem; border-radius: 18px;">
+                <div class="link-icon icon-leave" style="width: 48px; height: 48px; border-radius: 14px;"><i
+                        class="fas fa-calendar-plus"></i></div>
+                <div style="font-weight: 700; font-size: 1rem;">Apply Leave</div>
+            </a>
+            <a href="/dashboard/company/staff/help/" class="quick-link-item"
+                style="animation: slideLeftFade 0.5s both; animation-delay: 0.8s; padding: 1.25rem; border-radius: 18px;">
+                <div class="link-icon icon-help" style="width: 48px; height: 48px; border-radius: 14px;"><i
+                        class="fas fa-life-ring"></i></div>
+                <div style="font-weight: 700; font-size: 1rem;">Help & Support</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Face Capture Modal -->
+    <div id="face-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center; backdrop-filter: blur(10px);">
+        <div
+            style="background:var(--card-bg); width:90%; max-width:450px; border-radius:32px; padding:2.5rem; position:relative; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);">
+            <button onclick="closeFaceModal()"
+                style="position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.1); border:none; width:36px; height:36px; border-radius:50%; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.3s;"><i
+                    class="fas fa-times"></i></button>
+
+            <h3
+                style="margin-top:0; color:var(--text-primary); font-size:1.5rem; font-weight:800; letter-spacing:-0.02em;">
+                Face Verification</h3>
+            <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">Please position your face
+                clearly within the frame</p>
+
+            <div
+                style="position:relative; width:100%; aspect-ratio:1; background:#000; border-radius:24px; overflow:hidden; border:4px solid var(--primary); box-shadow:0 0 20px rgba(16, 185, 129, 0.3);">
+                <video id="webcam" autoplay playsinline
+                    style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
+                <div id="face-guideline"
+                    style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:65%; height:75%; border:2px dashed rgba(255,255,255,0.5); border-radius:50%; pointer-events:none;">
+                </div>
+                <canvas id="photo-canvas" style="display:none;"></canvas>
+            </div>
+
+            <div id="capture-status" style="margin-top:1.25rem; font-size:0.85rem; font-weight:600; min-height:1.2rem;">
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; gap:1rem;">
+                <button onclick="closeFaceModal()" class="btn"
+                    style="flex:1; background:rgba(255,255,255,0.05); color:var(--text-primary); padding:1rem; border-radius:14px; font-weight:700;">Cancel</button>
+                <button id="btn-capture" onclick="captureAndSubmit()" class="btn"
+                    style="flex:2; background:linear-gradient(135deg, #10b981, #059669); color:white; padding:1rem; border-radius:14px; font-weight:800; border:none; box-shadow:0 10px 15px -3px rgba(16, 185, 129, 0.3);">Capture
+                    & Verify</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initNewDesign();
+            fetchRecentPayslips();
+            fetchAnnouncements();
+        });
+
+        async function fetchAnnouncements() {
+            try {
+                const res = await authFetch('/api/announcements/');
+                if (!res.ok) return;
+                const data = await res.json();
+                const results = data.results || data;
+
+                const section = document.getElementById('announcements-section');
+                const container = document.getElementById('announcements-container');
+
+                if (results && results.length > 0) {
+                    section.style.display = 'block';
+                    container.innerHTML = results.slice(0, 4).map((a, idx) => `
+                    <div class="announcement-card priority-${a.priority}" style="animation-delay: ${0.2 + (idx * 0.1)}s;">
+                        <div class="announcement-header">
+                            <span class="announcement-title">${a.title}</span>
+                        </div>
+                        <div class="announcement-content">${a.content}</div>
+                        <div class="announcement-footer">
+                            <i class="far fa-calendar-alt"></i>
+                            <span>${new Date(a.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                    </div>
+                `).join('');
+                }
+            } catch (e) {
+                console.error('Announcements error', e);
+            }
+        }
+
+        async function initNewDesign() {
+            try {
+                // 1. Fetch User Info
+                const userRes = await authFetch('/api/me/');
+                if (!userRes.ok) throw new Error('Auth failed');
+                const user = await userRes.json();
+
+                // Name Logic for Title
+                const name = user.employee_name || user.username;
+                const parts = name.split(' ');
+                let displayName = parts[0];
+                // Handle titles
+                if (['Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.'].some(t => parts[0].includes(t)) && parts.length > 1) {
+                    displayName = parts[0] + ' ' + parts[1];
+                }
+                document.getElementById('staff-first-name').textContent = displayName;
+
+                // Set Photo
+                if (user.photo) {
+                    document.getElementById('staff-photo-main').src = user.photo;
+                }
+
+                // 2. Fetch Leaves
+                fetchSimpleLeaves();
+
+                // 3. Fetch Attendance
+                fetchAttendanceSummary();
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        let geoConfig = null;
+        let currentAttendance = null;
+
+        async function fetchAttendanceSummary() {
+            try {
+                const res = await authFetch('/api/attendance/my_summary/');
+                if (!res.ok) return;
+                const data = await res.json();
+                currentAttendance = data;
+
+                if (data.geofence) geoConfig = data.geofence;
+
+                document.getElementById('days-count').textContent = data.presence_count;
+                updateGeoUI(data);
+
+            } catch (e) {
+                console.error('Attendance error', e);
+            }
+        }
+
+        function updateGeoUI(data) {
+            const btn = document.getElementById('btn-geo-action');
+            const statusText = document.getElementById('today-status-text');
+            const msgText = document.getElementById('geo-msg');
+            const checkTimes = document.getElementById('check-times');
+
+            statusText.textContent = data.today_status;
+
+            // Color coding
+            if (data.today_status === 'ABSENT') statusText.style.color = '#ff4d4d';
+            else if (data.today_status === 'PRESENT') statusText.style.color = '#4ade80';
+            else if (data.today_status === 'HOLIDAY') statusText.style.color = '#fbbf24';
+
+            if (data.check_in) {
+                checkTimes.style.display = 'block';
+                document.getElementById('val-time-in').textContent = formatTime(data.check_in);
+                if (data.check_out) {
+                    document.getElementById('val-time-out').textContent = formatTime(data.check_out);
+                    btn.innerHTML = '<i class="fas fa-check-double"></i> Shift Completed';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.7';
+                    msgText.textContent = "Enjoy your evening!";
+                } else {
+                    document.getElementById('val-time-out').textContent = "--:--";
+                    btn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Clock Out Now';
+                    msgText.textContent = "Work hard, stay productive!";
+                }
+            } else {
+                checkTimes.style.display = 'none';
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Clock In Now';
+                msgText.textContent = "Click to mark your presence";
+            }
+        }
+
+        async function handleGeoAction() {
+            if (!navigator.geolocation) {
+                showToast("Geolocation not supported", "error");
+                return;
+            }
+
+            const actionType = currentAttendance && currentAttendance.check_in ? 'check_out' : 'check_in';
+
+            if (actionType === 'check_out') {
+                // Clock out: Location only, no face needed
+                const btn = document.getElementById('btn-geo-action');
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking location...';
+
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    await submitAttendance(pos.coords.latitude, pos.coords.longitude, 'check_out');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }, (err) => {
+                    showToast("Location access required for clock-out", "error");
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }, { enableHighAccuracy: true });
+            } else {
+                // Clock in: Require face capture
+                openFaceModal();
+            }
+        }
+
+        async function submitAttendance(latitude, longitude, actionType, faceImage = null) {
+            const indicator = document.getElementById('distance-indicator');
+            const msgText = document.getElementById('geo-msg');
+
+            // Local range check for UI feedback
+            if (geoConfig && geoConfig.latitude) {
+                const dist = calculateDistance(latitude, longitude, geoConfig.latitude, geoConfig.longitude);
+                if (indicator) {
+                    indicator.style.display = 'block';
+                    indicator.textContent = `${Math.round(dist)}m away`;
+                    indicator.style.background = dist > geoConfig.radius ? 'rgba(239, 68, 68, 0.4)' : 'rgba(74, 222, 128, 0.4)';
+                }
+            }
+
+            try {
+                const res = await authFetch('/api/attendance/geo_check_in/', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        latitude,
+                        longitude,
+                        action: actionType,
+                        face_image: faceImage
+                    })
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    showToast(actionType === 'check_in' ? "Checked in successfully" : "Checked out successfully", "success");
+                    if (faceImage) {
+                        const status = document.getElementById('capture-status');
+                        if (status) {
+                            status.textContent = "Verified! Welcome.";
+                            status.style.color = '#4ade80';
+                        }
+                    }
+                    setTimeout(() => {
+                        if (faceImage) closeFaceModal();
+                        fetchAttendanceSummary();
+                    }, 1000);
+                } else {
+                    const errorMsg = result.error || "Verification failed";
+                    showToast(errorMsg, "error");
+                    if (faceImage) {
+                        const status = document.getElementById('capture-status');
+                        if (status) {
+                            status.textContent = errorMsg;
+                            status.style.color = '#ff4d4d';
+                            document.getElementById('btn-capture').disabled = false;
+                            document.getElementById('btn-capture').innerHTML = 'Capture & Verify';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Attendance Error:", e);
+                showToast("Connection error", "error");
+            }
+        }
+
+        let stream = null;
+        function openFaceModal() {
+            const modal = document.getElementById('face-modal');
+            const video = document.getElementById('webcam');
+            const btn = document.getElementById('btn-capture');
+            const status = document.getElementById('capture-status');
+
+            btn.disabled = false;
+            btn.innerHTML = 'Capture & Verify';
+            status.textContent = "";
+
+            modal.style.display = 'flex';
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+                .then(s => {
+                    stream = s;
+                    video.srcObject = s;
+                })
+                .catch(err => {
+                    console.error("Camera error:", err);
+                    showToast("Could not access camera. Please allow permission.", "error");
+                    closeFaceModal();
+                });
+        }
+
+        function closeFaceModal() {
+            const modal = document.getElementById('face-modal');
+            modal.style.display = 'none';
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        async function captureAndSubmit() {
+            const btn = document.getElementById('btn-capture');
+            const status = document.getElementById('capture-status');
+            const video = document.getElementById('webcam');
+            const canvas = document.getElementById('photo-canvas');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            status.textContent = "Verifying location and identity...";
+            status.style.color = 'var(--primary)';
+
+            // 1. Capture Image
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const faceImage = canvas.toDataURL('image/jpeg', 0.8);
+
+            // 2. Get Geolocation
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                await submitAttendance(pos.coords.latitude, pos.coords.longitude, 'check_in', faceImage);
+            }, (err) => {
+                status.textContent = "Location access denied";
+                status.style.color = '#ff4d4d';
+                btn.disabled = false;
+                btn.innerHTML = 'Capture & Verify';
+            }, { enableHighAccuracy: true });
+        }
+
+        // async function originalHandleGeoAction() { // Placeholder for reference
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const p1 = lat1 * Math.PI / 180;
+            const p2 = lat2 * Math.PI / 180;
+            const dp = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+                Math.cos(p1) * Math.cos(p2) *
+                Math.sin(dl / 2) * Math.sin(dl / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function formatTime(t) {
+            if (!t) return "--:--";
+            const [h, m] = t.split(':');
+            let hours = parseInt(h);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${hours}:${m} ${ampm}`;
+        }
+
+        async function fetchSimpleLeaves() {
+            try {
+                const res = await authFetch('/api/leaves/balances/');
+                if (!res.ok) return;
+                const balances = await res.json();
+
+                const container = document.getElementById('simple-leaves-grid');
+
+                if (balances.length === 0) {
+                    container.innerHTML = '<div class="leave-stat-card"><div class="leave-number">0</div><div class="leave-type-label">No entitlements</div></div>';
+                    return;
+                }
+
+                container.innerHTML = balances.map(bal => `
+                <div class="leave-stat-card">
+                    <div class="leave-number">${bal.balance}</div>
+                    <div class="leave-type-label">${bal.leave_type_name}</div>
+                </div>
+            `).join('');
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchRecentPayslips() {
+            try {
+                const res = await authFetch('/api/payroll/my-payslips/?limit=3');
+                let payslips = await res.json();
+                payslips = payslips.slice(0, 3);
+
+                const tbody = document.getElementById('payslip-table');
+                if (payslips.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="padding: 2rem; color: #94a3b8;">No payslips generated yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = payslips.map(p => `
+                <tr>
+                    <td style="font-weight: 500;">${p.month}</td>
+                    <td style="color: var(--primary-accent); font-weight: 700;">₹${parseFloat(p.net_pay).toLocaleString('en-IN')}</td>
+                    <td><span class="badge ${getStatusBadge(p.status)}">${p.status}</span></td>
+                    <td>
+                        ${p.status === 'PAID' || p.status === 'LOCKED' ? `
+                            <button class="btn btn-sm btn-outline-primary" style="padding: 0.25rem 0.75rem;" onclick="viewRecentPayslip(${p.id})">View</button>
+                        ` : `
+                            <span style="color: #94a3b8; font-size: 0.75rem; font-style: italic;">Processing</span>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+
+            } catch (e) {
+                console.error('Payslips error', e);
+            }
+        }
+
+        async function viewRecentPayslip(id) {
+            try {
+                const res = await authFetch(`/api/payroll/${id}/payslip/`);
+                const data = await res.json();
+                if (data.payslip) {
+                    window.open(data.payslip, '_blank');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function getStatusBadge(status) {
+            if (status === 'PAID') return 'bg-success';
+            if (status === 'LOCKED') return 'bg-info';
+            return 'bg-secondary';
+        }
+    </script>
+    {% endblock %}

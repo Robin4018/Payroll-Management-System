@@ -1,0 +1,312 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Compensation Architecture{% endblock %}
+
+{% block content_body %}
+<div class="salary-structure-container animate-entry">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">Earnings & Deductions
+                Matrix</h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Configure global salary
+                components and benefit structures.</p>
+        </div>
+
+        <button class="btn btn-primary" onclick="openAddComponent()">
+            <i class="fas fa-plus-circle"></i> New Compensation Component
+        </button>
+    </div>
+
+    <!-- Components Grid -->
+    <div class="components-grid">
+        <!-- Earnings -->
+        <div class="component-section">
+            <div class="section-badge success">EARNINGS (PAY-IN)</div>
+            <div class="component-list" id="earnings-list">
+                <div class="component-item loading">Loading structures...</div>
+            </div>
+        </div>
+
+        <!-- Deductions -->
+        <div class="component-section">
+            <div class="section-badge danger">DEDUCTIONS (PAY-OUT)</div>
+            <div class="component-list" id="deductions-list">
+                <div class="component-item loading">Loading structures...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .components-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .component-section {
+        background: var(--bg-card);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+    }
+
+    .section-badge {
+        display: inline-block;
+        font-size: 0.65rem;
+        font-weight: 850;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.05em;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-badge.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .section-badge.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .component-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .component-item {
+        background: var(--bg-input);
+        padding: 1.25rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+    .component-item:hover {
+        border-color: var(--primary);
+        transform: scale(1.02);
+    }
+
+    .comp-name {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .comp-calc {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .comp-status {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #10b981;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchSalaryComponents();
+    });
+
+    async function fetchSalaryComponents() {
+        try {
+            const res = await authFetch('/api/components/');
+            if (!res.ok) {
+                console.error('Components API error:', res.status);
+                return;
+            }
+            const data = await res.json();
+            const components = data.results || data;
+
+            const eList = document.getElementById('earnings-list');
+            const dList = document.getElementById('deductions-list');
+            eList.innerHTML = '';
+            dList.innerHTML = '';
+
+            const earnings = components.filter(s => s.type === 'EARNING');
+            const deductions = components.filter(s => s.type === 'DEDUCTION');
+
+            if (earnings.length === 0) {
+                eList.innerHTML = '<div class="component-item" style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-info-circle" style="margin-right:0.5rem;"></i>No earning components yet.</div>';
+            } else {
+                earnings.forEach(e => {
+                    eList.innerHTML += `
+                        <div class="component-item">
+                            <div>
+                                <div class="comp-name">${e.name}</div>
+                                <div class="comp-calc">${e.calculation_type === 'FORMULA' ? 'Formula: ' + (e.formula || '—') : 'Flat Amount'} ${e.is_taxable ? '· Taxable' : '· Non-Taxable'}</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <div class="comp-status">Active</div>
+                                <button onclick="deleteComponent(${e.id}, '${e.name}')" style="background:rgba(239,68,68,0.1); border:none; color:#ef4444; border-radius:8px; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (deductions.length === 0) {
+                dList.innerHTML = '<div class="component-item" style="color:var(--text-muted); font-size:0.9rem;"><i class="fas fa-info-circle" style="margin-right:0.5rem;"></i>No deduction components yet.</div>';
+            } else {
+                deductions.forEach(d => {
+                    dList.innerHTML += `
+                        <div class="component-item">
+                            <div>
+                                <div class="comp-name">${d.name}</div>
+                                <div class="comp-calc">${d.calculation_type === 'FORMULA' ? 'Formula: ' + (d.formula || '—') : 'Flat Amount'} ${d.is_taxable ? '· Taxable' : '· Non-Taxable'}</div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <div class="comp-status">Active</div>
+                                <button onclick="deleteComponent(${d.id}, '${d.name}')" style="background:rgba(239,68,68,0.1); border:none; color:#ef4444; border-radius:8px; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        } catch (e) { console.error('Error loading components:', e); }
+    }
+
+    function openAddComponent() {
+        document.getElementById('comp-form').reset();
+        document.getElementById('formula-group').style.display = 'none';
+        document.getElementById('comp-modal').style.display = 'flex';
+    }
+
+    function closeCompModal() {
+        document.getElementById('comp-modal').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const calcType = document.getElementById('comp-calc-type');
+        if (calcType) {
+            calcType.addEventListener('change', () => {
+                document.getElementById('formula-group').style.display =
+                    calcType.value === 'FORMULA' ? 'block' : 'none';
+            });
+        }
+    });
+
+    async function submitComponent() {
+        const name = document.getElementById('comp-name').value.trim();
+        const type = document.getElementById('comp-type').value;
+        const calcType = document.getElementById('comp-calc-type').value;
+        const formula = document.getElementById('comp-formula').value.trim();
+        const taxable = document.getElementById('comp-taxable').checked;
+
+        if (!name) { showToast('Component name is required', 'error'); return; }
+        if (calcType === 'FORMULA' && !formula) { showToast('Formula is required', 'error'); return; }
+
+        const payload = {
+            name,
+            type,
+            calculation_type: calcType,
+            formula: calcType === 'FORMULA' ? formula : '',
+            is_taxable: taxable
+        };
+
+        const btn = document.getElementById('comp-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        try {
+            const res = await authFetch('/api/components/', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                showToast('Component created successfully!', 'success');
+                closeCompModal();
+                fetchSalaryComponents();
+            } else {
+                const err = await res.json();
+                showToast(err.name?.[0] || err.detail || 'Failed to create component', 'error');
+            }
+        } catch (e) {
+            showToast('Connection error', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus-circle"></i> Create Component';
+        }
+    }
+
+    async function deleteComponent(id, name) {
+        const confirmed = await confirm(`Delete "${name}"? This may affect existing payroll calculations.`);
+        if (!confirmed) return;
+        try {
+            const res = await authFetch(`/api/components/${id}/`, { method: 'DELETE' });
+            if (res.ok || res.status === 204) {
+                showToast('Component deleted', 'success');
+                fetchSalaryComponents();
+            } else {
+                showToast('Cannot delete — component may be in use.', 'error');
+            }
+        } catch (e) { showToast('Error deleting component', 'error'); }
+    }
+</script>
+
+<!-- Add Component Modal -->
+<div id="comp-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+    <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:28px; padding:2.5rem; width:90%; max-width:480px; box-shadow:0 30px 60px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+            <div>
+                <h3 style="margin:0; font-size:1.4rem; font-weight:800; color:var(--text-main);">New Compensation Component</h3>
+                <p style="margin:0.4rem 0 0; color:var(--text-muted); font-size:0.9rem;">Define an earning or deduction for your payroll.</p>
+            </div>
+            <button onclick="closeCompModal()" style="background:var(--bg-body); border:1px solid var(--border-color); width:38px; height:38px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="comp-form" onsubmit="event.preventDefault(); submitComponent();">
+            <div style="margin-bottom:1rem;">
+                <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.4rem;">Component Name *</label>
+                <input type="text" id="comp-name" class="form-control" placeholder="e.g. House Rent Allowance" required>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.4rem;">Type *</label>
+                    <select id="comp-type" class="form-control">
+                        <option value="EARNING">Earning</option>
+                        <option value="DEDUCTION">Deduction</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.4rem;">Calculation *</label>
+                    <select id="comp-calc-type" class="form-control">
+                        <option value="FLAT_AMOUNT">Flat Amount</option>
+                        <option value="FORMULA">Formula</option>
+                    </select>
+                </div>
+            </div>
+            <div id="formula-group" style="display:none; margin-bottom:1rem;">
+                <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.4rem;">Formula</label>
+                <input type="text" id="comp-formula" class="form-control" placeholder="e.g. basic * 0.40">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.4rem;">Use "basic" to reference basic salary. Example: <code>basic * 0.40</code></div>
+            </div>
+            <div style="margin-bottom:2rem; display:flex; align-items:center; gap:0.75rem;">
+                <input type="checkbox" id="comp-taxable" checked style="width:16px; height:16px; cursor:pointer;">
+                <label for="comp-taxable" style="font-size:0.9rem; font-weight:600; color:var(--text-main); cursor:pointer;">Taxable Component</label>
+            </div>
+            <div style="display:flex; gap:1rem;">
+                <button type="button" class="btn btn-outline" style="flex:1;" onclick="closeCompModal()">Cancel</button>
+                <button type="submit" id="comp-submit-btn" class="btn btn-primary" style="flex:2;">
+                    <i class="fas fa-plus-circle"></i> Create Component
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

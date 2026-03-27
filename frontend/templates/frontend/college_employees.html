@@ -4,245 +4,597 @@
 
 {% block content_body %}
 <style>
-    /* Premium Table Interaction */
-    #employee-table-body tr {
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    #employee-table-body tr:hover {
-        background-color: #f1f5f9;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-        z-index: 10;
-        position: relative;
-    }
-
-    /* Fixed Height Table with Sticky Header */
-    .table-container {
-        max-height: calc(100vh - 280px);
-        /* Adjust based on header+filters height */
-        overflow-y: auto;
-        overflow-x: auto;
+    /* Professional Form Controls */
+    .form-control {
+        border: 1px solid var(--border-color);
         border-radius: 8px;
-        box-shadow: inset 0 0 0 1px var(--border-color);
-        position: relative;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        background-color: var(--bg-input);
+        color: var(--text-main);
     }
 
-    thead th {
-        position: sticky;
-        top: 0;
-        background: #f8fafc;
-        /* Match original header bg */
-        z-index: 20;
-        box-shadow: 0 1px 0 var(--border-color);
-        /* Bottom border for sticky header */
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-light);
+        background-color: var(--bg-card);
+        outline: none;
+    }
+
+    /* Improved Cards */
+    .employees-header-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 0.75rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .filter-grid-employees {
+        display: grid;
+        grid-template-columns: 1fr 200px 200px 150px;
+        gap: 1rem;
+        align-items: flex-end;
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .setup-card-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Table Adjustments */
+    .employees-table-container {
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: var(--primary-light);
+        padding: 1.25rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+    }
+
+    td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        font-size: 0.95rem;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background-color: var(--primary-light);
+        cursor: pointer;
+    }
+
+    .status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .badge-neutral {
+        background: var(--primary-light);
+        color: var(--text-muted);
+    }
+
+    .btn-icon-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        padding: 0.6rem 1.25rem;
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    .btn-outline {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+        background: var(--primary-light);
+        border-color: var(--primary);
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Modal Tweaks */
+    .modal-box {
+        border-radius: 20px !important;
+        overflow: hidden;
+        transform: scale(0.95) translateY(10px);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        opacity: 0;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-overlay.active .modal-box {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+
+    /* --- Animations --- */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-entry {
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .animate-delay-1 {
+        animation-delay: 0.1s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .animate-delay-2 {
+        animation-delay: 0.2s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    /* Improved Cards Hover */
+    .employees-header-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.75rem 2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .employees-header-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .setup-card {
+        background: var(--bg-input);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .setup-card:focus-within {
+        background: var(--bg-card);
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px var(--primary-light);
+    }
+
+    /* Table Animation Init */
+    .employees-table-container {
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        opacity: 0;
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+    }
+
+    /* Modal Overlay Transition */
+    .modal-overlay {
+        transition: opacity 0.3s ease, backdrop-filter 0.3s ease;
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Reduce body padding for more compact look */
+    .app-body {
+        padding-top: 1rem !important;
     }
 </style>
 
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <!-- ... header content ... -->
-        <div>
-            <h3 style="margin-bottom: 0.25rem;">Employee Directory</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Manage all teaching and non-teaching staff.</p>
-        </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <button class="btn btn-secondary" onclick="exportData()">
-                <span>⬇️</span> Export
-            </button>
-            <button class="btn btn-secondary" onclick="importData()">
-                <span>⬆️</span> Import
-            </button>
-            <button class="btn btn-primary" onclick="openAddModal()">
-                <span>+</span> Add Employee
-            </button>
-        </div>
-    </div>
-
-    <!-- Filter Bar -->
+<div class="employees-header-card animate-entry">
     <div
-        style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
-        <div style="flex: 1;">
-            <input type="text" id="search-input" class="form-control" placeholder="Search by Name, Email or ID..."
-                onkeyup="filterEmployees()">
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1.5rem;">
+        <div class="animate-entry">
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main); border: none;">Employee
+                Directory
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Manage your staff members and
+                add new employees.</p>
         </div>
-        <select id="filter-dept" class="form-control" style="width: 200px;" onchange="filterEmployees()">
-            <option value="">All Departments</option>
-            <!-- Populated via JS -->
-        </select>
-        <select id="filter-type" class="form-control" style="width: 200px;" onchange="filterEmployees()">
-            <option value="">All Types</option>
-            <option value="PERMANENT">Permanent</option>
-            <option value="CONTRACT">Contract</option>
-            <option value="GUEST_LECTURER">Guest Lecturer</option>
-            <option value="INTERN">Intern</option>
-        </select>
-        <select id="filter-status" class="form-control" style="width: 150px;" onchange="filterEmployees()">
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-        </select>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-outline btn-icon-label" onclick="exportEmployees()">
+                <i class="fas fa-file-export"></i> Export
+            </button>
+            <button class="btn btn-outline btn-icon-label" onclick="openImportModal()">
+                <i class="fas fa-file-import"></i> Import
+            </button>
+            <button class="btn btn-primary btn-icon-label" onclick="openAddModal()"
+                style="background: var(--primary); border: none; box-shadow: 0 4px 12px var(--primary-light);">
+                <i class="fas fa-user-plus"></i> Add Employee
+            </button>
+        </div>
     </div>
 
-    <div class="table-container">
-        <table id="employee-table">
-            <thead>
-                <tr>
-                    <th>Emp ID</th>
-                    <th>Name / Email</th>
-                    <th>Department</th>
-                    <th>Designation</th>
-                    <th>Type</th>
-                    <th>Mobile</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="employee-table-body">
-                <tr>
-                    <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading
-                        employees...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <!-- Filters -->
+    <div class="filter-grid-employees">
+        <div class="setup-card">
+            <span class="setup-card-label">Search Staff</span>
+            <div style="position: relative;">
+                <i class="fas fa-search"
+                    style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" id="search-input" class="form-control" placeholder="Search by name, email, or ID..."
+                    style="padding-left: 2.75rem; width: 100%;" onkeyup="filterEmployees()">
+            </div>
+        </div>
 
-    <!-- Pagination (Mock) -->
-    <div style="display: flex; justify-content: flex-end; margin-top: 1rem; gap: 0.5rem; display: none;">
-        <button class="btn btn-secondary" disabled>Previous</button>
-        <button class="btn btn-secondary">Next</button>
+        <div class="setup-card">
+            <span class="setup-card-label">Department</span>
+            <select id="filter-dept" class="form-control" onchange="filterEmployees()">
+                <option value="">All Departments</option>
+            </select>
+        </div>
+
+        <div class="setup-card">
+            <span class="setup-card-label">Employment Type</span>
+            <select id="filter-type" class="form-control" onchange="filterEmployees()">
+                <option value="">All Types</option>
+                <option value="PERMANENT">Permanent</option>
+                <option value="CONTRACT">Contract</option>
+                <option value="GUEST_LECTURER">Guest Lecturer</option>
+                <option value="INTERN">Intern</option>
+            </select>
+        </div>
+
+        <div class="setup-card">
+            <span class="setup-card-label">Status</span>
+            <select id="filter-status" class="form-control" onchange="filterEmployees()">
+                <option value="">All Records</option>
+                <option value="Active">Active Only</option>
+                <option value="Inactive">Inactive/Former</option>
+            </select>
+        </div>
     </div>
 </div>
 
+<div class="employees-table-container">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 12%">EMP ID</th>
+                <th style="width: 25%">Staff Member</th>
+                <th style="width: 18%">Department</th>
+                <th style="width: 15%">Designation</th>
+                <th style="width: 12%">Status</th>
+                <th style="width: 10%">Type</th>
+                <th style="width: 8%; text-align: right;">Profile</th>
+            </tr>
+        </thead>
+        <tbody id="employee-table-body">
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading staff...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 <!-- Add Employee Modal -->
-<div id="add-employee-modal" class="modal-overlay hidden">
-    <div class="modal-box" style="width: 700px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-            <h3>Add New Employee</h3>
+<div id="add-employee-modal" class="modal-overlay">
+    <div class="modal-box" style="width: 750px;">
+        <div class="modal-header"
+            style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; color: var(--text-main);">Add New Staff Member</h3>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Enter simple details to
+                    create an employee profile.</p>
+            </div>
             <button onclick="closeAddModal()"
-                style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+                style="background:none; border:none; font-size: 1.5rem; cursor:pointer; color: var(--text-muted);">&times;</button>
         </div>
-
         <form id="add-employee-form" onsubmit="saveEmployee(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label class="form-label">First Name</label>
-                    <input type="text" name="first_name" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" name="last_name" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Phone</label>
-                    <input type="text" name="phone" class="form-control" required>
-                </div>
-
-                <!-- Employee Code is Auto-Generated -->
-                <!-- <div class="form-group">
-                    <label class="form-label">Employee Code</label>
-                    <input type="text" name="employee_code" class="form-control" required>
-                </div> -->
-                <div class="form-group" style="display:none;">
-                    <input type="hidden" name="employee_code" value="">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Joining Date</label>
-                    <input type="date" name="date_of_joining" class="form-control" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Department</label>
-                    <select name="department" id="modal-dept-select" class="form-control">
-                        <option value="">Select Department</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Classification</label>
-                    <select name="employment_type" class="form-control">
-                        <option value="PERMANENT">Permanent</option>
-                        <option value="CONTRACT">Contract</option>
-                        <option value="GUEST_LECTURER">Guest Lecturer</option>
-                        <option value="INTERN">Intern</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Role (Permissions)</label>
-                    <select name="role_id" id="modal-role-select" class="form-control">
-                        <option value="">No Role (Standard User)</option>
-                    </select>
+            <div class="modal-body" style="background: var(--bg-card); padding: 2.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">First Name</label>
+                        <input type="text" name="first_name" class="form-control" placeholder="Rahul" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" placeholder="Sharma" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="rahul@college.edu" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Phone</label>
+                        <input type="text" name="phone" class="form-control" placeholder="+91 00000 00000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Department</label>
+                        <select name="department" id="modal-dept-select" class="form-control" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Employment Type</label>
+                        <select name="employment_type" class="form-control" required>
+                            <option value="PERMANENT">Permanent Staff</option>
+                            <option value="CONTRACT">Contract Basis</option>
+                            <option value="GUEST_LECTURER">Guest Lecturer</option>
+                            <option value="INTERN">Intern</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Role / Access</label>
+                        <select name="role_id" id="modal-role-select" class="form-control">
+                            <option value="">Regular Staff</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="color: var(--text-main);">Joining Date</label>
+                        <input type="date" name="date_of_joining" class="form-control" required>
+                    </div>
                 </div>
             </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save & Continue</button>
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeAddModal()"
+                    style="border: 1px solid var(--border-color); padding: 0.7rem 1.5rem; border-radius: 10px; background: var(--bg-input); color: var(--text-muted); font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 0.7rem 2.5rem; border-radius: 10px; font-weight: 700; background: var(--primary); border: none; color: white;">Save
+                    Employee</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Import Modal -->
+<div id="import-employee-modal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header"
+            style="padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: var(--text-main); margin: 0;">Upload Multiple Staff (CSV)</h3>
+            <button onclick="closeImportModal()"
+                style="background:none; border:none; font-size: 1.5rem; cursor:pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form id="importEmployeesForm" onsubmit="submitImport(event)">
+            <div class="modal-body">
+                <div
+                    style="background: var(--primary-light); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                        <i class="fas fa-info-circle" style="color: var(--primary); margin-top: 4px;"></i>
+                        <div>
+                            <p style="margin: 0; color: var(--text-main); font-weight: 700; font-size: 0.9rem;">CSV
+                                Format
+                                Requirements</p>
+                            <p
+                                style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.85rem; line-height: 1.4;">
+                                Include: <code>First Name, Last Name, Email, Phone, Dept, Designation, Type</code>
+                            </p>
+                            <a href="/api/employees/export_csv/?template=true"
+                                style="display: inline-block; margin-top: 0.75rem; color: var(--primary); text-decoration: underline; font-size: 0.85rem; font-weight: 600;">
+                                Download Sample Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-drop-zone" id="drop-zone"
+                    style="background: var(--bg-input); border: 2px dashed var(--border-color); border-radius: 16px; padding: 3rem; text-align: center; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-cloud-upload-alt"
+                        style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                    <p style="font-weight: 700; color: var(--text-main); margin: 0;">Drag and drop file here</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">or click to browse
+                        from computer
+                    </p>
+                    <input type="file" name="file" id="csv-file-input" accept=".csv" required style="display: none;"
+                        onchange="handleFileSelect(this)">
+                    <div id="file-name-display" class="hidden"
+                        style="margin-top: 1.5rem; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border-color); display: inline-flex; align-items: center; gap: 0.6rem;">
+                        <i class="fas fa-file-csv" style="color: var(--primary);"></i>
+                        <span id="selected-file-name"
+                            style="font-weight: 600; font-size: 0.9rem; color: var(--text-main);"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="padding: 1.5rem 2.5rem; border-top: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: flex-end; gap: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeImportModal()"
+                    style="border: 1px solid var(--border-color); padding: 0.7rem 1.5rem; border-radius: 10px; background: var(--bg-input); color: var(--text-muted); font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary"
+                    style="padding: 0.7rem 2.5rem; border-radius: 10px; font-weight: 700; background: var(--primary); border: none; color: white;">Upload
+                    Now</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+<style>
+    /* Ensure modal stays hidden by default but transitions correctly */
+    .modal-overlay {
+        display: flex;
+        visibility: hidden;
+    }
+
+    .modal-overlay.active {
+        visibility: visible;
+    }
+
+    /* Centering Fix */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(8, 9, 11, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 50;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+{% block extra_js %}
 <script>
     let allEmployees = [];
+
+    // Helper to handle both array and paginated results
+    function getData(res) {
+        if (Array.isArray(res)) return res;
+        if (res && res.results && Array.isArray(res.results)) return res.results;
+        return [];
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         fetchEmployees();
         fetchDepartments();
         fetchRoles();
+
+        // Setup dropzone click
+        const dz = document.getElementById('drop-zone');
+        if (dz) dz.onclick = () => document.getElementById('csv-file-input').click();
     });
 
     function openAddModal() {
-        document.getElementById('add-employee-modal').classList.remove('hidden');
+        document.getElementById('add-employee-modal').classList.add('active');
     }
 
     function closeAddModal() {
-        document.getElementById('add-employee-modal').classList.add('hidden');
+        document.getElementById('add-employee-modal').classList.remove('active');
     }
 
     async function fetchEmployees() {
         try {
-            const res = await fetch('/api/employees/');
+            const res = await authFetch('/api/employees/');
             if (!res.ok) throw new Error("Failed to load");
-            allEmployees = await res.json();
+            const data = await res.json();
+            allEmployees = getData(data);
             renderTable(allEmployees);
         } catch (e) {
             console.error(e);
-            document.getElementById('employee-table-body').innerHTML = `<tr><td colspan="8" class="text-center">Error loading data</td></tr>`;
+            document.getElementById('employee-table-body').innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 4rem;">Error loading employee data</td></tr>`;
         }
     }
 
     async function fetchDepartments() {
         try {
-            const res = await fetch('/api/employees/departments/');
-            const depts = await res.json();
+            const res = await authFetch('/api/employees/departments/');
+            const rawData = await res.json();
+            const depts = getData(rawData);
             const filterSelect = document.getElementById('filter-dept');
             const modalSelect = document.getElementById('modal-dept-select');
 
             depts.forEach(d => {
-                const opt = `<option value="${d.id}">${d.name}</option>`;
-                const optName = `<option value="${d.name}">${d.name}</option>`;
-                filterSelect.innerHTML += optName;
-                modalSelect.innerHTML += opt;
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                modalSelect.appendChild(opt);
+
+                const filterOpt = document.createElement('option');
+                filterOpt.value = d.name;
+                filterOpt.textContent = d.name;
+                filterSelect.appendChild(filterOpt);
             });
-        } catch (e) { }
+        } catch (e) { console.error("Dept error", e); }
     }
 
     async function fetchRoles() {
         try {
-            const res = await fetch('/api/roles/');
-            const roles = await res.json();
+            const res = await authFetch('/api/roles/');
+            const rawData = await res.json();
+            const roles = getData(rawData);
             const select = document.getElementById('modal-role-select');
             roles.forEach(r => {
-                select.innerHTML += `<option value="${r.id}">${r.name}</option>`;
+                const opt = document.createElement('option');
+                opt.value = r.id;
+                opt.textContent = r.name;
+                select.appendChild(opt);
             });
-        } catch (e) { }
+        } catch (e) { console.error("Role error", e); }
     }
 
     function renderTable(data) {
@@ -250,38 +602,40 @@
         tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;">No employees found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 4rem; color: var(--text-muted);">No staff found matching your search.</td></tr>`;
             return;
         }
 
-        data.forEach(emp => {
-            const row = `
-                <tr onclick="window.location.href='/dashboard/college/employees/${emp.id}/'">
-                    <td style="font-weight: 500;">${emp.employee_code || '--'}</td>
-                    <td>
-                        <div style="font-weight: 500; color: var(--text-main);">${emp.first_name} ${emp.last_name}</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted);">${emp.email}</div>
-                    </td>
-                    <td>
-                        <div>${emp.department_name || '--'}</div>
-                        ${emp.secondary_department_names && emp.secondary_department_names.length > 0 ?
-                    emp.secondary_department_names.map(d => `<div style='font-size: 0.85rem; color: var(--text-muted);'>+ ${d}</div>`).join('')
-                    : ''}
-                    </td>
-                    <td>${emp.designation_name || emp.designation || '--'}</td>
-                    <td><span class="badge badge-neutral">${emp.employment_type}</span></td>
-                    <td>${emp.phone}</td>
-                    <td>
-                        <span class="badge ${emp.is_active ? 'badge-success' : 'badge-danger'}">
-                            ${emp.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">View</button>
-                    </td>
-                </tr>
+        data.forEach((emp, index) => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => window.location.href = `/dashboard/college/employees/${emp.id}/`;
+            tr.style.animation = `slideInUp 0.4s ease-out forwards ${index * 0.05}s`;
+            tr.style.opacity = '0'; // Start hidden for animation
+
+            const badgeClass = emp.is_active ? 'badge-active' : 'badge-inactive';
+            const statusIcon = emp.is_active ? 'fa-check-circle' : 'fa-times-circle';
+
+            tr.innerHTML = `
+                <td style="font-weight: 500; font-family: monospace; color: var(--text-main);">${emp.employee_code || '--'}</td>
+                <td>
+                    <div style="font-weight: 700; color: var(--text-main);">${emp.first_name} ${emp.last_name}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">${emp.email}</div>
+                </td>
+                <td>
+                    <div style="font-weight: 600; color: var(--text-main);">${emp.department_name || '--'}</div>
+                </td>
+                <td style="color: var(--text-muted); font-weight: 500;">${emp.designation_name || emp.designation || '--'}</td>
+                <td>
+                    <span class="status-badge ${badgeClass}">
+                        <i class="fas ${statusIcon}"></i> ${emp.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td><span class="status-badge badge-neutral">${emp.employment_type}</span></td>
+                <td style="text-align: right;">
+                    <i class="fas fa-chevron-right" style="color: var(--border-color); font-size: 0.8rem;"></i>
+                </td>
             `;
-            tbody.innerHTML += row;
+            tbody.appendChild(tr);
         });
     }
 
@@ -310,109 +664,79 @@
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData.entries());
 
-        // Add minimal required fields to pass validation
-        if (!data.department) delete data.department;
-
         try {
-            const res = await fetch('/api/employees/', {
+            const res = await authFetch('/api/employees/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify(data)
             });
             if (res.ok) {
                 const newEmp = await res.json();
-                closeAddModal();
-                fetchEmployees();
-                // Redirect to new profile to complete details
+                showToast("Success", "Onboarding profile created", "success");
                 window.location.href = `/dashboard/college/employees/${newEmp.id}/`;
             } else {
-                alert('Error processing request');
+                showToast("Error", "Failed to create profile", "error");
             }
         } catch (err) { console.error(err); }
     }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function exportData() {
-        window.location.href = '/api/employees/export_csv/';
+    function exportEmployees() {
+        const token = localStorage.getItem('access_token');
+        window.location.href = `/api/employees/export_csv/?token=${token}`;
     }
 
     function openImportModal() {
-        document.getElementById('import-employee-modal').classList.remove('hidden');
+        document.getElementById('import-employee-modal').classList.add('active');
     }
 
     function closeImportModal() {
-        document.getElementById('import-employee-modal').classList.add('hidden');
+        document.getElementById('import-employee-modal').classList.remove('active');
     }
 
     async function submitImport(e) {
         e.preventDefault();
-        const formData = new FormData(e.target);
+        const fileInput = document.getElementById('csv-file-input');
+        if (!fileInput.files[0]) {
+            showToast("Error", "Please select a CSV file", "error");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
 
         try {
+            const token = localStorage.getItem('access_token');
             const res = await fetch('/api/employees/import_csv/', {
                 method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
                 body: formData
             });
             const data = await res.json();
 
             if (res.ok) {
-                alert(data.message);
-                if (data.errors && data.errors.length > 0) {
-                    console.warn("Import Errors:", data.errors);
-                    alert("Some rows had errors. Check console.");
-                }
+                showToast("Import Successful", data.message, "success");
                 closeImportModal();
                 fetchEmployees();
             } else {
-                alert(data.error || 'Import failed');
+                showToast("Import Failed", data.error || 'Check CSV format', "error");
             }
         } catch (err) {
             console.error(err);
-            alert('Import failed');
+            showToast("Error", "Import failed", "error");
         }
     }
 
-    function importData() {
-        openImportModal();
+    function handleFileSelect(input) {
+        const display = document.getElementById('file-name-display');
+        const nameSpan = document.getElementById('selected-file-name');
+        if (input.files && input.files[0]) {
+            nameSpan.textContent = input.files[0].name;
+            display.classList.remove('hidden');
+        } else {
+            display.classList.add('hidden');
+        }
     }
 </script>
-
-<!-- Import Modal -->
-<div id="import-employee-modal" class="modal-overlay hidden">
-    <div class="modal-box" style="width: 500px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem;">
-            <h3>Import Employees (CSV)</h3>
-            <button onclick="closeImportModal()"
-                style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
-        </div>
-        <form onsubmit="submitImport(event)">
-            <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">
-                Upload a CSV file with columns: <b>First Name, Last Name, Email, Phone, [Dept], [Designation],
-                    [Type]</b>.
-            </p>
-            <div class="form-group">
-                <input type="file" name="file" accept=".csv" class="form-control" required>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Upload & Import</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}

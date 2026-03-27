@@ -1,0 +1,438 @@
+{% extends 'frontend/dashboard_base.html' %}
+{% load static %}
+
+{% block header_title %}Leaves{% endblock %}
+
+{% block content_body %}
+<div style="padding-bottom: 3rem;">
+    <!-- Title & Action -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem;">
+        <div>
+            <h2 style="font-weight: 800; color: var(--text-main); margin: 0; font-size: 2rem; letter-spacing: -0.04em;">
+                Leaves & Time Off</h2>
+            <p style="margin: 0.75rem 0 0; color: var(--text-muted); font-size: 1rem; font-weight: 500;">
+                {% if not request.user.employee %}Check and approve staff leaves.{% else %}Check your leave balance and
+                ask for time off.{% endif %}
+            </p>
+        </div>
+
+        {% if request.user.employee %}
+        <button class="btn btn-primary" onclick="openApplyLeaveModal()">
+            <i class="fas fa-plus-circle" style="margin-right: 8px;"></i> Ask for Leave
+        </button>
+        {% endif %}
+    </div>
+
+    {% if not request.user.employee %}
+    <!-- Admin View: Pending Requests -->
+    <div class="card"
+        style="border: 1px solid var(--border-light); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.02); background: white;">
+        <div
+            style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: #fcfdfe;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);">Waiting for Approval
+            </h3>
+            <button class="btn btn-secondary" onclick="exportLeaves()"
+                style="font-size: 0.85rem; padding: 0.6rem 1rem;">
+                <i class="fas fa-file-export" style="margin-right: 6px;"></i> Download List
+            </button>
+        </div>
+        <div style="padding: 0;">
+            <div class="table-responsive">
+                <table class="table" id="adminLeavesTable">
+                    <thead>
+                        <tr>
+                            <th>Staff</th>
+                            <th>Type</th>
+                            <th>Dates</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                            <th style="text-align: right;">Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Staff View -->
+    <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+        <!-- Balances Grid -->
+        <div id="leaveBalances"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
+            <!-- Populated by JS: Cards with Icons -->
+        </div>
+
+        <!-- Personal Requests Table -->
+        <div class="card"
+            style="border: 1px solid var(--border-light); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.02); background: white;">
+            <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-light); background: #fcfdfe;">
+                <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--text-main);">My Leaves
+                </h3>
+            </div>
+            <div style="padding: 0;">
+                <div class="table-responsive">
+                    <table class="table" id="staffLeavesTable">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Status</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal: Request Time Off -->
+<div id="applyLeaveModal" class="custom-modal-overlay">
+    <div class="modal-box" style="width: 100%; max-width: 550px; border-radius: 20px;">
+        <div class="modal-header" style="padding: 2.5rem 2.5rem 1.5rem; border-bottom: 1px solid var(--border-light);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div
+                    style="width: 48px; height: 48px; border-radius: 12px; background: rgba(37, 99, 235, 0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+                <div>
+                    <h3
+                        style="margin: 0; font-size: 1.5rem; font-weight: 950; letter-spacing: -0.04em; color: var(--text-main);">
+                        Ask for Leave</h3>
+                    <p style="margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">
+                        Ask for leave for approval.</p>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeApplyLeaveModal()"
+                style="font-size: 1.5rem; top: 2rem; right: 2rem;">&times;</button>
+        </div>
+        <form id="applyLeaveForm">
+            <div class="modal-body" style="padding: 2.5rem;">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label"
+                        style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem;">Leave
+                        Type</label>
+                    <select id="leaveTypeSelect" class="form-control"
+                        style="border-radius: 10px; height: 50px; border-color: #e2e8f0; font-weight: 600;" required>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem;">From</label>
+                        <input type="date" id="startDate" class="form-control"
+                            style="border-radius: 10px; height: 50px; border-color: #e2e8f0; font-weight: 600;"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"
+                            style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem;">To</label>
+                        <input type="date" id="endDate" class="form-control"
+                            style="border-radius: 10px; height: 50px; border-color: #e2e8f0; font-weight: 600;"
+                            required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label"
+                        style="font-weight: 800; font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.75rem;">Why?</label>
+                    <textarea id="leaveReason" class="form-control"
+                        style="height: 120px; resize: none; border-radius: 10px; border-color: #e2e8f0; padding: 1rem; font-weight: 500;"
+                        placeholder="Tell us why you need this leave..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer"
+                style="background: #fcfdfe; border-top: 1px solid var(--border-light); padding: 2rem 2.5rem; border-radius: 0 0 20px 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeApplyLeaveModal()"
+                    style="font-weight: 700; height: 50px; padding: 0 2rem;">Cancel</button>
+                <button type="submit" class="btn btn-primary"
+                    style="height: 50px; padding: 0 3rem; font-weight: 900; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Send
+                    Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Premium Table Styling */
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th {
+        background: #f8fafc;
+        padding: 1.25rem 2rem;
+        text-align: left;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 800;
+        color: #64748b;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .table td {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 0.95rem;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+
+    .table tr:hover td {
+        background: #fcfdfe;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Leave Balance Card */
+    .balance-card {
+        padding: 2rem;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid var(--border-light);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        transition: transform 0.2s;
+    }
+
+    .balance-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    .balance-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    /* Status Badges */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        display: block;
+    }
+
+    .badge-pending {
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .badge-pending::before {
+        background: #f59e0b;
+    }
+
+    .badge-approved {
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .badge-approved::before {
+        background: #10b981;
+    }
+
+    .badge-rejected {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .badge-rejected::before {
+        background: #ef4444;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const role = localStorage.getItem('role');
+        if (role === 'employee') {
+            loadStaffLeaveData();
+            setInterval(loadStaffLeaveData, 30000);
+        } else {
+            loadAdminLeaveData();
+            setInterval(loadAdminLeaveData, 30000);
+        }
+    });
+
+    async function loadStaffLeaveData() {
+        const employeeId = localStorage.getItem('employee_id');
+
+        // 1. Fetch Balances
+        try {
+            const res = await authFetch(`${API_BASE}/leave-balances/?employee=${employeeId}`);
+            const data = await res.json();
+            const balances = data.results || data;
+            const balancesDiv = document.getElementById('leaveBalances');
+
+            const icons = {
+                'Sick Leave': { icon: 'fa-hand-holding-medical', color: '#ef4444', bg: '#fef2f2' },
+                'Casual Leave': { icon: 'fa-umbrella-beach', color: '#2563eb', bg: '#eff6ff' },
+                'Earned Leave': { icon: 'fa-star', color: '#f59e0b', bg: '#fffbeb' },
+                'Maternity Leave': { icon: 'fa-baby', color: '#db2777', bg: '#fdf2f8' }
+            };
+
+            if (balances.length === 0) {
+                balancesDiv.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-weight: 600; padding: 4rem;">No leave balance.</p>';
+            } else {
+                balancesDiv.innerHTML = balances.map(b => {
+                    const style = icons[b.leave_type_name] || { icon: 'fa-calendar-alt', color: '#64748b', bg: '#f8fafc' };
+                    return `
+                        <div class="balance-card">
+                            <div class="balance-icon" style="background: ${style.bg}; color: ${style.color};">
+                                <i class="fas ${style.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-size: 1.75rem; font-weight: 950; color: var(--text-main); line-height: 1;">${parseFloat(b.balance)}</h4>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">${b.leave_type_name}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (e) { console.error(e); }
+
+        // 2. Fetch Requests
+        try {
+            const res = await authFetch(`${API_BASE}/leave-requests/?employee=${employeeId}`);
+            const data = await res.json();
+            const requests = data.results || data;
+            const tbody = document.querySelector('#staffLeavesTable tbody');
+
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 5rem; font-weight: 600;">No leave requests.</td></tr>';
+            } else {
+                tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td style="font-weight: 800;">${req.leave_type_name || 'Personal'}</td>
+                    <td>${new Date(req.start_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td>${new Date(req.end_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td><span class="badge badge-${req.status.toLowerCase()}">${req.status}</span></td>
+                    <td style="color: #64748b; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${req.reason}</td>
+                </tr>
+            `).join('');
+            }
+        } catch (e) { console.error(e); }
+
+        // 3. Load Types
+        try {
+            const res = await authFetch(`${API_BASE}/leave-types/`);
+            const types = await res.json();
+            const select = document.getElementById('leaveTypeSelect');
+            select.innerHTML = types.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        } catch (e) { }
+    }
+
+    async function loadAdminLeaveData() {
+        try {
+            const res = await authFetch(`${API_BASE}/leave-requests/`);
+            const data = await res.json();
+            const requests = data.results || data;
+            const tbody = document.querySelector('#adminLeavesTable tbody');
+
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 6rem; font-weight: 600;">No leaves waiting for approval.</td></tr>';
+            } else {
+                tbody.innerHTML = requests.map(req => `
+                <tr>
+                    <td>
+                        <div style="font-weight: 900; color: var(--text-main);">${req.employee_name || 'Staff Member'}</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8; font-weight: 700;">ID: ${req.employee}</div>
+                    </td>
+                    <td><span style="font-weight: 800; color: var(--text-main);">${req.leave_type_name || 'Personal'}</span></td>
+                    <td>${new Date(req.start_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} → ${new Date(req.end_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</td>
+                    <td><span class="badge badge-${req.status.toLowerCase()}">${req.status}</span></td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #64748b;">${req.reason}</td>
+                    <td style="text-align: right;">
+                        <button class="btn btn-primary" onclick="processLeave(${req.id}, 'approve')" style="padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 8px;">Approve</button>
+                        <button class="btn btn-secondary" onclick="processLeave(${req.id}, 'reject')" style="background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 0.5rem 1rem; font-size: 0.75rem; border-radius: 8px;">Reject</button>
+                    </td>
+                </tr>
+            `).join('');
+            }
+        } catch (e) { }
+    }
+
+    async function processLeave(id, action) {
+        const title = action === 'approve' ? 'Approve' : 'Reject';
+        if (await customConfirm(`Are you sure you want to ${action} this leave request?`, `${title} Request`)) {
+            try {
+                const res = await authFetch(`${API_BASE}/leave-requests/${id}/${action}/`, { method: 'POST' });
+                if (res.ok) {
+                    showToast(`Request ${action}ed successfully.`, 'success');
+                    loadAdminLeaveData();
+                } else { showToast(`Failed to ${action} request.`, 'error'); }
+            } catch (e) { showToast("An error occurred.", "error"); }
+        }
+    }
+
+    function openApplyLeaveModal() { document.getElementById('applyLeaveModal').classList.add('active'); }
+    function closeApplyLeaveModal() { document.getElementById('applyLeaveModal').classList.remove('active'); }
+
+    document.getElementById('applyLeaveForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const employeeId = localStorage.getItem('employee_id');
+        const data = {
+            employee: employeeId,
+            leave_type: document.getElementById('leaveTypeSelect').value,
+            start_date: document.getElementById('startDate').value,
+            end_date: document.getElementById('endDate').value,
+            reason: document.getElementById('leaveReason').value,
+            status: 'PENDING'
+        };
+
+        try {
+            const res = await authFetch(`${API_BASE}/leave-requests/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                showToast("Request submitted for approval!", "success");
+                closeApplyLeaveModal();
+                loadStaffLeaveData();
+            } else {
+                const err = await res.json();
+                showToast("Error: " + (err.detail || "Could not submit"), "error");
+            }
+        } catch (e) { showToast("Connection error", "error"); }
+    });
+</script>
+{% endblock %}

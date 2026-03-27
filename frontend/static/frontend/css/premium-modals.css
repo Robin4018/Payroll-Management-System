@@ -1,0 +1,286 @@
+/* premium-modals.css - Global Popup & Toast Design System */
+
+:root {
+    --modal-bg: rgba(2, 6, 23, 0.7);
+    --modal-box-bg: rgba(30, 41, 59, 0.8);
+    --modal-radius: 32px;
+    --modal-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    --modal-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Global Overlay */
+.common-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.common-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Centered Modal Box (for confirmations/alerts) */
+.premium-popup-box {
+    background: var(--modal-box-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    width: 90%;
+    max-width: 460px;
+    padding: 3.5rem 3rem 3rem;
+    border-radius: var(--modal-radius);
+    box-shadow: var(--modal-shadow);
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+    position: relative;
+    border: var(--modal-border);
+    color: white;
+}
+
+.common-modal-overlay.active .premium-popup-box {
+    transform: scale(1) translateY(0);
+}
+
+/* Icons & Typography within Popups */
+.popup-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2.5rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.popup-title {
+    font-size: 1.75rem;
+    font-weight: 850;
+    color: white;
+    margin-bottom: 0.85rem;
+    letter-spacing: -0.03em;
+    background: linear-gradient(to right, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.popup-desc {
+    font-size: 1.05rem;
+    color: #94a3b8;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    font-weight: 400;
+}
+
+.popup-actions {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+}
+
+.popup-actions .btn {
+    padding: 1.1rem 2rem;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+}
+
+.popup-actions .btn-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    color: white;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+}
+
+.popup-actions .btn-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6);
+}
+
+.popup-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+#toast-container {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 100000;
+}
+
+.premium-toast {
+    background: #ffffff;
+    padding: 1.25rem 1.75rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-width: 320px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transform: translateX(120%);
+    opacity: 0;
+    animation: toastIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.premium-toast.success {
+    border-left: 6px solid #22c55e;
+}
+
+.premium-toast.error {
+    border-left: 6px solid #ef4444;
+}
+
+.premium-toast.info {
+    border-left: 6px solid #3b82f6;
+}
+
+@keyframes toastIn {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastOut {
+    to {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+}
+
+/* Standard Modals (for larger forms) */
+.standard-modal-box {
+    background: #ffffff;
+    width: 95%;
+    max-width: 680px;
+    max-height: 92vh;
+    border-radius: 32px;
+    box-shadow: 0 30px 60px -12px rgba(15, 23, 42, 0.2), 0 18px 36px -18px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95) translateY(30px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.common-modal-overlay.active .standard-modal-box {
+    transform: scale(1) translateY(0);
+}
+
+.modal-header-premium {
+    padding: 2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    background: #ffffff;
+}
+
+.modal-header-premium h2 {
+    font-size: 1.4rem;
+    font-weight: 850;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+}
+
+.modal-body-premium {
+    padding: 2.5rem;
+    overflow-y: auto;
+}
+
+.modal-footer-premium {
+    padding: 1.75rem 2.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.25rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Premium Form Elements */
+.premium-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.premium-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0f172a;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+}
+
+.premium-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    background: #ffffff;
+}
+
+.premium-input::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+.premium-close-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.premium-close-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    transform: rotate(90deg);
+}

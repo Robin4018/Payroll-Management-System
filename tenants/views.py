@@ -25,11 +25,14 @@ class TenantSettingsViewSet(viewsets.ModelViewSet):
         Get or Update the current user's tenant settings.
         """
         # Logic to find tenant
-        tenant_id = 1
+        tenant = None
         if hasattr(request.user, 'employee') and request.user.employee.tenant:
-            tenant_id = request.user.employee.tenant.id
+            tenant = request.user.employee.tenant
+        elif request.user.is_superuser:
+            tenant = Tenant.objects.first()
         
-        tenant = Tenant.objects.get(pk=tenant_id)
+        if not tenant:
+            return Response({"error": "No tenant associated with this user"}, status=status.HTTP_404_NOT_FOUND)
         
         if request.method == 'GET':
             serializer = self.get_serializer(tenant)

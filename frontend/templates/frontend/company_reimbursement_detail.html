@@ -1,0 +1,164 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Expense Detail{% endblock %}
+
+{% block content_body %}
+<div class="detail-container animate-entry">
+    <div style="margin-bottom: 2rem;">
+        <a href="/dashboard/company/reimbursements/" class="btn btn-outline" style="padding: 0.5rem 1rem;">
+            <i class="fas fa-arrow-left"></i> Back to Audit
+        </a>
+    </div>
+
+    <div class="detail-card" id="claim-detail-area">
+        <div style="text-align: center; padding: 4rem;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
+            <p style="margin-top: 1rem; color: var(--text-muted);">Loading claim details...</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2.5rem;
+        box-shadow: var(--shadow-md);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .claim-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .data-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .data-item-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .data-item-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .status-banner {
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.9rem;
+    }
+</style>
+
+<script>
+    const claimId = "{{ claim_id }}";
+
+    document.addEventListener('DOMContentLoaded', fetchClaimDetail);
+
+    async function fetchClaimDetail() {
+        try {
+            const res = await authFetch(`/api/reimbursements/${claimId}/`);
+            if (!res.ok) throw new Error("Claim not found");
+            const data = await res.json();
+
+            renderClaim(data);
+        } catch (e) {
+            document.getElementById('claim-detail-area').innerHTML = `
+                <div style="text-align:center; padding: 4rem;">
+                    <i class="fas fa-exclamation-triangle fa-3x" style="color:#ef4444;"></i>
+                    <h3 style="margin-top:1.5rem;">Failed to load claim</h3>
+                    <p>${e.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function renderClaim(c) {
+        const area = document.getElementById('claim-detail-area');
+        const statusColor = c.status === 'PAID' ? '#10b981' : (c.status === 'REJECTED' ? '#ef4444' : '#f59e0b');
+        
+        area.innerHTML = `
+            <div class="detail-header">
+                <div>
+                    <h2 class="claim-title">${c.title || 'Expense Claim'}</h2>
+                    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">ID: #${c.id} | Date: ${c.date_of_expense}</p>
+                </div>
+                <div class="status-banner" style="background: ${statusColor}20; color: ${statusColor}">
+                    ${c.status}
+                </div>
+            </div>
+
+            <div class="data-grid">
+                <div class="data-item">
+                    <span class="data-item-label">Employee</span>
+                    <div class="data-item-value">${c.employee_name || 'System User'}</div>
+                </div>
+                <div class="data-item">
+                    <span class="data-item-label">Amount</span>
+                    <div class="data-item-value" style="font-size: 1.5rem; color: var(--primary);">₹ ${parseFloat(c.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                </div>
+                <div class="data-item">
+                    <span class="data-item-label">Category</span>
+                    <div class="data-item-value">Personnel Reimbursement</div>
+                </div>
+                <div class="data-item">
+                    <span class="data-item-label">Payment Mode</span>
+                    <div class="data-item-value">Payroll Integration</div>
+                </div>
+                <div class="data-item" style="grid-column: span 2;">
+                    <span class="data-item-label">Description</span>
+                    <div class="data-item-value" style="font-weight: 400; line-height: 1.6;">${c.description || 'No description provided.'}</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem; display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 2rem;">
+                ${c.status === 'PENDING' ? `
+                    <button class="btn btn-primary" onclick="processAction('approve')" style="flex: 1;">Approve Claim</button>
+                    <button class="btn btn-outline" onclick="processAction('reject')" style="flex: 1; border-color: #ef4444; color: #ef4444;">Reject Claim</button>
+                ` : `<p style="color: var(--text-muted); font-style: italic;">This claim has already been ${c.status.toLowerCase()}.</p>`}
+            </div>
+        `;
+    }
+
+    async function processAction(action) {
+        if (!confirm(`Are you sure you want to ${action} this claim?`)) return;
+        
+        try {
+            const res = await authFetch(`/api/reimbursements/${claimId}/${action}/`, { method: 'POST' });
+            if (res.ok) {
+                alert(`Claim ${action}d successfully!`);
+                fetchClaimDetail();
+            } else {
+                const err = await res.json();
+                alert(err.error || `Failed to ${action} claim`);
+            }
+        } catch (e) { alert("Network error"); }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'frontend/dashboard_company_base.html' %}
+{% load static %}
+
+{% block header_title %}Workforce Monitoring{% endblock %}
+
+{% block content_body %}
+<div class="attendance-container animate-entry">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <div>
+            <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: var(--text-main);">Shift Logs & Presence
+            </h3>
+            <p style="margin: 0.5rem 0 0 0; color: var(--text-muted); font-size: 0.95rem;">Monitor real-time clock-ins
+                and geofenced attendance.</p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <input type="date" id="attendance-date" class="form-control" onchange="fetchAttendance()"
+                style="width: 200px;">
+            <button class="btn btn-outline" onclick="exportAttendance()">
+                <i class="fas fa-file-download"></i> Export Logs
+            </button>
+        </div>
+    </div>
+
+    <!-- Attendance Stats -->
+    <div class="attendance-stats-grid">
+        <div class="stat-mini-card">
+            <span class="mini-label">Present</span>
+            <span class="mini-value" id="present-count">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="mini-label">On Leave</span>
+            <span class="mini-value" id="leave-count">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="mini-label">Absentees</span>
+            <span class="mini-value" id="absent-count">0</span>
+        </div>
+        <div class="stat-mini-card">
+            <span class="mini-label">Geo-Violations</span>
+            <span class="mini-value text-danger" id="violation-count">0</span>
+        </div>
+    </div>
+
+    <div class="attendance-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Personnel</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Work Duration</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="attendance-table-body">
+                <tr>
+                    <td colspan="6" class="text-center">Loading work logs...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .attendance-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-mini-card {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mini-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .mini-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .attendance-table-container {
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-card);
+        overflow: hidden;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('attendance-date').valueAsDate = new Date();
+        fetchAttendance();
+    });
+
+    async function fetchAttendance() {
+        try {
+            const date = document.getElementById('attendance-date').value;
+
+            // 1. Fetch Logs
+            const res = await authFetch(`/api/attendance/?date=${date}`);
+            const data = await res.json();
+            const logs = data.results || data;
+            const tbody = document.getElementById('attendance-table-body');
+            tbody.innerHTML = '';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No attendance recorded for this date.</td></tr>';
+            } else {
+                logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    const statusColor = log.status === 'PRESENT' ? 'success' : (log.status === 'LEAVE' ? 'neutral' : 'danger');
+
+                    tr.innerHTML = `
+                        <td>
+                            <div style="font-weight: 700;">${log.employee_name || '--'}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${log.employee_code || '--'}</div>
+                        </td>
+                        <td style="font-family: monospace;">${log.check_in || '--'}</td>
+                        <td style="font-family: monospace;">${log.check_out || '--'}</td>
+                        <td style="font-weight: 600;">${log.work_duration || '0.00'} h</td>
+                        <td><span class="status-badge badge-neutral">Geo-Fenced</span></td>
+                        <td><span class="status-badge badge-${statusColor}">${log.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // 2. Fetch Stats Summary
+            const statsRes = await authFetch(`/api/attendance/daily_summary/?date=${date}`);
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                document.getElementById('present-count').textContent = stats.present;
+                document.getElementById('leave-count').textContent = stats.leave;
+                document.getElementById('absent-count').textContent = stats.absent;
+                document.getElementById('violation-count').textContent = stats.violations || 0;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function exportAttendance() {
+        const date = document.getElementById('attendance-date').value;
+        window.location.href = `/api/attendance/export_csv/?date=${date}&token=${localStorage.getItem('access_token')}`;
+    }
+</script>
+{% endblock %}

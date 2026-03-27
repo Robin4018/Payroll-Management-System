@@ -1,0 +1,328 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'frontend/css/college_modern.css' %}?v=2.0">
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" style="flex-shrink: 0;">
+        <div class="sidebar-header">
+            <a href="/dashboard/company/" class="brand-logo-container">
+                <div class="logo-wrapper">
+                    {% if current_tenant.logo %}
+                    <img src="{{ current_tenant.logo.url }}" alt="Logo">
+                    {% else %}
+                    <i class="fas fa-layer-group"></i>
+                    {% endif %}
+                </div>
+                <div class="brand-info">
+                    <span class="brand-name">UPMS</span>
+                    <span class="brand-tagline">Unified Payroll</span>
+                </div>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/dashboard/company/"
+                class="nav-item {% if request.path == '/dashboard/company/' %}active{% endif %}">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-section-label">WORKFORCE</div>
+
+            <a href="/dashboard/company/departments/"
+                class="nav-item {% if 'departments' in request.path %}active{% endif %}">
+                <i class="fas fa-sitemap"></i>
+                <span>Departments</span>
+            </a>
+            <a href="/dashboard/company/employees/"
+                class="nav-item {% if 'employees' in request.path %}active{% endif %}">
+                <i class="fas fa-user-tie"></i>
+                <span>Employees</span>
+            </a>
+            <a href="/dashboard/company/attendance/"
+                class="nav-item {% if 'attendance' in request.path %}active{% endif %}">
+                <i class="fas fa-clock"></i>
+                <span>Attendance</span>
+            </a>
+
+            <div class="nav-section-label">OPERATIONS</div>
+
+            <a href="/dashboard/company/salary-structure/"
+                class="nav-item {% if 'salary-structure' in request.path %}active{% endif %}">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Compensation</span>
+            </a>
+
+            <a href="/dashboard/company/reimbursements/"
+                class="nav-item {% if 'reimbursements' in request.path %}active{% endif %}">
+                <i class="fas fa-receipt"></i>
+                <span>Expenses</span>
+            </a>
+
+            <a href="/dashboard/company/payroll-processing/"
+                class="nav-item {% if 'payroll-processing' in request.path %}active{% endif %}">
+                <i class="fas fa-play-circle"></i>
+                <span>Process Payroll</span>
+            </a>
+
+            <a href="/dashboard/company/payments/"
+                class="nav-item {% if 'payments' in request.path %}active{% endif %}">
+                <i class="fas fa-credit-card"></i>
+                <span>Payments</span>
+            </a>
+
+            <a href="/dashboard/company/reports/" class="nav-item {% if 'reports' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-pie"></i>
+                <span>Analytics</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/logout/" onclick="localStorage.clear()" class="nav-item logout-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <style>
+        /* Corporate Green & Amber Theme Overrides */
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: rgba(16, 185, 129, 0.1);
+            --primary-glow: rgba(16, 185, 129, 0.3);
+            /* Contrast Color */
+            --contrast: #f59e0b;
+            --contrast-dark: #d97706;
+            --contrast-glow: rgba(245, 158, 11, 0.3);
+            /* Background Override */
+            --bg-body: #f8fafc;
+        }
+
+        [data-theme='dark'] {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: rgba(16, 185, 129, 0.15);
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            /* Contrast Color */
+            --contrast: #f59e0b;
+            --contrast-dark: #d97706;
+            --contrast-glow: rgba(245, 158, 11, 0.4);
+            /* Background Override */
+            --bg-body: #020617;
+        }
+
+        /* Professional Corporate Sidebar UI */
+        .app-sidebar {
+            background-color: #061913;
+            /* Very deep dark emerald */
+            border-right: 1px solid rgba(16, 185, 129, 0.08);
+            /* Green tinted border */
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-wrapper {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--contrast), var(--contrast-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 8px 16px var(--contrast-glow);
+        }
+
+        .logo-wrapper img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-size: 1.1rem;
+            font-weight: 850;
+            color: white;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .brand-tagline {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 1rem;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #4b5563;
+            margin: 1rem 0.75rem 0.5rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            color: #94a3b8;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 2px;
+            font-size: 0.85rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        .nav-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            color: white !important;
+            box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Override the sliding indicator for corporate */
+        .nav-item.active::before {
+            background: var(--contrast) !important;
+            box-shadow: 0 0 15px var(--contrast-glow) !important;
+        }
+
+        .nav-item.active i {
+            color: white;
+        }
+
+        .logout-item {
+            color: #f87171 !important;
+            margin-top: 1rem;
+            border: 1px solid rgba(248, 113, 113, 0.1);
+        }
+
+        .logout-item:hover {
+            background: rgba(248, 113, 113, 0.1) !important;
+            border-color: rgba(248, 113, 113, 0.2);
+        }
+
+        /* Profile Avatar Contrast Override */
+        .user-avatar {
+            background: linear-gradient(135deg, var(--contrast), var(--contrast-dark)) !important;
+            box-shadow: 0 4px 6px -1px var(--contrast-glow) !important;
+        }
+    </style>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <header class="app-header">
+            <div class="header-title">
+                <h2>{% block header_title %}Overview{% endblock %}</h2>
+            </div>
+            <div class="user-profile">
+                <!-- Theme Toggle -->
+                <div class="theme-toggle" onclick="toggleTheme()"
+                    style="margin-right: 1.5rem; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: all 0.3s ease;">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </div>
+
+                <!-- Notifications -->
+                <div class="dropdown-trigger" id="notifyDropdown">
+                    <div class="notifications-bell" id="bellIcon" onclick="toggleDropdown('notifyDropdown')">
+                        <i class="fas fa-bell"></i>
+                        <span class="bell-dot" id="notifCount" style="display: none;">0</span>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div class="dropdown-trigger" id="profileDropdown">
+                    <div class="profile-info" onclick="toggleDropdown('profileDropdown')">
+                        <div class="profile-text">
+                            <div class="user-name" id="header-user-name">
+                                {{ request.user.get_full_name|default:request.user.username }}
+                            </div>
+                            <div class="user-role">Corporate Admin</div>
+                        </div>
+                        <div class="user-avatar" id="header-user-avatar">
+                            {% if request.user.first_name %}
+                            {{ request.user.first_name|slice:":1" }}{{ request.user.last_name|slice:":1" }}
+                            {% else %}
+                            {{ request.user.username|slice:":2"|upper }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-body">
+            {% block content_body %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+
+<script>
+    function toggleTheme() {
+        const html = document.documentElement;
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        const icon = document.getElementById('theme-icon');
+        icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('theme', newTheme);
+    }
+
+    function toggleDropdown(id) {
+        document.getElementById(id).classList.toggle('active');
+    }
+
+
+    // Auto-apply stored theme
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', storedTheme);
+    if (storedTheme === 'dark') document.getElementById('theme-icon').className = 'fas fa-sun';
+</script>
+{% endblock %}

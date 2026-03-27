@@ -14,7 +14,7 @@ from tenants.models import Tenant
 from django.contrib.auth.models import User
 
 # Ensure a tenant exists
-tenant, _ = Tenant.objects.get_or_create(name="Test Tenant", subdomain="test", schema_name="test")
+tenant, _ = Tenant.objects.get_or_create(name="Test Tenant", type='CORPORATE')
 
 # Create a test employee without code
 try:
