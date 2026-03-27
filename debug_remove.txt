@@ -1,3 +1,0 @@
-Starting...
-Response Status: 200
-Success! Photo removed.
