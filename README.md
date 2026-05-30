@@ -90,4 +90,4 @@ A high-performance, **Multi-tenant SaaS** payroll and HR management solution bui
 ```
 
 ---
-*Developed with by [Robin](https://github.com/Robin4018)*
+*Developed by [Robin](https://github.com/Robin4018)*
