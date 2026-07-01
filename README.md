@@ -1,36 +1,36 @@
-# 🚀 Universal Payroll Management System
+# Universal Payroll Management System
 
 A high-performance, **Multi-tenant SaaS** payroll and HR management solution built with **Django**. Designed to handle complex organizational workflows for Schools, Colleges, and Corporate entities with absolute data isolation. I've Submitted this as my Final Year main Project. If you're interested in contributing to this project, kindly create a seperate new branch and feel free to work on this.  
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-### 🏢 Multi-tenant Architecture
+### Multi-tenant Architecture
 - **Data Isolation:** Securely manage multiple organizations (Tenants) within a single deployment.
 - **Sector Support:** Tailored modules for **Schools**, **Colleges**, and **Companies**.
 
-### 💸 Advanced Payroll Engine
+### Advanced Payroll Engine
 - **Salary Automation:** Automated calculation of monthly payouts based on CTC structures.
 - **Statutory Compliance:** Built-in logic for **PF (Provident Fund)**, **ESI**, **TDS**, and **Professional Tax**.
 - **Component Management:** Dynamic handling of bonuses, overtime, and deductions.
 
-### 👥 Employee Lifecycle Management
+### Employee Lifecycle Management
 - **Smart Onboarding:** Automated employee code generation and profile management.
 - **Document Vault:** Secure storage for employee ID proofs, educational certificates, and resumes.
 - **Bank Integration:** Seamless management of employee bank details for direct payouts.
 
-### 📅 Attendance & Leave Tracking
+### Attendance & Leave Tracking
 - **Real-time Monitoring:** Integration-ready for external attendance APIs.
 - **Leave Workflows:** Comprehensive leave application and approval logic with balance tracking.
 
-### 📊 Powerful Analytics
+### Powerful Analytics
 - **Dynamic Dashboards:** Real-time stats on employee counts, active status, and departmental distributions.
 - **Reporting:** Exportable reports for payroll audits and financial planning.
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Backend:** Python 3.12+, Django 5.x
 - **Frontend:** HTML5, CSS3, JavaScript (Vanilla), Django Templates
@@ -40,7 +40,7 @@ A high-performance, **Multi-tenant SaaS** payroll and HR management solution bui
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Python 3.12 or higher
@@ -77,7 +77,7 @@ A high-performance, **Multi-tenant SaaS** payroll and HR management solution bui
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 ├── employees/      # Employee profile and document management
